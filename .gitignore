@@ -1,0 +1,82 @@
+# Byte-compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment variables
+.env
+.env.*
+
+# Python virtual environments
+venv/
+.env/
+
+# Cache and logs
+*.log
+*.pot
+*.pyc
+*.pyo
+*.pyd
+*.sqlite3
+*.db
+instance/
+*.db-journal
+*.sqlite
+
+# Static and media files (if generated during runtime)
+staticfiles/
+media/
+
+# Distribution files
+dist/
+build/
+*.egg-info/
+*.egg
+*.manifest
+
+# IDE-specific files
+.vscode/
+.idea/
+*.iml
+*.sublime-project
+*.sublime-workspace
+
+# Pytest
+.pytest_cache/
+.tox/
+.cache/
+.coverage
+.coverage.*
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Docker-related
+docker-compose.override.yml
+*.dockerignore
+
+# Ignore unnecessary backups or temp files
+*.bak
+*.swp
+*.tmp
+*~
+
+# Security - Private keys or credentials
+*.pem
+*.key
+
+# Node.js dependencies (if you have a frontend with it)
+node_modules/
+
+# Mypy
+.mypy_cache/
+.dmypy.json
+
+# Pylint
+.pylint.d/
+
+# Black formatter cache
+.cache/
+
+# Local FastAPI runs
+uvicorn.log
