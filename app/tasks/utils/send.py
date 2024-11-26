@@ -4,8 +4,8 @@ import json
 import logging
 
 import boto3
-from pyspark.sql import DataFrame as SparkDF
 from pandas import DataFrame as PandasDF
+from pyspark.sql import DataFrame as SparkDF
 
 from app.services.celery.task import CeleryTaskStatus
 from app.services.celery.task_statuses import FAILURE, SUCCESS
