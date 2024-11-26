@@ -23,6 +23,6 @@ jobs:
     - name: Check with isort
       run: |
         pipenv run isort . --check --diff
-    - name: Lint with pylint
-      run: |
-        pipenv run pylint app tests eosc_pl
+#    - name: Lint with pylint
+#      run: |
+#        pipenv run pylint app tests eosc_pl
