@@ -7,16 +7,17 @@ Welcome to Transformer Service documentation!
 =============================================
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
    intro
 
 .. toctree::
-   :maxdepth: 1
+   :caption: Code Documentation
+   :maxdepth: 3
 
-   app
-   schemas
-   tests
+   Application Documentation <app/modules>
+   Schemas Documentation <schemas/modules>
+   Tests Documentation <tests/modules>
 
 Indices and tables
 ==================
