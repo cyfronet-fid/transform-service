@@ -1,4 +1,24 @@
-sphinx==7.4.7
+sphinx
 sphinx_rtd_theme
 sphinx_autodoc_typehints
 autodoc_pydantic
+
+# Runtime dependencies needed for autodoc imports
+boto3
+celery
+fastapi
+pandas
+pydantic[email]
+pycountry
+pyarrow
+pyspark
+pytest
+sentry_sdk
+stomp.py
+tqdm
+
+uvicorn[standard]
+
+# tet ppkges
+pytest
+pytest-mock
