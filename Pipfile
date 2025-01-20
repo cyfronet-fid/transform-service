@@ -27,6 +27,7 @@ sphinx-autodoc-typehints = "*"
 sphinx-rtd-theme = "*"
 autodoc-pydantic = "*"
 sentry-sdk = {version = "*", extras = ["fastapi"]}
+email-validator = "*"
 
 [dev-packages]
 pytest = "*"
