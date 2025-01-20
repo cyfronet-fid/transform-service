@@ -17,7 +17,7 @@ from schemas.common.oag.relation import Relation
 from schemas.common.oag.subject import Subject
 
 
-class OtherResearchProductDBSchema(BaseModel):
+class OtherRPDBSchema(BaseModel):
     """
     Pydantic model representing the expected db schema for a other_rp data type.
 

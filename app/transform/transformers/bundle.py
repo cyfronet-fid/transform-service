@@ -14,7 +14,7 @@ from app.settings import settings
 from app.transform.transformers.base.base import BaseTransformer
 from app.transform.utils.common import harvest_popularity
 from app.transform.utils.utils import sort_schema
-from schemas.old.output.bundle import bundle_output_schema
+from schemas.db.bundle import BundleDBSchema
 from schemas.properties.data import ID, POPULARITY, TYPE
 
 
@@ -24,7 +24,7 @@ class BundleTransformer(BaseTransformer):
     def __init__(self, spark: SparkSession):
         self.type = settings.BUNDLE
         self.id_increment = settings.BUNDLE_IDS_INCREMENTOR
-        self.exp_output_schema = bundle_output_schema
+        self.exp_output_schema = BundleDBSchema
 
         super().__init__(
             self.type,

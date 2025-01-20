@@ -2,7 +2,7 @@
 """Transform other research products"""
 from app.settings import settings
 from app.transform.transformers.base.oag import OagBaseTransformer
-from schemas.old.output.other_rp import other_rp_output_schema
+from schemas.db.other_rp import OtherRPDBSchema
 
 
 class OtherRPTransformer(OagBaseTransformer):
@@ -10,7 +10,7 @@ class OtherRPTransformer(OagBaseTransformer):
 
     def __init__(self, spark):
         self.type = settings.OTHER_RP
-        self.exp_output_schema = other_rp_output_schema
+        self.exp_output_schema = OtherRPDBSchema
 
         super().__init__(
             self.type,

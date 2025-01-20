@@ -9,7 +9,7 @@ from app.settings import settings
 from app.transform.transformers.base.base import BaseTransformer
 from app.transform.utils.common import harvest_popularity
 from app.transform.utils.utils import sort_schema
-from schemas.old.output.provider import provider_output_schema
+from schemas.db.provider import ProviderDBSchema
 from schemas.properties.data import ID, POPULARITY, TYPE, URL
 
 
@@ -20,7 +20,7 @@ class ProviderTransformer(BaseTransformer):
         self.type = settings.PROVIDER
         # Increase the range of providers IDs -> to avoid a conflicts
         self.id_increment = settings.PROVIDER_IDS_INCREMENTOR
-        self.exp_output_schema = provider_output_schema
+        self.exp_output_schema = ProviderDBSchema
 
         super().__init__(
             self.type,

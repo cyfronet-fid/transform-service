@@ -8,8 +8,8 @@ from dotenv import load_dotenv
 from pydantic import AnyUrl
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from schemas.old.input import *
-from schemas.old.output import *
+from schemas.db import *
+from schemas.input import *
 
 logger = logging.getLogger(__name__)
 EnvironmentType = Literal["dev", "test", "production"]
@@ -210,73 +210,73 @@ class TransformSettings(GlobalSettings):
         collections = {
             self.SOFTWARE: {
                 PATH: self.SOFTWARE_PATH,
-                OUTPUT_SCHEMA: software_output_schema,
-                INPUT_SCHEMA: software_input_schema,
+                OUTPUT_SCHEMA: SoftwareDBSchema,
+                INPUT_SCHEMA: SoftwareInputSchema,
             },
             self.OTHER_RP: {
                 PATH: self.OTHER_RP_PATH,
-                OUTPUT_SCHEMA: other_rp_output_schema,
-                INPUT_SCHEMA: other_rp_input_schema,
+                OUTPUT_SCHEMA: OtherRPDBSchema,
+                INPUT_SCHEMA: OtherRPInputSchema,
             },
             self.DATASET: {
                 PATH: self.DATASET_PATH,
-                OUTPUT_SCHEMA: dataset_output_schema,
-                INPUT_SCHEMA: dataset_input_schema,
+                OUTPUT_SCHEMA: DatasetDBSchema,
+                INPUT_SCHEMA: DatasetInputSchema,
             },
             self.PUBLICATION: {
                 PATH: self.PUBLICATION_PATH,
-                OUTPUT_SCHEMA: publication_output_schema,
-                INPUT_SCHEMA: publication_input_schema,
+                OUTPUT_SCHEMA: PublicationDBSchema,
+                INPUT_SCHEMA: PublicationInputSchema,
             },
             self.ORGANISATION: {
                 PATH: self.ORGANISATION_PATH,
-                OUTPUT_SCHEMA: organisation_output_schema,
-                INPUT_SCHEMA: organisation_input_schema,
+                OUTPUT_SCHEMA: OrganisationDBSchema,
+                INPUT_SCHEMA: OrganisationInputSchema,
             },
             self.PROJECT: {
                 PATH: self.PROJECT_PATH,
-                OUTPUT_SCHEMA: project_output_schema,
-                INPUT_SCHEMA: project_input_schema,
+                OUTPUT_SCHEMA: ProjectDBSchema,
+                INPUT_SCHEMA: ProjectInputSchema,
             },
             self.SERVICE: {
                 ADDRESS: mp_api + "services",
-                OUTPUT_SCHEMA: service_output_schema,
-                INPUT_SCHEMA: service_input_schema,
+                OUTPUT_SCHEMA: ServiceDBSchema,
+                INPUT_SCHEMA: ServiceInputSchema,
             },
             self.DATASOURCE: {
                 ADDRESS: mp_api + "datasources",
-                OUTPUT_SCHEMA: data_source_output_schema,
-                INPUT_SCHEMA: data_source_input_schema,
+                OUTPUT_SCHEMA: DataSourceDBSchema,
+                INPUT_SCHEMA: DataSourceInputSchema,
             },
             self.BUNDLE: {
                 ADDRESS: mp_api + "bundles",
-                OUTPUT_SCHEMA: bundle_output_schema,
-                INPUT_SCHEMA: bundle_input_schema,
+                OUTPUT_SCHEMA: BundleDBSchema,
+                INPUT_SCHEMA: BundleInputSchema,
             },
             self.GUIDELINE: {
                 ADDRESS: str(self.GUIDELINE_ADDRESS),
-                OUTPUT_SCHEMA: guideline_output_schema,
-                INPUT_SCHEMA: guideline_input_schema,
+                OUTPUT_SCHEMA: GuidelineDBSchema,
+                INPUT_SCHEMA: GuidelineInputSchema,
             },
             self.TRAINING: {
                 ADDRESS: str(self.TRAINING_ADDRESS),
-                OUTPUT_SCHEMA: training_output_schema,
-                INPUT_SCHEMA: training_input_schema,
+                OUTPUT_SCHEMA: TrainingDBSchema,
+                INPUT_SCHEMA: TrainingInputSchema,
             },
             self.PROVIDER: {
                 ADDRESS: mp_api + "providers",
-                OUTPUT_SCHEMA: provider_output_schema,
-                INPUT_SCHEMA: provider_input_schema,
+                OUTPUT_SCHEMA: ProviderDBSchema,
+                INPUT_SCHEMA: ProviderInputSchema,
             },
             self.OFFER: {
                 ADDRESS: mp_api + "offers",
-                OUTPUT_SCHEMA: offer_output_schema,
-                INPUT_SCHEMA: offer_input_schema,
+                OUTPUT_SCHEMA: OfferDBSchema,
+                INPUT_SCHEMA: OfferInputSchema,
             },
             self.CATALOGUE: {
                 ADDRESS: mp_api + "catalogues",
-                OUTPUT_SCHEMA: catalogue_output_schema,
-                INPUT_SCHEMA: catalogue_input_schema,
+                OUTPUT_SCHEMA: CatalogueDBSchema,
+                INPUT_SCHEMA: CatalogueInputSchema,
             },
         }
 

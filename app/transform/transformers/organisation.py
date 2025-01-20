@@ -9,7 +9,7 @@ from pyspark.sql.types import ArrayType, StringType, StructField, StructType
 from app.settings import settings
 from app.transform.transformers.base.base import BaseTransformer
 from app.transform.utils.utils import sort_schema
-from schemas.old.output.organisation import organisation_output_schema
+from schemas.db.organisation import OrganisationDBSchema
 from schemas.properties.data import (
     ABBREVIATION,
     ALTERNATIVE_NAMES,
@@ -31,7 +31,7 @@ class OrganisationTransformer(BaseTransformer):
 
     def __init__(self, spark: SparkSession):
         self.type = settings.ORGANISATION
-        self.exp_output_schema = organisation_output_schema
+        self.exp_output_schema = OrganisationDBSchema
 
         super().__init__(
             self.type,

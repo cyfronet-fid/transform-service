@@ -2,7 +2,7 @@
 """Transform publications"""
 from app.settings import settings
 from app.transform.transformers.base.oag import OagBaseTransformer
-from schemas.old.output.publication import publication_output_schema
+from schemas.db.publication import PublicationDBSchema
 
 
 class PublicationTransformer(OagBaseTransformer):
@@ -10,7 +10,7 @@ class PublicationTransformer(OagBaseTransformer):
 
     def __init__(self, spark):
         self.type = settings.PUBLICATION
-        self.exp_output_schema = publication_output_schema
+        self.exp_output_schema = PublicationDBSchema
         super().__init__(
             self.type,
             self.cols_to_add,

@@ -2,6 +2,7 @@
 """Transform OAG resources"""
 from abc import abstractmethod
 
+from pydantic import BaseModel
 from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql.functions import array, col, lit, year
 from pyspark.sql.types import (
@@ -53,7 +54,7 @@ class OagBaseTransformer(BaseTransformer):
         desired_type: str,
         cols_to_add: tuple[str, ...] | None,
         cols_to_drop: tuple[str, ...] | None,
-        exp_output_schema: dict,
+        exp_output_schema: BaseModel,
         spark: SparkSession,
     ):
         super().__init__(

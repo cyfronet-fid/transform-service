@@ -30,7 +30,7 @@ from app.transform.utils.common import (
     transform_date,
 )
 from app.transform.utils.utils import sort_schema
-from schemas.old.output.training import training_output_schema
+from schemas.db.training import TrainingDBSchema
 from schemas.properties.data import *
 
 logger = getLogger(__name__)
@@ -41,7 +41,7 @@ class TrainingTransformer(BaseTransformer):
 
     def __init__(self, spark: SparkSession):
         self.type = settings.TRAINING
-        self.exp_output_schema = training_output_schema
+        self.exp_output_schema = TrainingDBSchema
 
         super().__init__(
             self.type,
