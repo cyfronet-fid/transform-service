@@ -6,7 +6,7 @@ from pyspark.sql.types import StringType, StructType
 
 from app.settings import settings
 from app.transform.transformers.base.base import BaseTransformer
-from schemas.old.output.catalogue import catalogue_output_schema
+from schemas.db.catalogue import CatalogueDBSchema
 from schemas.properties.data import (
     CREATED_AT,
     ID,
@@ -26,7 +26,7 @@ class CatalogueTransformer(BaseTransformer):
         self.type = settings.CATALOGUE
         # Increase the range of providers IDs -> to avoid a conflicts
         self.id_increment = settings.CATALOGUE_IDS_INCREMENTOR
-        self.exp_output_schema = catalogue_output_schema
+        self.exp_output_schema = CatalogueDBSchema
 
         super().__init__(
             self.type,

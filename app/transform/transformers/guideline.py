@@ -8,10 +8,9 @@ import pandas as pd
 from pandas import DataFrame
 
 from app.services.mp_pc.data import get_providers_mapping
-from app.services.solr.validate.schema.validate import validate_pd_schema
+from app.services.solr.validate.schema.validate import validate_schema
 from app.settings import settings
-from schemas.old.input.guideline import guideline_input_schema
-from schemas.old.output.guideline import guideline_output_schema
+from schemas.input.guideline import GuidelineInputSchema
 from schemas.properties.data import (
     ALTERNATIVE_IDS,
     AUTHOR_NAMES,
@@ -20,6 +19,7 @@ from schemas.properties.data import (
     TYPE,
     URI,
 )
+from schemas.se.guideline import GuidelineSESchema
 
 logger = logging.getLogger(__name__)
 
@@ -318,7 +318,7 @@ def transform_guidelines(data: str) -> DataFrame:
     df = pd.DataFrame(data)
 
     try:  # validate input schema
-        validate_pd_schema(df, guideline_input_schema, settings.GUIDELINE, "input")
+        validate_schema(df, GuidelineInputSchema, settings.GUIDELINE, "input")
     except AssertionError:
         logger.warning(
             f"Schema validation of raw input data for type={settings.GUIDELINE} has failed. Input schema is different than excepted"
@@ -335,7 +335,7 @@ def transform_guidelines(data: str) -> DataFrame:
     if ALTERNATIVE_IDS in df.columns:
         serialize_alternative_ids(df)
     else:
-        del guideline_output_schema[ALTERNATIVE_IDS]
+        del GuidelineSESchema[ALTERNATIVE_IDS]
 
     harvest_identifiers(df)
     harvest_authors_names(df)
@@ -345,14 +345,14 @@ def transform_guidelines(data: str) -> DataFrame:
     df = df.reindex(sorted(df.columns), axis=1)
 
     try:  # validate output schema
-        validate_pd_schema(df, guideline_output_schema, settings.GUIDELINE, "output")
+        validate_schema(df, type[GuidelineSESchema], settings.GUIDELINE, "output")
     except AssertionError:
         logger.warning(
             f"Schema validation after transformation failed for type={settings.GUIDELINE} has failed. Output schema is different than excepted"
         )
 
     columns_to_get = [
-        _col for _col in guideline_output_schema.keys() if _col in df.columns
+        _col for _col in GuidelineSESchema.model_fields.keys() if _col in df.columns
     ]
     # Take only those columns that are present in the expected output schema and exists in df
     df = df[columns_to_get]

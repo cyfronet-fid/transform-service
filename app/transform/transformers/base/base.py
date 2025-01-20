@@ -3,6 +3,7 @@
 from abc import ABC, abstractmethod
 from logging import getLogger
 
+from pydantic import BaseModel
 from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql.functions import col, udf
 from pyspark.sql.types import StringType, StructType
@@ -28,7 +29,7 @@ class BaseTransformer(ABC):
         cols_to_add: tuple[str, ...] | None,
         cols_to_drop: tuple[str, ...] | None,
         cols_to_rename: dict[str, str] | None,
-        exp_output_schema: dict,
+        exp_output_schema: BaseModel,
         spark: SparkSession,
     ):
         self.type = desired_type
@@ -87,7 +88,9 @@ class BaseTransformer(ABC):
         In that manner, if any column was added additionally it won't be included in output data
         """
         expected_columns = [
-            col for col in df.columns if col in self._exp_output_schema.keys()
+            col
+            for col in df.columns
+            if col in self._exp_output_schema.model_fields.keys()
         ]
         return df.select(*expected_columns)
 

@@ -18,7 +18,7 @@ from app.transform.utils.common import (
     map_best_access_right,
 )
 from app.transform.utils.utils import sort_schema
-from schemas.old.output.offer import offer_output_schema
+from schemas.db.offer import OfferDBSchema
 from schemas.properties.data import BEST_ACCESS_RIGHT, ID, OPEN_ACCESS, POPULARITY, TYPE
 
 
@@ -28,7 +28,7 @@ class OfferTransformer(BaseTransformer):
     def __init__(self, spark: SparkSession):
         self.type = settings.OFFER
         self.id_increment = settings.OFFER_IDS_INCREMENTOR
-        self.exp_output_schema = offer_output_schema
+        self.exp_output_schema = OfferDBSchema
 
         super().__init__(
             self.type,

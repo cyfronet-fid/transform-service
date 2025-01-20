@@ -2,7 +2,7 @@
 """Transform datasets"""
 from app.settings import settings
 from app.transform.transformers.base.oag import OagBaseTransformer
-from schemas.old.output.dataset import dataset_output_schema
+from schemas.db.dataset import DatasetDBSchema
 
 
 class DatasetTransformer(OagBaseTransformer):
@@ -10,7 +10,7 @@ class DatasetTransformer(OagBaseTransformer):
 
     def __init__(self, spark):
         self.type = settings.DATASET
-        self.exp_output_schema = dataset_output_schema
+        self.exp_output_schema = DatasetDBSchema
 
         super().__init__(
             self.type,

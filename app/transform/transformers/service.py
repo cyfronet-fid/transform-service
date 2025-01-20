@@ -11,7 +11,7 @@ from pyspark.sql.types import (
 from app.settings import settings
 from app.transform.transformers.base.marketplace import MarketplaceBaseTransformer
 from app.transform.utils.utils import sort_schema
-from schemas.old.output.service import service_output_schema
+from schemas.db.service import ServiceDBSchema
 from schemas.properties.data import BEST_ACCESS_RIGHT, OPEN_ACCESS, POPULARITY
 
 
@@ -21,7 +21,7 @@ class ServiceTransformer(MarketplaceBaseTransformer):
     def __init__(self, spark):
         self.type = settings.SERVICE
         id_increment = settings.SERVICE_IDS_INCREMENTOR
-        self.exp_output_schema = service_output_schema
+        self.exp_output_schema = ServiceDBSchema
 
         super().__init__(
             id_increment,

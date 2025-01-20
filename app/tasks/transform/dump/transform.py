@@ -4,6 +4,7 @@ import logging
 from typing import Optional
 
 import boto3
+from pydantic import BaseModel
 from pyspark.sql import DataFrame, SparkSession
 from tqdm import tqdm
 
@@ -138,7 +139,7 @@ def transform_file(
     spark: SparkSession,
     s3_client: boto3.client,
     collection_name: str,
-    input_schema: dict,
+    input_schema: BaseModel,
     error_log: dict,
 ) -> Optional[DataFrame]:
     """

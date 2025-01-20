@@ -13,5 +13,7 @@ ENV PYTHONDONTWRITEBYTECODE 1
 # Don't buffer stdout and stderr
 ENV PYTHONUNBUFFERED 1
 COPY . .
+COPY Pipfile Pipfile.lock /app/
+COPY .env /app/.env
 RUN pip install --upgrade pip pipenv
 RUN pipenv install --deploy --system

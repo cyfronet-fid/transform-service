@@ -1,6 +1,7 @@
 import json
 from logging import getLogger
 
+from pydantic import BaseModel
 from pyspark.sql import DataFrame, SparkSession
 
 from app.services.solr.validate.schema.validate import validate_schema
@@ -14,7 +15,7 @@ def load_file_data(spark: SparkSession, data_path: str, _format: str = "json"):
 
 
 def load_request_data(
-    spark: SparkSession, data: dict | list[dict], input_exp_sch: dict, type_: str
+    spark: SparkSession, data: dict | list[dict], input_exp_sch: BaseModel, type_: str
 ) -> DataFrame:
     """Load input data into pyspark dataframe, validate its schema"""
     df = spark.read.json(spark.sparkContext.parallelize([json.dumps(data)]))

@@ -12,7 +12,7 @@ from pyspark.sql.types import (
 from app.settings import settings
 from app.transform.transformers.base.marketplace import MarketplaceBaseTransformer
 from app.transform.utils.utils import sort_schema
-from schemas.old.output.data_source import data_source_output_schema
+from schemas.db.data_source import DataSourceDBSchema
 from schemas.properties.data import (
     BEST_ACCESS_RIGHT,
     OPEN_ACCESS,
@@ -28,7 +28,7 @@ class DataSourceTransformer(MarketplaceBaseTransformer):
     def __init__(self, spark):
         self.type = settings.DATASOURCE
         id_increment = settings.DATA_SOURCE_IDS_INCREMENTOR
-        self.exp_output_schema = data_source_output_schema
+        self.exp_output_schema = DataSourceDBSchema
 
         super().__init__(
             id_increment,
