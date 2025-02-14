@@ -156,3 +156,13 @@ def read_json_from_zip(zip_content: BytesIO, file_path: str) -> list[dict]:
         with z.open(zip_file_name) as f:
             content = f.read()
             return process_json_content(content, zip_file_name.endswith(".gz"))
+
+
+def compress_to_gz(data: list[str]) -> BytesIO:
+    """Compress a list of JSON strings into a .gz format and return a file-like object."""
+    buffer = BytesIO()
+    with gzip.GzipFile(fileobj=buffer, mode="wb") as gz_file:
+        for line in data:
+            gz_file.write(line.encode("utf-8") + b"\n")  # Stream writing
+    buffer.seek(0)  # Reset cursor before returning
+    return buffer  # Returns a file-like object instead of raw bytes

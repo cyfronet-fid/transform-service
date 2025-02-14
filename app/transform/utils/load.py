@@ -18,15 +18,15 @@ def load_request_data(
 ) -> DataFrame:
     """Load input data into pyspark dataframe, validate its schema"""
     df = spark.read.json(spark.sparkContext.parallelize([json.dumps(data)]))
-    try:  # Check raw, input schema
-        validate_schema(
-            df,
-            input_exp_sch,
-            collection=type_,
-            source="input",
-        )
-    except AssertionError:
-        logger.warning(
-            f"Schema validation of raw input data for type={type_} has failed. Input schema is different than excepted"
-        )
+    # try:  # TODO Check raw, input schema
+    #     validate_schema(
+    #         df,
+    #         input_exp_sch,
+    #         collection=type_,
+    #         source="input",
+    #     )
+    # except AssertionError:
+    #     logger.warning(
+    #         f"Schema validation of raw input data for type={type_} has failed. Input schema is different than excepted"
+    #     )
     return df

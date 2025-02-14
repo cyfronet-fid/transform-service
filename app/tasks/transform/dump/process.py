@@ -93,21 +93,16 @@ def solr_cols_subtask(wf: chain, req_body: dict) -> chain:
 
             if not any(col in existing_cols for col in requested_cols):
                 # Create new solr collections
-                solr_task_params = {
-                    "solr_url": instance["url"],
-                    "all_collection_config": instance["all_col_conf"],
-                    "catalogue_config": instance["cat_conf"],
-                    "organisation_config": instance["org_conf"],
-                    "project_config": instance["proj_conf"],
-                    "provider_config": instance["provider_conf"],
-                    "collection_prefix": instance["cols_prefix"],
-                    "num_shards": instance["num_shards"],
-                    "replication_factor": instance["replication_factor"],
-                }
-
-                logger.info(
-                    f"Creating solr collections with params: {solr_task_params}"
+                wf |= create_solr_collections_task.s(
+                    solr_url=instance["url"],
+                    all_collection_config=instance["all_col_conf"],
+                    catalogue_config=instance["cat_conf"],
+                    organisation_config=instance["org_conf"],
+                    project_config=instance["proj_conf"],
+                    provider_config=instance["provider_conf"],
+                    collection_prefix=instance["cols_prefix"],
+                    num_shards=instance["num_shards"],
+                    replication_factor=instance["replication_factor"],
                 )
-                wf |= create_solr_collections_task.s(**solr_task_params)
 
     return wf

@@ -31,7 +31,9 @@ def create_solr_collections_task(
     replication_factor: int,
 ) -> dict | None:
     """Celery task for creating solr collections"""
-    logger.info("Creating solr collections...")
+    logger.info(
+        f"Creating collections for solr instance: {solr_url}, with prefix: {collection_prefix}"
+    )
 
     collection_names = get_uniq_solr_col_names(collection_prefix)
     validate(
