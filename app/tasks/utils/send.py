@@ -9,7 +9,8 @@ from pyspark.sql import DataFrame as SparkDF
 
 from app.services.celery.task import CeleryTaskStatus
 from app.services.celery.task_statuses import FAILURE, SUCCESS
-from app.services.s3.send import send_spark_df as send_to_s3
+from app.services.s3.send import s3_send_gz_data
+from app.services.s3.utils import compress_to_gz
 from app.services.solr.collections import COL_UPLOAD_CONFIG
 from app.services.solr.send import send_str_to_solr
 from app.settings import settings
@@ -70,17 +71,9 @@ def send_dump_data(
     s3_client: boto3.client = None,
 ) -> None:
     """Helper function to send data to S3 and/or Solr based on the task type and a configuration."""
-    solr_data_form, s3_data_form = serialize_df_to_send(collection_name, df)
-
+    solr_data, s3_data = serialize_df(collection_name, df)
     instances = req_body.get("instances")
-    if not instances:
-        logger.error(
-            "Unsuccessful data sent. No instance provided in a req_body: %s",
-            req_body,
-        )
-        return
-
-    file_key = extract_after_bucket(file_path, req_body.get("dump_url", ""))
+    input_file_path = extract_after_bucket(file_path, req_body.get("dump_url", ""))
 
     solr_instance = next(
         (inst for inst in instances if inst.get("type") == "solr"), None
@@ -88,8 +81,8 @@ def send_dump_data(
     if solr_instance:
         solr_url = solr_instance.get("url")
         solr_collections = solr_instance[COL_UPLOAD_CONFIG][collection_name]
-        send_str_to_solr(solr_data_form, solr_url, solr_collections, file_key)
-        logger.info("%s successfully send to solr.", file_key)
+        send_str_to_solr(solr_data, solr_url, solr_collections, input_file_path)
+        logger.info("%s successfully send to solr.", input_file_path)
 
     s3_instance = next((inst for inst in instances if inst.get("type") == "s3"), None)
 
@@ -97,8 +90,14 @@ def send_dump_data(
         if not s3_client:
             logger.error("No S3 client provided.")
             raise S3ClientError()
-        send_to_s3(s3_data_form, s3_client, s3_instance.get("s3_output_url"), file_key)
-        logger.info("%s successfully send to s3", file_key)
+        s3_send_gz_data(
+            s3_data,
+            collection_name,
+            s3_instance.get("s3_output_url"),
+            input_file_path,
+            s3_client,
+        )
+        logger.info("%s successfully send to s3", input_file_path)
 
 
 def send_live_data(
@@ -106,7 +105,7 @@ def send_live_data(
     collection_name: str,
 ) -> None:
     """Send data to solr/s3 integrated by constant settings. Used for live update."""
-    solr_data_form, s3_data_form = serialize_df_to_send(collection_name, df)
+    solr_data_form, s3_data_form = serialize_df(collection_name, df)
     solr_collections = settings.COLLECTIONS[collection_name]["SOLR_COL_NAMES"]
     send_str_to_solr(solr_data_form, str(settings.SOLR_URL), solr_collections)
     logger.info("Data successfully sent to Solr collections: %s.", solr_collections)
@@ -149,18 +148,17 @@ def get_file_number_and_path(file_path: str) -> tuple[str, str]:
     return path, file_number
 
 
-def serialize_df_to_send(
-    collection_name: str, df: SparkDF | PandasDF
-) -> [str, list[str]]:
-    """Serialize dataframes to solr and s3 send formats."""
+def serialize_df(collection_name: str, df: SparkDF | PandasDF) -> [str, bytes]:
+    """Serialize dataframes to solr format (str) and s3 format (.gz)"""
     if collection_name == settings.GUIDELINE:  # Pandas
-        s3_data_form = df.apply(lambda row: row.to_json(), axis=1).tolist()
+        s3_raw_json = df.apply(lambda row: row.to_json(), axis=1).tolist()
         solr_data_form = df.to_json(orient="records")
     else:  # Spark
-        s3_data_form = df.toJSON().collect()
-        solr_data_form = json.dumps([json.loads(line) for line in s3_data_form])
+        s3_raw_json = df.toJSON().collect()
+        solr_data_form = json.dumps([json.loads(line) for line in s3_raw_json])
 
-    return solr_data_form, s3_data_form
+    compressed_s3_json = compress_to_gz(s3_raw_json)
+    return solr_data_form, compressed_s3_json
 
 
 class S3ClientError(Exception):

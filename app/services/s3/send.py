@@ -1,7 +1,7 @@
-import gzip
-import io
+"""S3 send module."""
+
 import logging
-import re
+import os
 
 import boto3
 from botocore.exceptions import ClientError, EndpointConnectionError
@@ -11,38 +11,40 @@ from app.services.s3.utils import extract_bucket_and_key
 logger = logging.getLogger(__name__)
 
 
-def send_spark_df(
-    json_data: list[str], s3: boto3.client, s3_url: str, key: str
+def s3_send_gz_data(
+    gz_data: bytes,
+    col_name: str,
+    s3_output_url: str,
+    input_file_path: str,
+    s3: boto3.client,
 ) -> None:
     """
-    Compresses JSON data and uploads it to an S3 bucket.
+    Send compressed data to S3 output URL.
 
     Args:
-        json_data (List[str]): List of JSON lines to be uploaded.
+        gz_data (io.BytesIO): Compressed (.gz) file-like object to be uploaded.
+        col_name (str): Collection name. E.g. 'dataset'.
+        s3_output_url (str): The S3 output dump URL - where data should be stored.
+        input_file_path (str): input file path.
         s3 (boto3.client): Boto3 S3 client.
-        s3_url (str): The S3 URL (bucket) where data is to be stored.
-        key (str): Key path (filename) for the object.
 
     Raises:
         ClientError: If there is an error during the S3 upload.
         EndpointConnectionError: If there is a connectivity issue with the S3 endpoint.
     """
-    bucket, _ = extract_bucket_and_key(s3_url)
-    compressed_data = io.BytesIO()
-    with gzip.GzipFile(fileobj=compressed_data, mode="wb") as gz:
-        gz.write("\n".join(json_data).encode("utf-8"))
-    compressed_data.seek(0)
-    if key.endswith(".json"):
-        key += ".gz"
-    key = re.sub(r"(.*\.zip/|.*\.tar/)", "", key)
+    bucket, output_file_path = extract_bucket_and_key(s3_output_url)
+    filename = os.path.basename(input_file_path)  # Extract filename from the path
+    if not filename.endswith(".gz"):
+        filename += ".gz"
+    file_path = f"{output_file_path}/{col_name}/{filename}"
 
     try:
         s3.upload_fileobj(
-            Fileobj=compressed_data,
+            Fileobj=gz_data,
             Bucket=bucket,
-            Key=key,
+            Key=file_path,
         )
-        logger.info(f"{key} successfully uploaded to bucket {bucket}.")
+        logger.info(f"{input_file_path} successfully uploaded to {file_path}")
     except (ClientError, EndpointConnectionError) as err:
         # TODO failed_files[col_name][S3].append(file)
-        logger.error(f"{key} failed to be sent to the S3 - {err}")
+        logger.error(f"{input_file_path} failed to be sent to the S3 - {err}")
