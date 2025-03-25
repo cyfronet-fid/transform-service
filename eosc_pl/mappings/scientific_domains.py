@@ -116,7 +116,9 @@ oecd_controlled_vocabulary = {
     16: "Natural sciences - Biological sciences",
     17: "Natural sciences - Other natural sciences",
     21: "Engineering and technology - Civil engineering",
-    22: "Engineering and technology - Electrical engineering, electronic engineering, information engineering",
+    22: (
+        "Engineering and technology - Electrical engineering, electronic engineering, information engineering"
+    ),
     23: "Engineering and technology - Mechanical engineering",
     24: "Engineering and technology - Chemical engineering",
     25: "Engineering and technology - Materials engineering",

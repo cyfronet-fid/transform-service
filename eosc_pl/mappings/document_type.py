@@ -1,10 +1,16 @@
 """document_type mapping"""
 
 document_type_mapping = {
-    "laboratory data (measurements, samples, notebooks, protocols, etc.)": "Laboratory data",
-    "summary of research results (experiments, observations)": "Summary of research result",
+    "laboratory data (measurements, samples, notebooks, protocols, etc.)": (
+        "Laboratory data"
+    ),
+    "summary of research results (experiments, observations)": (
+        "Summary of research result"
+    ),
     "databases (content)": "Database",
-    "text documents (notes, descriptions, specifications, procedures, protocols)": "Text document",
+    "text documents (notes, descriptions, specifications, procedures, protocols)": (
+        "Text document"
+    ),
     "pictures": "Image",
     "numerical data (statistics)": "Numerical data",
     "audio and video recordings": "Audiovisual",
