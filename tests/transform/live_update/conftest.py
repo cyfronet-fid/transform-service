@@ -116,7 +116,9 @@ def interoperability_guideline_resource() -> Dict:
         ],
         "description": "00_test_00",
         "domain": "scientific_domain-agricultural_sciences",
-        "eoscGuidelineType": "ir_eosc_guideline_type-eosc_core_interoperability_guideline",
+        "eoscGuidelineType": (
+            "ir_eosc_guideline_type-eosc_core_interoperability_guideline"
+        ),
         "eoscIntegrationOptions": ["00_test_00"],
         "id": "eosc.b3f181d889c35a6b4cceeefb57f88ee4",
         "identifierInfo": {
