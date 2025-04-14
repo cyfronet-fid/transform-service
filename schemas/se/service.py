@@ -89,6 +89,8 @@ class ServiceSESchema(BaseModel):
     geographical_availabilities: List[str]
     horizontal: bool
     id: str
+    keywords: List[str]
+    keywords_tg: List[str]
     language: List[str]
     open_access: bool
     pid: str

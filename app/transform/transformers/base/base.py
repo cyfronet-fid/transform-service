@@ -54,6 +54,8 @@ class BaseTransformer(ABC):
 
     def apply_common_trans(self, df: DataFrame) -> DataFrame:
         """Apply common transformations"""
+        if "tag_list" in df.columns:
+            df = df.withColumn("keywords", col("tag_list"))
         if self._cols_to_drop:
             df = drop_columns_pyspark(df, self._cols_to_drop)
 
@@ -72,7 +74,6 @@ class BaseTransformer(ABC):
         df = add_tg_fields(df)
         df = replace_empty_str(df)
         df = df.select(sorted(df.columns))
-
         return df
 
     def rename_cols(self, df: DataFrame) -> DataFrame:
