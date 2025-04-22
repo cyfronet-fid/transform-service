@@ -26,6 +26,8 @@ data_source_output_schema = {
     "horizontal": "boolean",
     "id": "string",
     "jurisdiction": "string",
+    "keywords": "array<string>",
+    "keywords_tg": "array<string>",
     "language": "array<string>",
     "last_update": "date",
     "life_cycle_status": "string",

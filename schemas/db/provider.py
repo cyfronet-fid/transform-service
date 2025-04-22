@@ -104,6 +104,7 @@ class ProviderDBSchema(BaseModel):
     esfri_type: str
     hosting_legal_entity: str
     id: int
+    keywords: List[str]
     legal_entity: bool
     legal_status: str
     meril_scientific_domains: List[str]

@@ -179,6 +179,7 @@ class ServiceDBSchema(BaseModel):
     helpdesk_url: AnyHttpUrl
     horizontal: bool
     id: int
+    keywords: List[str]
     language: List[str]
     last_update: datetime
     life_cycle_status: str
