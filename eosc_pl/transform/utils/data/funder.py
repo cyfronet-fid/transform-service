@@ -1,8 +1,7 @@
 """Harvest funder as arr[str] from 'funding'"""
 
+from mappings.funder import funder_mapping
 from pandas import DataFrame
-
-from eosc_pl.mappings.funder import funder_mapping
 
 
 def map_funder(funder: str) -> str:

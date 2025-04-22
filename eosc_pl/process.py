@@ -1,19 +1,53 @@
 """Get, transform, upload data"""
 
-import eosc_pl.transform.transformers.pd as trans
-from eosc_pl.transform.transformers.pd.dataset import DATASET
-from eosc_pl.transform.utils.config import DATASET_ADDRESS, get_config
-from eosc_pl.transform.utils.loader import pd_load_datasets
-from eosc_pl.transform.utils.send import send_json_string_to_solr
+import logging
+import sys
 
-if __name__ == "__main__":
-    conf = get_config()
+import transform.transformers.pd as trans
+from settings import get_config, Repository
+from transform.utils.loader import pd_load_datasets, pd_load_datasets_with_pagination
+from transform.utils.send import send_json_string_to_solr
+
+logger = logging.getLogger(__name__)
+
+
+def process(repository):
+    conf = get_config(repository)
+
     # Load
-    datasets_raw = pd_load_datasets(conf[DATASET_ADDRESS])
+    datasets_raw = pd_load_datasets_with_pagination(conf)
 
     # Transform
-    datasets = trans.transformers[DATASET]()(datasets_raw)
+    transformer = trans.transformers.get(repository)
+    if not transformer:
+        raise ValueError(f"Transformer for {repository.value} not found.")
+
+    datasets = transformer()(datasets_raw)
 
     # Send
     datasets_json = datasets.to_json(orient="records")
     send_json_string_to_solr(datasets_json, conf)
+
+
+if __name__ == "__main__":
+    repositories = sys.argv[1:]
+
+    if not repositories:
+        repositories = list(Repository)
+
+    for repository in repositories:
+        try:
+            repo_enum = (
+                Repository(repository) if isinstance(repository, str) else repository
+            )
+        except ValueError:
+            logger.error(f"Invalid repository name provided: {repository}")
+            continue
+
+        logger.info(f"Processing data for {repo_enum.value}")
+        try:
+            process(repo_enum)
+        except Exception as e:
+            logger.error(e)
+            continue
+    logger.info("All requested repositories has been proceeded.")
