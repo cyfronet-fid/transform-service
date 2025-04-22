@@ -686,13 +686,12 @@ def add_tg_fields(df: DataFrame) -> DataFrame:
     strings - type used for filtering
     text_general - type used for searching"""
     columns = df.columns
-
     if AUTHOR_NAMES in columns:
         df = df.withColumn(AUTHOR_NAMES_TG, col(AUTHOR_NAMES))
     if KEYWORDS in columns:
         df = df.withColumn(KEYWORDS_TG, col(KEYWORDS))
     if TAG_LIST in columns:
-        df = df.withColumn(TAG_LIST_TG, col(TAG_LIST))
+        df = df.withColumn(TAG_LIST_TG, col(TAG_LIST))  # TODO remove
     if EOSC_IF in columns:
         df = df.withColumn(EOSC_IF_TG, col(EOSC_IF))
     return df

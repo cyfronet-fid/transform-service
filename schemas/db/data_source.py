@@ -187,6 +187,7 @@ class DataSourceDBSchema(BaseModel):
     horizontal: bool
     id: int
     jurisdiction: str
+    keywords: List[str]
     language: List[str]
     last_update: datetime
     life_cycle_status: str

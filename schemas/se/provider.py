@@ -60,6 +60,8 @@ class ProviderSESchema(BaseModel):
     catalogues: List[str]
     description: str
     id: str
+    keywords: List[str]
+    keywords_tg: List[str]
     legal_status: str
     meril_scientific_domains: List[str]
     pid: str
