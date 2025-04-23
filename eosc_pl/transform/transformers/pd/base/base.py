@@ -1,12 +1,20 @@
 # pylint: disable=line-too-long, too-many-arguments), invalid-name
 """Base transformer of pandas df"""
 import json
+import logging
 from abc import ABC, abstractmethod
 
 from pandas import DataFrame
+from transform.utils.consts import AUTHOR_NAMES, AUTHOR_NAMES_TG, KEYWORDS, KEYWORDS_TG
+
+logger = logging.getLogger(__name__)
 
 
-class BaseTransformer(ABC):
+class TransformerException(Exception):
+    pass
+
+
+class BaseDataverseTransformer(ABC):
     """Base pandas transformer class"""
 
     def __init__(
@@ -21,10 +29,21 @@ class BaseTransformer(ABC):
 
     def __call__(self, df: DataFrame) -> DataFrame:
         """Transform resources"""
-        df = self.transform(df)
-        df = self.apply_common_trans(df)
-        df = self.cast_columns(df)
-
+        try:
+            df = self.transform(df)
+        except Exception as e:
+            logger.error(f"transform phase failed: {e}")
+            raise TransformerException from e
+        try:
+            df = self.apply_common_trans(df)
+        except Exception as e:
+            logger.error(f"common_trans fase failed: {e}")
+            raise TransformerException from e
+        try:
+            df = self.cast_columns(df)
+        except Exception as e:
+            logger.error(f"cast_columns fase failed: {e}")
+            raise TransformerException from e
         return df
 
     def __repr__(self):
@@ -32,10 +51,12 @@ class BaseTransformer(ABC):
 
     def apply_common_trans(self, df: DataFrame) -> DataFrame:
         """Apply common transformations"""
+        self.add_tg_fields(df)
         if self._cols_to_drop:
             df = self.drop_columns(df)
         if self._cols_to_rename:
             self.rename_cols(df)
+
         return df
 
     def drop_columns(self, df: DataFrame) -> DataFrame:
@@ -57,6 +78,14 @@ class BaseTransformer(ABC):
         """Map string columns to array columns"""
         for col in cols:
             df[col] = [[row] for row in df[col]]
+
+    @staticmethod
+    def add_tg_fields(df: DataFrame) -> None:
+        """Add text_general fields"""
+        if AUTHOR_NAMES in df.columns:
+            df[AUTHOR_NAMES_TG] = df[AUTHOR_NAMES]
+        if KEYWORDS in df.columns:
+            df[KEYWORDS_TG] = df[KEYWORDS]
 
     @abstractmethod
     def transform(self, df: DataFrame) -> DataFrame:

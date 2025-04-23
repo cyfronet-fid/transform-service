@@ -1,8 +1,7 @@
 """Harvest document_type as arr[str] from 'kindOfDataMain'"""
 
+from mappings.document_type import document_type_mapping
 from pandas import DataFrame
-
-from eosc_pl.mappings.document_type import document_type_mapping
 
 
 def map_document_type(document_type: str) -> str:
