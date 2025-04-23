@@ -3,27 +3,22 @@
 from logging import getLogger
 
 from pandas import DataFrame, to_datetime
+from transform.utils import data
+from transform.utils.consts import (
+    AUTHOR_NAMES,
+    AUTHOR_NAMES_TG,
+    DATASET,
+    KEYWORDS,
+    KEYWORDS_TG,
+    SUBJECTS,
+)
 
-from eosc_pl.transform.transformers.pd.base.base import BaseTransformer
-from eosc_pl.transform.utils.data.affiliation import harvest_affiliation
-from eosc_pl.transform.utils.data.document_type import harvest_document_type
-from eosc_pl.transform.utils.data.funder import harvest_funder
-from eosc_pl.transform.utils.data.language import harvest_language
-from eosc_pl.transform.utils.data.license import harvest_license
-from eosc_pl.transform.utils.data.scientific_domains import harvest_scientific_domains
+from ..base import BaseDataverseTransformer
 
 logger = getLogger(__name__)
 
-DATASET = "DATASET"
 
-AUTHOR_NAMES = "author_names"
-KEYWORDS = "keywords"
-AUTHOR_NAMES_TG = "author_names_tg"
-KEYWORDS_TG = "keywords_tg"
-SUBJECTS = "subjects"
-
-
-class DatasetTransformer(BaseTransformer):
+class RodbukDatasetTransformer(BaseDataverseTransformer):
     """Transformer used to transform training resources"""
 
     def __init__(self):
@@ -33,16 +28,15 @@ class DatasetTransformer(BaseTransformer):
 
     def transform(self, df: DataFrame) -> DataFrame:
         """Apply df transformations"""
-        self.add_tg_fields(df)
         df["datasource_pids"] = [["eosc.cyfronet.rodbuk"]] * len(df)
         df["country"] = [["PL"]] * len(df)
         df["publication_year"] = to_datetime(df["published_at"]).dt.year
-        df["scientific_domains"] = harvest_scientific_domains(df)
-        df["funder"] = harvest_funder(df)
-        df["document_type"] = harvest_document_type(df)
-        df["language"] = harvest_language(df)
-        df["affiliation"] = harvest_affiliation(df)
-        df["license"] = harvest_license(df)
+        df["scientific_domains"] = data.harvest_scientific_domains(df)
+        df["funder"] = data.harvest_funder(df)
+        df["document_type"] = data.harvest_document_type(df)
+        df["language"] = data.harvest_language(df)
+        df["affiliation"] = data.harvest_affiliation(df)
+        df["license"] = data.harvest_license(df)
         self.transform_global_id(df)
         self.check_subjects_empty(df)
         self.serialize(df, ["contacts", "publications"])
@@ -88,12 +82,6 @@ class DatasetTransformer(BaseTransformer):
         df["global_id"] = df["global_id"].str.replace("^doi:", "", regex=True)
         df["id"] = df["global_id"]  # We still need unique identifier
         # TODO ID shouldn't be taken from DOIs
-
-    @staticmethod
-    def add_tg_fields(df: DataFrame) -> None:
-        """Add text_general fields"""
-        df[AUTHOR_NAMES_TG] = df["authors"]
-        df[KEYWORDS_TG] = df[KEYWORDS]
 
     @staticmethod
     def check_subjects_empty(df: DataFrame) -> None:
