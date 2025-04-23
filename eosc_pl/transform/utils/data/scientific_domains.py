@@ -2,9 +2,8 @@
 
 from collections import defaultdict
 
+from mappings.scientific_domains import mp_sd_structure, oecd_mapping
 from pandas import DataFrame
-
-from eosc_pl.mappings.scientific_domains import mp_sd_structure, oecd_mapping
 
 
 def harvest_scientific_domains(df: DataFrame) -> list[list[str]] | list[str]:

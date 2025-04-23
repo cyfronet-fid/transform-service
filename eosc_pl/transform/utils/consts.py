@@ -1,0 +1,6 @@
+DATASET = "DATASET"
+AUTHOR_NAMES = "author_names"
+KEYWORDS = "keywords"
+AUTHOR_NAMES_TG = "author_names_tg"
+KEYWORDS_TG = "keywords_tg"
+SUBJECTS = "subjects"
