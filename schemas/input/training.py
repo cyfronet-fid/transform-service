@@ -126,7 +126,7 @@ class TrainingInputSchema(BaseModel):
     alternativeIdentifiers: List[AlternativeIdentifier]
     authors: List[str]
     catalogueId: str
-    contact: Union[TrainingContact, str]
+    contact: Union[TrainingContact, str]  # Authorization needed
     contentResourceTypes: List[str]
     description: str
     duration: str

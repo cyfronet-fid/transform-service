@@ -1,7 +1,7 @@
 # pylint: disable=line-too-long, wildcard-import, invalid-name, unused-wildcard-import, duplicate-code
 """Transform trainings"""
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from itertools import chain
 from logging import getLogger
 
@@ -79,7 +79,7 @@ class TrainingTransformer(BaseTransformer):
         df = self.map_lang(df)
         df = self.map_resource_type(df)
         df = self.map_sci_domains(df)
-        df = self.ts_to_iso(df)
+        df = self.standardize_publication_date(df)
         df = self.serialize_alternative_ids(df, ALTERNATIVE_IDS)
         df = self.map_providers_and_orgs(df)
 
@@ -303,15 +303,15 @@ class TrainingTransformer(BaseTransformer):
 
         return df.drop(SCIENTIFIC_DOMAINS)
 
-    def ts_to_iso(self, df: DataFrame) -> DataFrame:
-        """Reformat certain columns from unix ts into iso format
-        timestamp is provided with millisecond-precision -> 13digits"""
+    def standardize_publication_date(self, df: DataFrame) -> DataFrame:
+        """Convert ISO datetime strings with offsets to UTC-aware datetime objects (for Spark TimestampType)."""
         pub_date_raw = df.select(PUBLICATION_DATE).collect()
+
         pub_date_column = [
-            parser.parse(
-                datetime.utcfromtimestamp(int(row) / 1000).isoformat(timespec="seconds")
-            )
-            for row in chain.from_iterable(pub_date_raw)
+            parser.isoparse(row[PUBLICATION_DATE])
+            .astimezone(timezone.utc)
+            .replace(microsecond=0)
+            for row in pub_date_raw
         ]
         self.harvested_properties[PUBLICATION_DATE] = pub_date_column
 
@@ -344,7 +344,7 @@ class TrainingTransformer(BaseTransformer):
         Note: organisations are providers - and they are mandatory, providers are not"""
 
         def _map(pids_list: str | list[str]) -> list[str]:
-            """Map list of pids into a list of names"""
+            """Map list of pids into a list of names."""
             if isinstance(pids_list, str):
                 pids_list = [pids_list]
             output = []
@@ -357,6 +357,15 @@ class TrainingTransformer(BaseTransformer):
             return output
 
         providers_mapping = get_providers_mapping()
+
+        if not providers_mapping:
+            logger.warning("Providers mapping is empty, applying fallback values.")
+            row_count = df.count()
+            self.harvested_properties[PROVIDERS] = [[] for _ in range(row_count)]
+            self.harvested_properties[RESOURCE_ORGANISATION] = [
+                "" for _ in range(row_count)
+            ]
+            return df.drop(PROVIDERS).drop(RESOURCE_ORGANISATION)
 
         for _col in (PROVIDERS, RESOURCE_ORGANISATION):
             pids_col = df.select(_col).collect()

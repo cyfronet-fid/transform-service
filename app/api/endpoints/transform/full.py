@@ -60,7 +60,6 @@ async def full_update(
 async def update_single_col(data_type: str, tasks_id: dict) -> None:
     """Update whole, single collection"""
     data_address = settings.COLLECTIONS[data_type]["ADDRESS"]
-
     data = await get_data(data_type, data_address)
 
     if data:
