@@ -11,7 +11,7 @@ class GuidelineInputSchema(BaseModel):
     Pydantic model representing the expected input schema for a interoperability guideline.
 
     Attributes:
-        alternativeIdentifiers (Listń):
+        alternativeIdentifiers (List):
             A list of alternative identifiers for the guideline.
         catalogueId (str):
             The catalogue identifier for the guideline.
@@ -50,6 +50,7 @@ class GuidelineInputSchema(BaseModel):
     """
 
     # TODO make it more detailed
+    # Authorization does NOT provide any more data from the API
     alternativeIdentifiers: List
     catalogueId: str
     created: datetime

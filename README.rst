@@ -128,14 +128,41 @@ Relations
 
 Data from API
 -------------
-
+Marketplace
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 - ``MP_API_ADDRESS``: ``AnyUrl = "https://marketplace.sandbox.eosc-beyond.eu"`` - A Marketplace API address.
 - ``MP_API_TOKEN``: ``str`` - An authorization token for the Marketplace API.
+
+Provider Component
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 - ``GUIDELINE_ADDRESS``: ``AnyUrl = "https://integration.providers.sandbox.eosc-beyond.eu/api/public/interoperabilityRecord/all?catalogue_id=all&active=true&suspended=false&quantity=10000"`` - A full address to get all interoperability guidelines **endpoint**.
 - ``TRAINING_ADDRESS``: ``AnyUrl = "https://integration.providers.sandbox.eosc-beyond.eu/api/public/trainingResource/all?catalogue_id=all&active=true&suspended=false&quantity=10000"`` - A full address to get all trainings **endpoint**.
+Authentication (Optional)
+"""""""""""""""""""""""""""""""""""""""""""
+If the target endpoint requires authentication, the following settings can be used to enable token-based access:
+
+- ``PC_AUTH``: ``bool = False``
+  Enables or disables authentication. Set to `True` to retrieve a bearer token before calling the API.
+
+- ``PC_REFRESH_TOKEN``: ``str = ""``
+  A valid **refresh token** used to obtain an access token.
+
+- ``PC_TOKEN_URL``: ``str = "https://core-proxy.sandbox.eosc-beyond.eu/auth/realms/core/protocol/openid-connect/token"``
+  The URL to fetch the access token using the refresh token (following the OpenID Connect token flow).
+
+- ``PC_CLIENT_ID``: ``str = "providers-api-token-client"``
+  The client ID registered in the authentication server used to identify the requesting application.
+
+If authentication is enabled (`PC_AUTH = True`), the application will request a bearer token using the provided credentials and attach it to the request header as:
+
+.. code-block:: python
+
+    headers["Authorization"] = f"Bearer {access_token}"
+
+If the token request fails, a `requests.HTTPError` is raised.
 
 Transformation General Settings
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-------------
 - ``INPUT_FORMAT``: ``str = "json"`` - Format of the input data files.
 - ``OUTPUT_FORMAT``: ``str = "json"`` - Format of the output data files.
 

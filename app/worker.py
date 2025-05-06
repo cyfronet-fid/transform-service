@@ -27,6 +27,7 @@ celery.conf.broker_url = os.environ.get("CELERY_BROKER_URL", "redis://localhost:
 celery.conf.result_backend = os.environ.get(
     "CELERY_RESULT_BACKEND", "redis://localhost:6379"
 )
+celery.conf.broker_connection_retry_on_startup = True
 
 
 @after_setup_logger.connect()

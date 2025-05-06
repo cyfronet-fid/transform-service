@@ -15,7 +15,9 @@ logger = logging.getLogger(__name__)
 def _get_params(per_page: int, start: int, repository: Repository) -> str:
     repo_to_params_map = {
         Repository.REPOD: "?q=*&type=dataset&per_page={per_page}&start={start}",
-        Repository.RODBUK: "?q=*&type=dataset&per_page={per_page}&metadata_fields=citation:*",
+        Repository.RODBUK: (
+            "?q=*&type=dataset&per_page={per_page}&metadata_fields=citation:*"
+        ),
     }
     params_string = repo_to_params_map[repository]
     return params_string.format(per_page=per_page, start=start)

@@ -1519,6 +1519,7 @@ sd_training_temp_mapping = {
         "Natural Sciences>Earth & Related Environmental Sciences"
     ),
     "natural_sciences-physical_sciences": "Natural Sciences>Physical Sciences",
+    "natural_sciences-biological_sciences": "Natural Sciences>Biological Sciences",
     "other": "Other",
     "other-other": "Other>Other",
 }

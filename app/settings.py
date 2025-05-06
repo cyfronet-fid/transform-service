@@ -81,6 +81,12 @@ class GlobalSettings(BaseSettings):
     MP_API_TOKEN: str = ""
 
     # - Provider Component
+    PC_AUTH: bool = True
+    PC_REFRESH_TOKEN: str = ""
+    PC_TOKEN_URL: str = (
+        "https://core-proxy.sandbox.eosc-beyond.eu/auth/realms/core/protocol/openid-connect/token"
+    )
+    PC_CLIENT_ID: str = "providers-api-token-client"
     GUIDELINE_ADDRESS: AnyUrl = (
         "https://integration.providers.sandbox.eosc-beyond.eu/api/public/interoperabilityRecord/all?catalogue_id=all&active=true&suspended=false&quantity=10000"
     )
