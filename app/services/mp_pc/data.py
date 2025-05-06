@@ -5,6 +5,7 @@ from logging import getLogger
 
 import requests
 
+from app.services.mp_pc.pc import get_access_token_from_refresh_token
 from app.settings import settings
 
 logger = getLogger(__name__)
@@ -13,6 +14,9 @@ logger = getLogger(__name__)
 async def get_data(data_type: str, data_address: str) -> list[dict] | None:
     """Get data from the APIs of both MP and PC"""
     try:
+        headers = {
+            "accept": "application/json",
+        }
         if data_type in (
             settings.SERVICE,
             settings.DATASOURCE,
@@ -21,18 +25,29 @@ async def get_data(data_type: str, data_address: str) -> list[dict] | None:
             settings.BUNDLE,
             settings.CATALOGUE,
         ):
-            headers = {
-                "accept": "application/json",
-                "X-User-Token": settings.MP_API_TOKEN,
-            }
+            headers["X-User-Token"] = settings.MP_API_TOKEN
             data = requests.get(
                 data_address,
                 headers=headers,
                 timeout=1000,
             ).json()
             await check_mp_auth(data)
+        elif data_type in (settings.TRAINING, settings.GUIDELINE):
+            if settings.PC_AUTH:
+                access_token = get_access_token_from_refresh_token(
+                    refresh_token=settings.PC_REFRESH_TOKEN,
+                    client_id=settings.PC_CLIENT_ID,
+                    token_url=settings.PC_TOKEN_URL,
+                )
+                if not access_token:
+                    raise requests.HTTPError(
+                        "Failed to retrieve access token using refresh token"
+                    )
+                headers["Authorization"] = f"Bearer {access_token}"
+
+            response = requests.get(data_address, headers=headers, timeout=20)
+            data = response.json().get("results", [])
         else:
-            # Trainings, guidelines
             data = requests.get(data_address, timeout=20).json()["results"]
 
     except requests.ConnectionError:
