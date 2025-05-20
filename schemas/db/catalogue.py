@@ -38,6 +38,8 @@ class CatalogueDBSchema(BaseModel):
             A list of multimedia URLs related to the catalogue.
         networks (Optional[List[str]]):
             A list of networks associated with the catalogue.
+        node (Optional[str]):
+            Name of the node associated with the catalogue.
         participating_countries (Optional[List[str]]):
             A list of countries participating in the catalogue.
         pid (str):
@@ -80,6 +82,7 @@ class CatalogueDBSchema(BaseModel):
     legal_status: Optional[str]
     multimedia_urls: Optional[List[BasicURL]]
     networks: Optional[List[str]]
+    node: Optional[str]
     participating_countries: Optional[List[str]]
     pid: str
     publication_date: datetime  # TODO check date format

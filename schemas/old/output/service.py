@@ -34,6 +34,7 @@ service_output_schema = {
     "maintenance_url": "string",
     "manual_url": "string",
     "multimedia_urls": "array<string>",
+    "node": "string",
     "offers_count": "bigint",
     "open_access": "boolean",
     "open_source_technologies": "array<string>",

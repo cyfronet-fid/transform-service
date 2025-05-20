@@ -1,9 +1,9 @@
 """Service expected search engine schema"""
 
 from datetime import date
-from typing import List
+from typing import List, Optional
 
-from pydantic import AnyHttpUrl, BaseModel, EmailStr
+from pydantic import BaseModel
 
 
 class ServiceSESchema(BaseModel):
@@ -39,6 +39,8 @@ class ServiceSESchema(BaseModel):
             Unique identifier for the service.
         language (List[str]):
             A list of languages in which the service is available. Used in filters and resource view.
+        node (Optional[str]):
+            Name of the node associated with the service. Used in filters.
         open_access (bool):
             # TODO is it used?
             Indicates whether the service is open access.
@@ -92,6 +94,7 @@ class ServiceSESchema(BaseModel):
     keywords: List[str]
     keywords_tg: List[str]
     language: List[str]
+    node: Optional[str]
     open_access: bool
     pid: str
     platforms: List[str]

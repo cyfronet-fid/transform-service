@@ -24,6 +24,7 @@ provider_output_schema = {
     "multimedia_urls": "array<string>",
     "national_roadmaps": "array<string>",
     "networks": "array<string>",
+    "node": "string",
     "participating_countries": "array<string>",
     "pid": "string",
     "popularity": "int",

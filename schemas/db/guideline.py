@@ -1,7 +1,7 @@
 """Interoperability Guideline expected db schema"""
 
 from datetime import datetime
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from pydantic import BaseModel
 
@@ -31,6 +31,8 @@ class GuidelineDBSchema(BaseModel):
             Unique identifier for the guideline.
         identifierInfo (Dict):
             Information about the identifier of the guideline.
+        node (Optional[str]):
+            Name of the node associated with the guideline.
         providers (str):
             The provider identifier for the guideline.
         publication_year (int):
@@ -62,6 +64,7 @@ class GuidelineDBSchema(BaseModel):
     eosc_integration_options: List
     id: str
     identifierInfo: Dict
+    node: Optional[str]
     providers: str
     publication_year: int
     relatedStandards: List

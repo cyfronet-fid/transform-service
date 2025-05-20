@@ -14,6 +14,7 @@ catalogue_input_schema = {
     "legal_status": ["string"],
     "multimedia_urls": ["array<struct<name:string,url:string>>"],
     "name": ["string"],
+    "node": ["string"],
     "networks": ["array<string>"],
     "participating_countries": ["array<string>"],
     "pid": ["string"],

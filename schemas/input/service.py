@@ -1,7 +1,7 @@
 """Service expected input schema"""
 
 from datetime import datetime
-from typing import List, Union
+from typing import List, Optional, Union
 
 from pydantic import AnyHttpUrl, BaseModel, EmailStr
 
@@ -70,6 +70,8 @@ class ServiceInputSchema(BaseModel):
             A list of multimedia URLs related to the service.
         name (str):
             The name of the service.
+        node (Optional[str]):
+            Name of the node associated with the service.
         offers_count (int):
             The count of offers available for the service.
         open_source_technologies (List[str]):
@@ -180,6 +182,7 @@ class ServiceInputSchema(BaseModel):
     manual_url: AnyHttpUrl
     multimedia_urls: Union[List[BasicURL], List[str]]
     name: str
+    node: Optional[str]
     offers_count: int
     open_source_technologies: List[str]
     order_type: str

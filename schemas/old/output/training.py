@@ -20,6 +20,7 @@ training_output_schema = {
     "learning_outcomes": "array<string>",
     "level_of_expertise": "string",
     "license": "string",
+    "node": "string",
     "open_access": "boolean",
     "providers": "array<string>",
     "publication_date": "date",

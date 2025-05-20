@@ -1,9 +1,9 @@
 """Expected db training schema"""
 
 from datetime import datetime
-from typing import List, Union
+from typing import List, Optional, Union
 
-from pydantic import AnyHttpUrl, BaseModel, EmailStr
+from pydantic import AnyHttpUrl, BaseModel
 
 from schemas.input.training import (
     AlternativeIdentifier,
@@ -51,6 +51,8 @@ class TrainingDBSchema(BaseModel):
             A list of learning resource types for the training.
         license (str):
             The license under which the training is provided.
+        node (Optional[str]):
+            Name of the node associated with the training.
         open_access (bool):
             Indicates whether the training is open access.
         qualification (List[str]):
@@ -94,6 +96,7 @@ class TrainingDBSchema(BaseModel):
     learning_outcomes: List[str]
     resource_type: List[str]
     license: str
+    node: Optional[str]
     open_access: bool
     qualification: List[str]
     resource_organisation: str

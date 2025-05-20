@@ -1,9 +1,9 @@
 """Provider expected input schema"""
 
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 
-from pydantic import AnyHttpUrl, BaseModel, EmailStr
+from pydantic import AnyHttpUrl, BaseModel
 
 from schemas.common.public_contact import PublicContact
 from schemas.common.url import BasicURL
@@ -52,6 +52,8 @@ class ProviderInputSchema(BaseModel):
             A list of national roadmaps associated with the provider.
         networks (List[str]):
             A list of networks associated with the provider.
+        node (Optional[str]):
+            Name of the node associated with the provider.
         participating_countries (List[str]):
             A list of countries participating in the provider's activities.
         pid (str):
@@ -107,6 +109,7 @@ class ProviderInputSchema(BaseModel):
     name: str
     national_roadmaps: List[str]
     networks: List[str]
+    node: Optional[str]
     participating_countries: List[str]
     pid: str
     postal_code: str

@@ -1,7 +1,7 @@
 """Data source expected search engine schema"""
 
 from datetime import date
-from typing import List
+from typing import List, Optional
 
 from pydantic import AnyHttpUrl, BaseModel, EmailStr
 
@@ -39,6 +39,8 @@ class DataSourceSESchema(BaseModel):
             Unique identifier for the data source.
         language (List[str]):
             A list of languages in which the data source is available. Used in resource view and filters.
+        node (Optional[str]):
+            Name of the node associated with the data source. Used in filters
         open_access (bool):
             TODO Saw no usage in the code. Dive deeper.
             Indicates whether the data source is open access.
@@ -89,6 +91,7 @@ class DataSourceSESchema(BaseModel):
     keywords: List[str]
     keywords_tg: List[str]
     language: List[str]
+    node: Optional[str]
     open_access: bool
     pid: str
     platforms: List[str]

@@ -1,7 +1,7 @@
 """Provider expected search engine schema"""
 
 from datetime import date
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel
 
@@ -29,6 +29,8 @@ class ProviderSESchema(BaseModel):
             The legal status of the provider. Used in filters and tags.
         meril_scientific_domains (List[str]):
             # TODO add description. Used in filters and tags.
+        node (Optional[str]):
+            Name of the node associated with the provider. Used in filters.
         pid (str):
             Persistent identifier for the provider. Used in resource view.
         popularity (int):
@@ -64,6 +66,7 @@ class ProviderSESchema(BaseModel):
     keywords_tg: List[str]
     legal_status: str
     meril_scientific_domains: List[str]
+    node: Optional[str]
     pid: str
     popularity: int
     publication_date: date

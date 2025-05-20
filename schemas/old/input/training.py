@@ -22,6 +22,7 @@ training_input_schema = {
     "learningOutcomes": ["array<string>"],
     "learningResourceTypes": ["array<string>"],
     "license": ["string"],
+    "node": ["string"],
     "qualifications": ["array<string>"],
     "resourceOrganisation": ["string"],
     "resourceProviders": ["array<string>"],

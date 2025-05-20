@@ -1,7 +1,7 @@
 """Input training expected schema"""
 
 from datetime import datetime
-from typing import List, Union
+from typing import List, Optional, Union
 
 from pydantic import AnyHttpUrl, BaseModel, EmailStr
 
@@ -102,6 +102,8 @@ class TrainingInputSchema(BaseModel):
             A list of learning resource types for the training.
         license (str):
             The license under which the training is provided.
+        node (Optional[str]):
+            Name of the node associated with the training.
         qualifications (List[str]):
             A list of qualifications associated with the training.
         resourceOrganisation (str):
@@ -139,6 +141,7 @@ class TrainingInputSchema(BaseModel):
     learningOutcomes: List[str]
     learningResourceTypes: List[str]
     license: str
+    node: Optional[str]
     qualifications: List[str]
     resourceOrganisation: str
     resourceProviders: List[str]

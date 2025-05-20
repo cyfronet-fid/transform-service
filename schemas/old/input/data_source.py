@@ -30,6 +30,7 @@ data_source_input_schema = {
     "manual_url": ["string"],
     "multimedia_urls": ["array<struct<name:string,url:string>>", "array<string>"],
     "name": ["string"],
+    "node": ["string"],
     "open_source_technologies": ["array<string>"],
     "order_type": ["string"],
     "order_url": ["string"],
