@@ -34,6 +34,7 @@ data_source_output_schema = {
     "maintenance_url": "string",
     "manual_url": "string",
     "multimedia_urls": "array<string>",
+    "node": "string",
     "open_access": "boolean",
     "open_source_technologies": "array<string>",
     "order_url": "string",

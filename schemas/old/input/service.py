@@ -30,6 +30,7 @@ service_input_schema = {
     "manual_url": ["string"],
     "multimedia_urls": ["array<struct<name:string,url:string>>", "array<string>"],
     "name": ["string"],
+    "node": ["string"],
     "offers_count": ["bigint"],
     "open_source_technologies": ["array<string>"],
     "order_type": ["string"],

@@ -1,7 +1,7 @@
 """Catalogue expected search engine schema"""
 
 from datetime import date
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel
 
@@ -23,6 +23,8 @@ class CatalogueSESchema(BaseModel):
             The same data as 'keywords' but in solr: text general type. Used in searching.
         legal_status (str):
             The legal status of the catalogue. Used in tags.
+        node (Optional[str]):
+            Name of the node associated with the catalogue. Used in filters.
         pid (str):
             The persistent identifier of the catalogue. Used in the resource view.
         publication_date (date):
@@ -41,6 +43,7 @@ class CatalogueSESchema(BaseModel):
     keywords: List[str]
     keywords_tg: List[str]
     legal_status: str
+    node: Optional[str]
     pid: str
     publication_date: date
     scientific_domains: List[str]

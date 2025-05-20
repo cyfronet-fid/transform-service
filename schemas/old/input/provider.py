@@ -21,6 +21,7 @@ provider_input_schema = {
     "name": ["string"],
     "national_roadmaps": ["array<string>"],
     "networks": ["array<string>"],
+    "node": ["string"],
     "participating_countries": ["array<string>"],
     "pid": ["string"],
     "postal_code": ["string"],

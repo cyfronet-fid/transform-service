@@ -5,7 +5,7 @@ from logging import getLogger
 
 import requests
 
-from app.services.mp_pc.pc import get_access_token_from_refresh_token
+from app.services.mp_pc.pc import get_access_token_from_refresh_token, map_nodes
 from app.settings import settings
 
 logger = getLogger(__name__)
@@ -46,7 +46,8 @@ async def get_data(data_type: str, data_address: str) -> list[dict] | None:
                 headers["Authorization"] = f"Bearer {access_token}"
 
             response = requests.get(data_address, headers=headers, timeout=20)
-            data = response.json().get("results", [])
+            full_data = map_nodes(response.json())
+            data = full_data.get("results", [])
         else:
             data = requests.get(data_address, timeout=20).json()["results"]
 

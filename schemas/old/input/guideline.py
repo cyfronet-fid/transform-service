@@ -12,6 +12,7 @@ guideline_input_schema = {
     "eoscIntegrationOptions": ["list"],
     "id": ["str"],
     "identifierInfo": ["dict"],
+    "node": ["str"],
     "providerId": ["str"],
     "publicationYear": ["int"],
     "relatedStandards": ["list"],

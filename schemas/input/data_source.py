@@ -1,7 +1,7 @@
 """Data source expected input schema"""
 
 from datetime import datetime
-from typing import List, Union
+from typing import List, Optional, Union
 
 from pydantic import AnyHttpUrl, BaseModel, EmailStr
 
@@ -85,6 +85,8 @@ class DataSourceInputSchema(BaseModel):
             A list of multimedia URLs related to the data source.
         name (str):
             The name of the data source.
+        node (Optional[str]):
+            Name of the node associated with the data source.
         open_source_technologies (List[str]):
            # TODO Add description.
         order_type (str):
@@ -201,6 +203,7 @@ class DataSourceInputSchema(BaseModel):
     manual_url: AnyHttpUrl
     multimedia_urls: Union[List[BasicURL], List[str]]
     name: str
+    node: Optional[str]
     open_source_technologies: List[str]
     order_type: str
     order_url: AnyHttpUrl

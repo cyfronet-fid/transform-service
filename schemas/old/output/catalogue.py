@@ -8,6 +8,7 @@ catalogue_output_schema = {
     "keywords": "array<string>",
     "keywords_tg": "array<string>",
     "legal_status": "string",
+    "node": "string",
     "pid": "string",
     "publication_date": "date",
     "scientific_domains": "array<string>",

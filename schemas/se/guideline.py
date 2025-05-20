@@ -1,7 +1,7 @@
 """Guideline expected search engine schema"""
 
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel
 
@@ -47,6 +47,8 @@ class GuidelineSESchema(BaseModel):
             A list of EOSC integration options.
         id (str):
             Unique identifier for the guideline.
+        node (Optional[str]):
+            Name of the node associated with the guideline. Used in filters.
         provider (str):  # TODO delete
             The provider associated with the guideline.
         providers (List[str]):
@@ -99,6 +101,7 @@ class GuidelineSESchema(BaseModel):
     eosc_guideline_type: str
     eosc_integration_options: List[str]
     id: str
+    node: Optional[str]
     provider: str  # TODO delete
     providers: List[str]
     publication_date: datetime
@@ -119,6 +122,8 @@ class GuidelineSESchema(BaseModel):
     """
     Transformations necessary to convert GuidelineInputSchema to GuidelineSESchema
         - add type = "interoperability guideline"
+        - do mappings:
+            - map_nodes
         - rename:
             "alternativeIdentifiers": "alternative_ids",
             "publicationYear": "publication_year",

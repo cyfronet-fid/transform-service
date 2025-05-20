@@ -40,14 +40,14 @@ async def full_update(
     if data_type == "all":
         # Update all collections
         for col in (
+            settings.CATALOGUE,
+            settings.PROVIDER,
             settings.SERVICE,
             settings.DATASOURCE,
-            settings.PROVIDER,
             settings.OFFER,
             settings.BUNDLE,
             settings.GUIDELINE,
             settings.TRAINING,
-            settings.CATALOGUE,
         ):
             await update_single_col(col, tasks_ids)
     else:

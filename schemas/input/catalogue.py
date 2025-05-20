@@ -38,6 +38,8 @@ class CatalogueInputSchema(BaseModel):
             A list of multimedia URLs related to the catalogue.
         name (str):
             The name of the catalogue.
+        node (Optional[str]):
+            Name of the node associated with the catalogue.
         networks (Optional[List[str]]):
             A list of networks associated with the catalogue.
         participating_countries (Optional[List[str]]):
@@ -78,6 +80,7 @@ class CatalogueInputSchema(BaseModel):
     legal_status: Optional[str]
     multimedia_urls: Optional[List[BasicURL]]
     name: str
+    node: Optional[str]
     networks: Optional[List[str]]
     participating_countries: Optional[List[str]]
     pid: str
