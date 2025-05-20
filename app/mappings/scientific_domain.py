@@ -1485,6 +1485,15 @@ sd_training_temp_mapping = {
     "agricultural_sciences-agriculture_forestry_and_fisheries": (
         "Agricultural Sciences>Agriculture, Forestry & Fisheries"
     ),
+    "agricultural_sciences-animal_and_dairy_sciences": (
+        "Agricultural Sciences>Animal & Dairy Sciences"
+    ),
+    "agricultural_sciences-other_agricultural_sciences": (
+        "Agricultural Sciences>Other Agricultural Sciences"
+    ),
+    "agricultural_sciences-veterinary_sciences": (
+        "Agricultural Sciences>Veterinary Sciences"
+    ),
     "engineering_and_technology": "Engineering & Technology",
     "engineering_and_technology-chemical_engineering": (
         "Engineering & Technology>Chemical Engineering"
@@ -1495,12 +1504,34 @@ sd_training_temp_mapping = {
     "engineering_and_technology-electrical_electronic_and_information_engineering": (
         "Engineering & Technology>Electrical, Electronic & Information Engineering"
     ),
+    "engineering_and_technology-environmental_biotechnology": (
+        "Engineering & Technology>Environmental Biotechnology"
+    ),
+    "engineering_and_technology-environmental_engineering": (
+        "Engineering & Technology>Environmental Engineering"
+    ),
+    "engineering_and_technology-industrial_biotechnology": (
+        "Engineering & Technology>Industrial Biotechnology"
+    ),
+    "engineering_and_technology-materials_engineering": (
+        "Engineering & Technology>Materials Engineering"
+    ),
+    "engineering_and_technology-mechanical_engineering": (
+        "Engineering & Technology>Mechanical Engineering"
+    ),
+    "engineering_and_technology-medical_engineering": (
+        "Engineering & Technology>Medical Engineering"
+    ),
+    "engineering_and_technology-nanotechnology": (
+        "Engineering & Technology>Nanotechnology"
+    ),
     "engineering_and_technology-other_engineering_and_technology_sciences": (
         "Engineering & Technology>Other Engineering & Technology Sciences"
     ),
     "generic": "Generic",
     "generic-generic": "Generic>Generic",
     "humanities": "Humanities",
+    "humanities-arts": "Humanities>Arts",
     "humanities-history_and_archaeology": "Humanities>History & Archaeology",
     "humanities-languages_and_literature": "Humanities>Languages & Literature",
     "humanities-other_humanities": "Humanities>Other Humanities",
@@ -1511,15 +1542,46 @@ sd_training_temp_mapping = {
     "medical_and_health_sciences-basic_medicine": (
         "Medical & Health Sciences>Basic Medicine"
     ),
+    "medical_and_health_sciences-clinical_medicine": (
+        "Medical & Health Sciences>Clinical Medicine"
+    ),
+    "medical_and_health_sciences-health_sciences": (
+        "Medical & Health Sciences>Health Sciences"
+    ),
+    "medical_and_health_sciences-medical_biotechnology": (
+        "Medical & Health Sciences>Medical Biotechnology"
+    ),
     "medical_and_health_sciences-other_medical_sciences": (
         "Medical & Health Sciences>Other Medical Sciences"
     ),
     "natural_sciences": "Natural Sciences",
+    "natural_sciences-biological_sciences": "Natural Sciences>Biological Sciences",
+    "natural_sciences-chemical_sciences": "Natural Sciences>Chemical Sciences",
+    "natural_sciences-computer_and_information_sciences": (
+        "Natural Sciences>Computer & Information Sciences"
+    ),
     "natural_sciences-earth_and_related_environmental_sciences": (
         "Natural Sciences>Earth & Related Environmental Sciences"
     ),
+    "natural_sciences-mathematics": "Natural Sciences>Mathematics",
+    "natural_sciences-other_natural_sciences": (
+        "Natural Sciences>Other Natural Sciences"
+    ),
     "natural_sciences-physical_sciences": "Natural Sciences>Physical Sciences",
-    "natural_sciences-biological_sciences": "Natural Sciences>Biological Sciences",
     "other": "Other",
     "other-other": "Other>Other",
+    "social_sciences": "Social Sciences",
+    "social_sciences-economics_and_business": "Social Sciences>Economics & Business",
+    "social_sciences-educational_sciences": "Social Sciences>Educational Sciences",
+    "social_sciences-law": "Social Sciences>Law",
+    "social_sciences-media_and_communications": (
+        "Social Sciences>Media & Communications"
+    ),
+    "social_sciences-other_social_sciences": "Social Sciences>Other Social Sciences",
+    "social_sciences-political_sciences": "Social Sciences>Political Sciences",
+    "social_sciences-psychology": "Social Sciences>Psychology",
+    "social_sciences-social_and_economic_geography": (
+        "Social Sciences>Social & Economic Geography"
+    ),
+    "social_sciences-sociology": "Social Sciences>Sociology",
 }

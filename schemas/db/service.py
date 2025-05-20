@@ -1,7 +1,7 @@
 """Service expected db schema"""
 
 from datetime import datetime
-from typing import List, Union
+from typing import List, Optional, Union
 
 from pydantic import AnyHttpUrl, BaseModel, EmailStr
 
@@ -68,6 +68,8 @@ class ServiceDBSchema(BaseModel):
             The URL for the service manual.
         multimedia_urls (Union[List[BasicURL], List[str]]):
             A list of multimedia URLs related to the service.
+        node (Optional[str]):
+            Name of the node associated with the service.
         offers_count (int):
             The count of offers available for the service.
         open_access (bool):
@@ -186,6 +188,7 @@ class ServiceDBSchema(BaseModel):
     maintenance_url: AnyHttpUrl
     manual_url: AnyHttpUrl
     multimedia_urls: Union[List[BasicURL], List[str]]
+    node: Optional[str]
     offers_count: int
     open_access: bool
     open_source_technologies: List[str]

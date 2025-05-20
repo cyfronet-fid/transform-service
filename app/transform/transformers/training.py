@@ -352,7 +352,9 @@ class TrainingTransformer(BaseTransformer):
                 if pid in providers_mapping:
                     output.append(providers_mapping[pid])
                 else:
-                    logger.warning(f"Unknown training's {pid=}")
+                    logger.warning(
+                        f"Unknown provider or organisation {pid=}, for a training"
+                    )
                     output.append(pid)
             return output
 

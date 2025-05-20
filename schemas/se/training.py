@@ -1,7 +1,7 @@
 """Training expected search engine schema"""
 
 from datetime import date
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel
 
@@ -41,6 +41,8 @@ class TrainingSESchema(BaseModel):
             The level of expertise required for the training. Used in filters.
         license (str):
             The license under which the training is provided. Used in filters and resource view.
+        node (Optional[str]):
+            Name of the node associated with the training.
         open_access (bool):
             # TODO is it used?
             Indicates whether the training is open access.
@@ -86,6 +88,7 @@ class TrainingSESchema(BaseModel):
     language: List[str]
     level_of_expertise: str
     license: str
+    node: Optional[str]
     open_access: bool
     providers: List[str]
     publication_date: date
@@ -121,6 +124,7 @@ class TrainingSESchema(BaseModel):
             - ts_to_iso
             - serialize_alternative_ids
             - map_providers_and_orgs
+            - map_nodes
         - rename:
             "accessRights": "best_access_right",
             "alternativeIdentifiers": "alternative_ids",
