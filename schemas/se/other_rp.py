@@ -1,7 +1,7 @@
 """Other research product expected search engine schema"""
 
 from datetime import date
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel
 
@@ -46,6 +46,8 @@ class OtherResearchProductSESchema(BaseModel):
             The same data as 'keywords' but in solr text general type. Used in searching.
         language (List[str]):
             A list of languages in which the research product is available. Used in filters and resource view.
+        node (Optional[str]):
+            Name of the node associated with the other_rp.
         open_access (bool):
             # TODO is it used?
             Indicates whether the research product is open access.
@@ -106,6 +108,7 @@ class OtherResearchProductSESchema(BaseModel):
     keywords: List[str]
     keywords_tg: List[str]
     language: List[str]
+    node: Optional[str]
     open_access: bool
     popularity: int
     publication_date: date

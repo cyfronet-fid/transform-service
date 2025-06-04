@@ -84,6 +84,8 @@ class OtherResearchProductDBSchema(BaseModel):
             A list of languages in which the other_rp is available.
         last_update_timestamp (datetime):
             The timestamp of the last update for the other_rp (ISO 8601 format).
+        node (Optional[str]):
+            Name of the node associated with the other_rp.
         open_access (bool):
             Indicator of whether the other_rp is open access.
         original_id (str):
@@ -165,6 +167,7 @@ class OtherResearchProductDBSchema(BaseModel):
     keywords: List[str]
     language: List[str]
     last_update_timestamp: datetime
+    node: Optional[str]
     open_access: bool
     original_id: str
     pid: Optional[List[PID]]

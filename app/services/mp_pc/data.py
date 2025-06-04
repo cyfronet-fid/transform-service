@@ -87,7 +87,6 @@ async def check_mp_auth(data: dict | list[dict]) -> None:
 
 
 def get_data_source_pids() -> list[str]:
-    # TODO add reset pids after full oag transform
     """
     Returns a list of data source PIDs (used for OAG resources), using a singleton pattern.
 
@@ -116,6 +115,12 @@ def get_data_source_pids() -> list[str]:
         )
 
     return get_data_source_pids._instance
+
+
+def reset_data_source_pids_cache():
+    """Resets the singleton cache for data source PIDs."""
+    if hasattr(get_data_source_pids, "_instance"):
+        get_data_source_pids._instance = None
 
 
 def get_providers_mapping() -> dict[str, str] | dict:

@@ -64,6 +64,8 @@ class OtherRPInputSchema(BaseModel):
             The instance details for the other research product.
         keywords (Optional[List[str]]):
             A list of keywords for the other research product.
+        labels (Optional[List[str]]):
+            A list of labels for the dataset. Currently only node is passed.
         language (Optional[Language]):
             The language details for the other research product.
         last_update_timestamp (Optional[int]):
@@ -114,6 +116,7 @@ class OtherRPInputSchema(BaseModel):
     indicator: Optional[Indicator]
     instance: Optional[Instance]
     keywords: Optional[List[str]]
+    labels: Optional[List[str]]
     language: Optional[Language]
     last_update_timestamp: Optional[int]
     main_title: Optional[str]

@@ -63,6 +63,8 @@ class PublicationInputSchema(BaseModel):
             The instance details for the publication.
         keywords (Optional[List[str]]):
             A list of keywords for the publication.
+        labels (Optional[List[str]]):
+            A list of labels for the dataset. Currently only node is passed.
         language (Optional[Language]):
             The language details for the publication.
         last_update_timestamp (Optional[int]):
@@ -110,6 +112,7 @@ class PublicationInputSchema(BaseModel):
     indicator: Optional[Indicator]
     instance: Optional[Instance]
     keywords: Optional[List[str]]
+    labels: Optional[List[str]]
     language: Optional[Language]
     last_update_timestamp: Optional[int]
     main_title: Optional[str]

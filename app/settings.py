@@ -93,6 +93,9 @@ class GlobalSettings(BaseSettings):
     TRAINING_ADDRESS: AnyUrl = (
         "https://integration.providers.sandbox.eosc-beyond.eu/api/public/trainingResource/all?catalogue_id=all&active=true&suspended=false&quantity=10000"
     )
+    NODE_ADDRESS: AnyUrl = (
+        "https://integration.providers.sandbox.eosc-beyond.eu/api/vocabulary/byType/NODE"
+    )
 
     # Transformation General Settings TODO
     # INPUT_FORMAT: str = "json"
