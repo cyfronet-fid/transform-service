@@ -60,6 +60,8 @@ class SoftwareInputSchema(BaseModel):
             The instance details.
         keywords (Optional[List[str]]):
             A list of keywords.
+        labels (Optional[List[str]]):
+            A list of labels for the dataset. Currently only node is passed.
         language (Optional[Language]):
             The language details.
         last_update_timestamp (Optional[int]):
@@ -108,6 +110,7 @@ class SoftwareInputSchema(BaseModel):
     indicator: Optional[Indicator]
     instance: Optional[Instance]
     keywords: Optional[List[str]]
+    labels: Optional[List[str]]
     language: Optional[Language]
     last_update_timestamp: Optional[int]
     main_title: Optional[str]

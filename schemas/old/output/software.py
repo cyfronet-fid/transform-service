@@ -22,6 +22,7 @@ software_output_schema = {
     "keywords": "array<string>",
     "keywords_tg": "array<string>",
     "language": "array<string>",
+    "node": "string",
     "open_access": "boolean",
     "popularity": "int",
     "programming_language": "string",

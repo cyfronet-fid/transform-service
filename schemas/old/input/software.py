@@ -33,6 +33,7 @@ software_input_schema = {
         "array<struct<accessright:struct<code:string,label:string,scheme:string>,alternateIdentifier:array<struct<scheme:string,value:string>>,eoscDsId:array<string>,hostedby:struct<key:string,value:string>,license:string,pid:array<struct<scheme:string,value:string>>,publicationdate:string,refereed:string,type:string,url:array<string>>>"
     ],
     "keywords": ["array<string>"],
+    "labels": ["array<string>"],
     "language": ["struct<code:string,label:string>"],
     "lastupdatetimestamp": ["bigint"],
     "maintitle": ["string"],

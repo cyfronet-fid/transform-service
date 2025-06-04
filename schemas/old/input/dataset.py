@@ -32,6 +32,7 @@ dataset_input_schema = {
         "array<struct<accessright:struct<code:string,label:string,scheme:string,openAccessRoute:string>,alternateIdentifier:array<struct<scheme:string,value:string>>,eoscDsId:array<string>,hostedby:struct<key:string,value:string>,pid:array<struct<scheme:string,value:string>>,publicationdate:string,refereed:string,type:string,url:array<string>,license:string>>"
     ],
     "keywords": ["array<string>"],
+    "labels": ["array<string>"],
     "language": ["struct<code:string,label:string>"],
     "lastupdatetimestamp": ["int"],
     "maintitle": ["string"],

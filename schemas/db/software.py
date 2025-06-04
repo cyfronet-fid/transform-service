@@ -82,6 +82,8 @@ class SoftwareDBSchema(BaseModel):
             A list of languages in which the software is available.
         last_update_timestamp (datetime):
             The timestamp of the last update for the software (ISO 8601 format).
+        node (Optional[str]):
+            Name of the node associated with the software.
         open_access (bool):
             Indicator of whether the software is open access.
         original_id (str):
@@ -164,6 +166,7 @@ class SoftwareDBSchema(BaseModel):
     keywords: List[str]
     language: List[str]
     last_update_timestamp: datetime
+    node: Optional[str]
     open_access: bool
     original_id: str
     pid: Optional[List[PID]]
