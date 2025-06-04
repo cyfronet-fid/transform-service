@@ -10,10 +10,13 @@ from tqdm import tqdm
 import app.transform.transformers as trans
 from app.services.celery.task import CeleryTaskStatus
 from app.services.celery.task_statuses import FAILURE, SUCCESS
+from app.services.mp_pc.data import reset_data_source_pids_cache
+from app.services.mp_pc.node import reset_node_id_name_mapping_cache
 from app.services.s3.connect import connect_to_s3
 from app.services.s3.load import load_file_from_s3
 from app.services.spark.config import apply_spark_conf
 from app.settings import settings
+from app.tasks.utils.align import align_df_schema
 from app.tasks.utils.save_error_log import save_error_log_to_json
 from app.tasks.utils.send import send_merged_data
 from app.transform.transformers.base.base import BaseTransformer
@@ -48,7 +51,6 @@ def transform_data(prev_task_status: dict, req_body: dict) -> dict:
 
         for collection_name, paths in tqdm(prev_task_status["file_paths"].items()):
             if collection_name in trans.transformers.keys():
-                input_schema = settings.COLLECTIONS[collection_name]["INPUT_SCHEMA"]
                 transformer = trans.transformers.get(collection_name)
                 logger.info("Start to process %s collection", collection_name)
 
@@ -63,7 +65,6 @@ def transform_data(prev_task_status: dict, req_body: dict) -> dict:
                             spark,
                             s3_client,
                             collection_name,
-                            input_schema,
                             error_log,
                         )
                         if not df_transformed:
@@ -98,7 +99,7 @@ def transform_data(prev_task_status: dict, req_body: dict) -> dict:
 
                             merged_df, files = None, []
                         else:
-                            logger.info(
+                            logger.debug(
                                 f"Merging next file to satisfy %s minimum records, currently have %s",
                                 req_body["records_threshold"],
                                 merged_df.count(),
@@ -131,6 +132,13 @@ def transform_data(prev_task_status: dict, req_body: dict) -> dict:
         logger.error(f"Data transformation step has failed. Reason: {e}")
         return CeleryTaskStatus(status=FAILURE, reason=str(e)).dict()
 
+    finally:
+        logger.info(
+            "Resetting singleton caches for node mapping and data source PIDs..."
+        )
+        reset_node_id_name_mapping_cache()
+        reset_data_source_pids_cache()
+
 
 def transform_file(
     file_path: str,
@@ -138,7 +146,6 @@ def transform_file(
     spark: SparkSession,
     s3_client: boto3.client,
     collection_name: str,
-    input_schema: dict,
     error_log: dict,
 ) -> Optional[DataFrame]:
     """
@@ -150,7 +157,6 @@ def transform_file(
         spark (SparkSession): Spark session object.
         s3_client (boto3.client): S3 client for loading data.
         collection_name (str): Collection name for logging.
-        input_schema (dict): Input schema for loading data.
         error_log (dict): Dictionary to store transformation errors.
 
     Returns:
@@ -159,10 +165,12 @@ def transform_file(
     try:
         logger.debug("Loading file: %s, collections: %s", file_path, collection_name)
         data = load_file_from_s3(file_path, s3_client)
-        logger.info("Loaded file: %s, collections: %s", file_path, collection_name)
+        logger.debug("Loaded file: %s, collections: %s", file_path, collection_name)
         logger.debug(
             "Transforming file: %s, collections: %s", file_path, collection_name
         )
+        input_schema = settings.COLLECTIONS[collection_name]["INPUT_SCHEMA"]
+        output_schema = settings.COLLECTIONS[collection_name]["OUTPUT_SCHEMA"]
         df = load_request_data(spark, data, input_schema, collection_name)
         df_trans = transformer(spark)(df)
         if not df_trans:
@@ -172,12 +180,12 @@ def transform_file(
                 collection_name,
             )
             return
-        logger.info(
+        logger.debug(
             "Transforming was successful file: %s, collections: %s",
             file_path,
             collection_name,
         )
-        return df_trans
+        return align_df_schema(df_trans, output_schema)
     except Exception as e:
         logger.error("Transformation failed for %s: %s", file_path, e)
         error_log[collection_name][file_path] = {"error": str(e)}

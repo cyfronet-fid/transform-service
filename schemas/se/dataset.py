@@ -1,7 +1,7 @@
 """Dataset expected search engine schema"""
 
 from datetime import date
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel
 
@@ -46,6 +46,8 @@ class DatasetSESchema(BaseModel):
             The same data as 'keywords' but in solr text general type. Used in searching.
         language (List[str]):
             A list of languages in which the dataset is available. Used in filtering and resource view.
+        node (Optional[str]):
+            Name of the node associated with the dataset.
         open_access (bool):
             # TODO Saw no usage in the code. Dive deeper.
             Indicates whether the dataset is open access.
@@ -104,6 +106,7 @@ class DatasetSESchema(BaseModel):
     keywords: List[str]
     keywords_tg: List[str]
     language: List[str]
+    node: Optional[str]
     open_access: bool
     popularity: int
     publication_date: date

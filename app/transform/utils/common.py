@@ -78,6 +78,12 @@ def harvest_author_names_and_pids(df: DataFrame, harvested_properties: dict) -> 
     1) Retrieve AUTHOR_NAMES from author.element.fullname as arr[str]
     2) Retrieve AUTHOR_PIDS from author.element.pid as arr[dict[<author_name>: <pid>]]
     """
+    if AUTHOR not in df.columns:
+        logger.debug(f"`{AUTHOR}` not found in df columns")
+        harvested_properties[AUTHOR_NAMES] = [None] * df.count()
+        harvested_properties[AUTHOR_PIDS] = [None] * df.count()
+        return
+
     authors_collection = df.select(AUTHOR).collect()
     authors_names_column = []
     authors_pids_column = []
@@ -110,6 +116,10 @@ def harvest_author_names_and_pids(df: DataFrame, harvested_properties: dict) -> 
 
 def check_type(df: DataFrame, desired_type: str) -> None:
     """Check if all records have the right type"""
+    if TYPE not in df.columns:
+        logger.debug(f"`{TYPE}` not found in df columns")
+        return
+
     df_type = df.select(TYPE).collect()
     assert all(
         (row[TYPE].lower() == desired_type.lower() for row in df_type)
@@ -259,16 +269,20 @@ def harvest_scientific_domains(df: DataFrame, harvested_properties: dict) -> Non
                 f"The mapping of scientific domains for a ceratin resource was not completely successful. Some values may be missing or incorrect. See: {error_stats}"
             )
 
-    try:
-        subjects = df.select(SUBJECT).collect()
-    except AnalysisException:
+    if SUBJECT not in df.columns:
+        logger.debug(
+            f"`{SUBJECT}` not found in df columns, skipping harvesting {SCIENTIFIC_DOMAINS} column"
+        )
         harvested_properties[SCIENTIFIC_DOMAINS] = [None] * df.count()
         return
+
+    subjects = df.select(SUBJECT).collect()
 
     scientific_domain_column = []
     for subject in subjects:
         try:
-            sd_prop = subject[SUBJECT][FOS]
+            subject_data = subject[SUBJECT]
+            sd_prop = subject_data.get(FOS) if isinstance(subject_data, dict) else None
             sd_row = []
             if sd_prop:
                 for value in sd_prop:
@@ -287,7 +301,7 @@ def harvest_scientific_domains(df: DataFrame, harvested_properties: dict) -> Non
 
             else:
                 scientific_domain_column.append([])
-        except (TypeError, ValueError):
+        except (TypeError, ValueError, KeyError):
             scientific_domain_column.append([])
 
     harvested_properties[SCIENTIFIC_DOMAINS] = scientific_domain_column
@@ -295,16 +309,20 @@ def harvest_scientific_domains(df: DataFrame, harvested_properties: dict) -> Non
 
 def harvest_sdg(df: DataFrame, harvested_properties: dict) -> None:
     """Harvest sdg from subjects - OAG resources"""
-    try:
-        subjects = df.select(SUBJECT).collect()
-    except AnalysisException:
+    if SUBJECT not in df.columns:
+        logger.debug(
+            f"`{SUBJECT}` not found in df columns, skipping harvesting {SDG} column"
+        )
         harvested_properties[SDG] = [None] * df.count()
         return
+
+    subjects = df.select(SUBJECT).collect()
 
     sdg_column = []
     for subject in subjects:
         try:
-            sdg_prop = subject[SUBJECT][SDG]
+            subject_data = subject[SUBJECT]
+            sdg_prop = subject_data.get(SDG) if isinstance(subject_data, dict) else None
             sdg_row = []
             if sdg_prop:
                 for value in sdg_prop:
@@ -312,7 +330,7 @@ def harvest_sdg(df: DataFrame, harvested_properties: dict) -> None:
                 sdg_column.append(sdg_row)
             else:
                 sdg_column.append([])
-        except (TypeError, ValueError):
+        except (TypeError, ValueError, KeyError):
             sdg_column.append([])
 
         harvested_properties[SDG] = sdg_column
@@ -322,6 +340,11 @@ def map_best_access_right(
     df: DataFrame, harvested_properties: dict, col_name: str
 ) -> DataFrame:
     """Harvest best_access_right and map standardize its value"""
+    if BEST_ACCESS_RIGHT not in df.columns:
+        logger.debug(f"`{BEST_ACCESS_RIGHT}` not found in df columns")
+        harvested_properties[BEST_ACCESS_RIGHT] = [None] * df.count()
+        return df
+
     if col_name.lower() in {"dataset", "publication", "software", "other"}:
         df = df.withColumn(BEST_ACCESS_RIGHT, col(BEST_ACCESS_RIGHT)["label"])
 
@@ -468,6 +491,12 @@ def harvest_url_and_document_type(df: DataFrame, harvested_properties: dict) -> 
     Assumption:
     - url has to be unique for specific record, and it has to be a link
     """
+    if INSTANCE not in df.columns:
+        logger.debug(f"`{INSTANCE}` not found in df columns")
+        harvested_properties[URL] = [None] * df.count()
+        harvested_properties[DOCUMENT_TYPE] = [None] * df.count()
+        return
+
     instances_list = df.select(INSTANCE).collect()
     url_column = []
     document_type_column = []
@@ -495,6 +524,11 @@ def harvest_url_and_document_type(df: DataFrame, harvested_properties: dict) -> 
 
 def harvest_country(df: DataFrame, harvested_properties: dict) -> None:
     """Harvest country from country.element.code as array(str)"""
+    if COUNTRY not in df.columns:
+        logger.debug(f"`{COUNTRY}` not found in df columns")
+        harvested_properties[COUNTRY] = [None] * df.count()
+        return
+
     countries_list = df.select(COUNTRY).collect()
     country_column = []
 
@@ -552,6 +586,12 @@ def extract_pids(pid_list: List[Optional[Dict[str, str]]]) -> Dict[str, List[str
 
 def harvest_pids(df: DataFrame, harvested_properties: dict) -> None:
     """Harvest DOI from OAG resources"""
+    if PID not in df.columns:
+        logger.debug(f"`{PID}` not found in df columns")
+        harvested_properties[PIDS] = [None] * df.count()
+        harvested_properties[DOI] = [None] * df.count()
+        return
+
     pids_raw_column = df.select(PID).collect()
     pids_column = []
 
@@ -604,8 +644,12 @@ def harvest_relations(df: DataFrame, harvested_properties: dict):
 
 def harvest_eosc_if(df: DataFrame, harvested_properties: dict):
     """Harvest eoscIF from OAG resources"""
-    prefix_to_remove = "EOSC::"
+    if "eoscIF" not in df.columns:
+        logger.debug(f"`eoscIF` not found in df columns")
+        harvested_properties[EOSC_IF] = [None] * df.count()
+        return
 
+    prefix_to_remove = "EOSC::"
     eosc_if_collection = df.select("eoscIF").collect()
     eosc_if_col = []
 
@@ -621,6 +665,16 @@ def harvest_eosc_if(df: DataFrame, harvested_properties: dict):
 
 def harvest_popularity(df: DataFrame, harvested_properties: dict):
     """Harvest popularity as a sum of usage_counts_views and usage_counts_downloads"""
+    if (
+        "usage_counts_views" not in df.columns
+        or "usage_counts_downloads" not in df.columns
+    ):
+        logger.debug(
+            f"usage_counts_views or usage_counts_downloads not found in df columns"
+        )
+        harvested_properties[POPULARITY] = [None] * df.count()
+        return
+
     views_collection = df.select("usage_counts_views").collect()
     downloads_collection = df.select("usage_counts_downloads").collect()
     popularity_col = []
@@ -647,6 +701,11 @@ def transform_date(df: DataFrame, col_name: str, date_format: str) -> DataFrame:
 
 def create_unified_categories(df: DataFrame, harvested_properties: dict) -> None:
     """Create unified categories"""
+    if TYPE not in df.columns:
+        logger.debug(f"`{TYPE}` not found in df columns")
+        harvested_properties[UNIFIED_CATEGORIES] = [None] * df.count()
+        return
+
     type_column = df.select(TYPE).collect()
     uni_cat_column = []
 
@@ -724,6 +783,11 @@ def harvest_exportation(df: DataFrame, harvested_properties: dict) -> None:
     Note:
         - 'instance_idx' is used to limit harvesting to the first 10 versions of each instance.
     """
+    if INSTANCE not in df.columns:
+        logger.debug(f"`{INSTANCE}` not found in df columns")
+        harvested_properties[EXPORTATION] = [None] * df.count()
+        return
+
     instances_list = df.select(INSTANCE).collect()
     exportation_column = []
     instances_limit = 10
@@ -786,6 +850,11 @@ def harvest_data_source(df: DataFrame, harvested_properties: dict) -> None:
     Returns:
         None
     """
+    if INSTANCE not in df.columns:
+        logger.debug(f"`{INSTANCE}` not found in df columns")
+        harvested_properties[DATA_SOURCE] = [None] * df.count()
+        return
+
     data_source_list = get_data_source_pids()
 
     instances_list = df.select(INSTANCE).collect()
@@ -820,6 +889,11 @@ def harvest_data_source(df: DataFrame, harvested_properties: dict) -> None:
 
 def harvest_related_organisations(df: DataFrame, harvested_properties: dict) -> None:
     """"""
+    if AFFILIATION not in df.columns:
+        logger.debug(f"`{AFFILIATION}` not found in df columns")
+        harvested_properties[RELATED_ORGANISATION_TITLES] = [None] * df.count()
+        return
+
     organisation_list = df.select(AFFILIATION).collect()
     related_organisation_column = []
 

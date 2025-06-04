@@ -1,9 +1,10 @@
 # pylint: disable=line-too-long, wildcard-import, unused-wildcard-import
 """Transform OAG resources"""
+import logging
 from abc import abstractmethod
 
 from pyspark.sql import DataFrame, SparkSession
-from pyspark.sql.functions import array, col, lit, year
+from pyspark.sql.functions import array, col, lit, udf, year
 from pyspark.sql.types import (
     ArrayType,
     BooleanType,
@@ -13,6 +14,8 @@ from pyspark.sql.types import (
     StructType,
 )
 
+from app.services.mp_pc.node import get_node_id_name_mapping
+from app.settings import settings
 from app.transform.transformers.base.base import BaseTransformer
 from app.transform.utils.common import (
     check_type,
@@ -44,6 +47,8 @@ from app.transform.utils.utils import sort_schema
 from schemas import *
 from schemas.properties.data import *
 
+logger = logging.getLogger(__name__)
+
 
 class OagBaseTransformer(BaseTransformer):
     """Transformer used to transform OAG resources"""
@@ -74,6 +79,7 @@ class OagBaseTransformer(BaseTransformer):
         df = df.withColumn("catalogues", array(lit(self.catalogue)))
         df = df.withColumn("catalogue", lit(self.catalogue))  # TODO delete
         df = self.rename_cols(df)
+        df = self.map_node_ids_to_names(df)
         df = simplify_language(df)
         df = simplify_indicators(df)
         df = map_publisher(df)
@@ -145,6 +151,7 @@ class OagBaseTransformer(BaseTransformer):
         """Cast certain OAG columns"""
         df = transform_date(df, "publication_date", "yyyy-MM-dd")
         df = df.withColumn("publication_year", year(col("publication_date")))
+        df = df.withColumn("node", col("node")[0])  # TODO switch to an array
 
         return df
 
@@ -158,6 +165,7 @@ class OagBaseTransformer(BaseTransformer):
             "publicationdate": "publication_date",
             "maintitle": "title",
             "fulltext": "direct_url",
+            "labels": "node",
         }
 
     @property
@@ -171,3 +179,27 @@ class OagBaseTransformer(BaseTransformer):
     def cols_to_drop(self) -> tuple[str, ...]:
         """Drop those columns to the dataframe"""
         raise NotImplementedError
+
+    @staticmethod
+    def map_node_ids_to_names(df: DataFrame) -> DataFrame:
+        """Map node IDs in the 'node' column (list of strings) to their corresponding names using the singleton mapping.
+
+        If a record has more than one node ID, log a warning.
+        Replaces the 'node' column with the mapped values.
+        """
+        mapping = get_node_id_name_mapping(settings.NODE_ADDRESS)
+
+        if not mapping:
+            logger.warning("Node ID -> name mapping is empty. Skipping node mapping.")
+            return df
+
+        @udf(returnType=ArrayType(StringType()))
+        def map_nodes_udf(nodes: list[str]) -> list[str]:
+            if not nodes:
+                return []
+            if len(nodes) > 1:
+                logging.warning(f"Multiple node IDs found in a row: {nodes}")
+            return [mapping.get(node_id, node_id) for node_id in nodes]
+
+        df = df.withColumn("node", map_nodes_udf(col("node")))
+        return df

@@ -83,6 +83,8 @@ class DatasetDBSchema(BaseModel):
             A list of languages in which the dataset is available.
         last_update_timestamp (datetime):
             The timestamp of the last update for the dataset (ISO 8601 format).
+        node (Optional[str]):
+            Name of the node associated with the dataset.
         open_access (bool):
             Indicator of whether the dataset is open access.
         original_id (str):
@@ -167,6 +169,7 @@ class DatasetDBSchema(BaseModel):
     keywords: List[str]
     language: List[str]
     last_update_timestamp: datetime
+    node: Optional[str]
     open_access: bool
     original_id: str
     pid: Optional[List[PID]]
