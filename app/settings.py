@@ -58,6 +58,9 @@ class GlobalSettings(BaseSettings):
         "/topic/interoperability_record.update",
         "/topic/interoperability_record.create",
         "/topic/interoperability_record.delete",
+        "/topic/adapter.update",
+        "/topic/adapter.create",
+        "/topic/adapter.delete",
     ]
     STOMP_CLIENT_NAME: str = "transformer-client"
     STOMP_SSL: bool = False
@@ -93,6 +96,9 @@ class GlobalSettings(BaseSettings):
     TRAINING_ADDRESS: AnyUrl = (
         "https://integration.providers.sandbox.eosc-beyond.eu/api/public/trainingResource/all?catalogue_id=all&active=true&suspended=false&quantity=10000"
     )
+    ADAPTER_ADDRESS: AnyUrl = (
+        "https://integration.providers.sandbox.eosc-beyond.eu/api/public/adapter/all?active=true&suspended=false&quantity=10000"
+    )
     NODE_ADDRESS: AnyUrl = (
         "https://integration.providers.sandbox.eosc-beyond.eu/api/vocabulary/byType/NODE"
     )
@@ -116,6 +122,7 @@ class GlobalSettings(BaseSettings):
     GUIDELINE: str = "interoperability guideline"
     TRAINING: str = "training"
     CATALOGUE: str = "catalogue"
+    ADAPTER: str = "adapter"
     RESULT_ORGANISATION: str = "resultOrganisation"
     RESULT_PROJECT: str = "resultProject"
     ORGANISATION_PROJECT: str = "organisationProject"
@@ -147,6 +154,7 @@ class GlobalSettings(BaseSettings):
         "guideline",
         "training",
         "catalogue",
+        "adapter",
     ]
 
     # IDs incrementors
@@ -278,6 +286,11 @@ class TransformSettings(GlobalSettings):
                 OUTPUT_SCHEMA: catalogue_output_schema,
                 INPUT_SCHEMA: catalogue_input_schema,
             },
+            self.ADAPTER: {
+                ADDRESS: str(self.ADAPTER_ADDRESS),
+                OUTPUT_SCHEMA: adapter_output_schema,
+                INPUT_SCHEMA: adapter_input_schema,
+            },
         }
 
         return self.get_solr_col_names(collections)
@@ -304,6 +317,7 @@ class TransformSettings(GlobalSettings):
             self.BUNDLE: (prefix + "all_collection", prefix + "bundle"),
             self.GUIDELINE: (prefix + "all_collection", prefix + "guideline"),
             self.TRAINING: (prefix + "all_collection", prefix + "training"),
+            self.ADAPTER: (prefix + "all_collection", prefix + "adapter"),
             self.PROVIDER: (prefix + "provider",),
             self.OFFER: (prefix + "offer",),
             self.CATALOGUE: (prefix + "catalogue",),
@@ -318,10 +332,13 @@ class TransformSettings(GlobalSettings):
 class ProductionSettings(TransformSettings):
     SOLR_URL: AnyUrl = "http://149.156.182.69:8983"
     GUIDELINE_ADDRESS: AnyUrl = (
-        "https://providers.eosc-portal.eu/api/public/interoperabilityRecord/all?catalogue_id=all&active=true&suspended=false&quantity=10000"
+        "https://providers.sandbox.eosc-beyond.eu/api/public/interoperabilityRecord/all?active=true&suspended=false&quantity=10000"
     )
     TRAINING_ADDRESS: AnyUrl = (
-        "https://providers.eosc-portal.eu/api/public/trainingResource/all?catalogue_id=all&active=true&suspended=false&quantity=10000"
+        "https://providers.sandbox.eosc-beyond.eu/api/public/trainingResource/all?active=true&suspended=false&quantity=10000"
+    )
+    ADAPTER_ADDRESS: AnyUrl = (
+        "https://providers.sandbox.eosc-beyond.eu/api/public/adapter/all?active=true&suspended=false&quantity=10000"
     )
 
 

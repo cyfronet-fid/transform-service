@@ -1,5 +1,6 @@
 """Import output schemas"""
 
+from .adapter import adapter_output_schema
 from .bundle import bundle_output_schema
 from .catalogue import catalogue_output_schema
 from .data_source import data_source_output_schema
@@ -30,4 +31,5 @@ __all__ = [
     "organisation_output_schema",
     "project_output_schema",
     "catalogue_output_schema",
+    "adapter_output_schema",
 ]

@@ -76,6 +76,7 @@ def get_solr_upload_config(prefix: str) -> dict:
         settings.BUNDLE: (prefix + "all_collection", prefix + "bundle"),
         settings.GUIDELINE: (prefix + "all_collection", prefix + "guideline"),
         settings.TRAINING: (prefix + "all_collection", prefix + "training"),
+        settings.ADAPTER: (prefix + "all_collection", prefix + "adapter"),
         settings.PROVIDER: (prefix + "provider",),
         settings.OFFER: (prefix + "offer",),
         settings.CATALOGUE: (prefix + "catalogue",),

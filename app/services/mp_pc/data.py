@@ -32,7 +32,7 @@ async def get_data(data_type: str, data_address: str) -> list[dict] | None:
                 timeout=1000,
             ).json()
             await check_mp_auth(data)
-        elif data_type in (settings.TRAINING, settings.GUIDELINE):
+        elif data_type in (settings.TRAINING, settings.GUIDELINE, settings.ADAPTER):
             if settings.PC_AUTH:
                 access_token = get_access_token_from_refresh_token(
                     refresh_token=settings.PC_REFRESH_TOKEN,

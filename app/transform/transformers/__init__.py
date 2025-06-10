@@ -33,6 +33,7 @@ Example:
 
 from app.settings import settings
 
+from .adapter import AdapterTransformer
 from .bundle import BundleTransformer
 from .catalogue import CatalogueTransformer
 from .data_source import DataSourceTransformer
@@ -65,4 +66,5 @@ transformers = {
     settings.ORGANISATION: OrganisationTransformer,
     settings.PROJECT: ProjectTransformer,
     settings.CATALOGUE: CatalogueTransformer,
+    settings.ADAPTER: AdapterTransformer,
 }
