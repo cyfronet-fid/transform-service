@@ -1,5 +1,6 @@
 """Import input schemas"""
 
+from .adapter import adapter_input_schema
 from .bundle import bundle_input_schema
 from .catalogue import catalogue_input_schema
 from .data_source import data_source_input_schema
@@ -30,4 +31,5 @@ __all__ = [
     "organisation_input_schema",
     "project_input_schema",
     "catalogue_input_schema",
+    "adapter_input_schema",
 ]

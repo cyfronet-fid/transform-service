@@ -25,6 +25,7 @@ async def batch_update(
         "interoperability guideline",
         "training",
         "catalogue",
+        "adapter",
     ],
     action: Literal[
         "update",

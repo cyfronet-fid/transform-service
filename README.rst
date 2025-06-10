@@ -137,6 +137,7 @@ Provider Component
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 - ``GUIDELINE_ADDRESS``: ``AnyUrl = "https://integration.providers.sandbox.eosc-beyond.eu/api/public/interoperabilityRecord/all?catalogue_id=all&active=true&suspended=false&quantity=10000"`` - A full address to get all interoperability guidelines **endpoint**.
 - ``TRAINING_ADDRESS``: ``AnyUrl = "https://integration.providers.sandbox.eosc-beyond.eu/api/public/trainingResource/all?catalogue_id=all&active=true&suspended=false&quantity=10000"`` - A full address to get all trainings **endpoint**.
+- ``ADAPTER_ADDRESS``: ``AnyUrl = "https://integration.providers.sandbox.eosc-beyond.eu/api/public/adapter/all?active=true&suspended=false&quantity=10000"`` - A full address to get all adapters **endpoint**.
 - ``NODE_ADDRESS``: ``AnyUrl = "https://integration.providers.sandbox.eosc-beyond.eu/api/vocabulary/byType/NODE"`` - Get all nodes for OAG mapping.
 Authentication (Optional)
 """""""""""""""""""""""""""""""""""""""""""
