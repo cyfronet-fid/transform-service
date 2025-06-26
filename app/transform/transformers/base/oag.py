@@ -4,7 +4,7 @@ import logging
 from abc import abstractmethod
 
 from pyspark.sql import DataFrame, SparkSession
-from pyspark.sql.functions import array, col, lit, udf, year
+from pyspark.sql.functions import array, col, lit, udf, year, when
 from pyspark.sql.types import (
     ArrayType,
     BooleanType,
@@ -185,8 +185,10 @@ class OagBaseTransformer(BaseTransformer):
         """Map node IDs in the 'node' column (list of strings) to their corresponding names using the singleton mapping.
 
         If a record has more than one node ID, log a warning.
+        If a record has no 'node' column or it's null/empty, set it to default node name as default.
         Replaces the 'node' column with the mapped values.
         """
+        DEFAULT_NODE_NAME = "EU Node"
         mapping = get_node_id_name_mapping(settings.NODE_ADDRESS)
 
         if not mapping:
@@ -195,11 +197,29 @@ class OagBaseTransformer(BaseTransformer):
 
         @udf(returnType=ArrayType(StringType()))
         def map_nodes_udf(nodes: list[str]) -> list[str]:
+            # Handle missing, null, or empty node lists
             if not nodes:
-                return []
+                return [DEFAULT_NODE_NAME]
+
             if len(nodes) > 1:
                 logging.warning(f"Multiple node IDs found in a row: {nodes}")
+
             return [mapping.get(node_id, node_id) for node_id in nodes]
 
+        # Check if 'node' column exists, if not create it with default value
+        if "node" not in df.columns:
+            df = df.withColumn(
+                "node", lit([DEFAULT_NODE_NAME]).cast(ArrayType(StringType()))
+            )
+            # No need to map since all values are already set to default
+            return df
+        else:
+            # Handle null values in existing 'node' column by replacing with empty array
+            # The UDF will then convert empty arrays to ["EU Node"]
+            df = df.withColumn(
+                "node", when(col("node").isNull(), array()).otherwise(col("node"))
+            )
+
+        # Apply mapping to handle actual node IDs that exist in the data
         df = df.withColumn("node", map_nodes_udf(col("node")))
         return df

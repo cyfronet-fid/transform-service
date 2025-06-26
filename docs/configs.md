@@ -9,7 +9,7 @@ Please create Solr collections based on these configs:
 
     | **Collection Name** | **ConfigSet Version**     |
     |---------------------|---------------------------|
-    | all_collection      | all_collection_oag56_v205 |
+    | all_collection      | all_collection_v210 |
     | provider            | provider_v101             |
     | organisation        | organisation_v106         |
     | project             | project_v102              |
@@ -19,7 +19,7 @@ Please create Solr collections based on these configs:
 
     | **Collection Name** | **ConfigSet Version**     |
     |---------------------|---------------------------|
-    | all_collection      | all_collection_oag56_v205 |
+    | all_collection      | all_collection_v210 |
     | provider            | provider_v101             |
     | organisation        | organisation_v106         |
     | project             | project_v102              |
