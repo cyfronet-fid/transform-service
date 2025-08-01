@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from app.settings import settings
-from app.transform.live_update.training_ig import (
+from app.transform.live_update.process_message import (
     extract_data_from_frame,
     handle_create_action,
     handle_delete_action,
@@ -161,6 +161,7 @@ def test_handle_update_action_variations(
         training_resource,
         training_resource[ID],
     )
+
     if should_update:
         mock_dependencies.transform_batch.assert_called_once()
     elif should_delete:
@@ -177,6 +178,7 @@ def test_handle_delete_action_variations(
     """Test delete action handling based on resource existence."""
     mock_dependencies.check_document_exists.return_value = exists
     handle_delete_action(settings.TRAINING, training_resource[ID], training_resource)
+
     if exists:
         mock_dependencies.delete_data_by_id.assert_called_once()
     else:
@@ -188,6 +190,7 @@ def test_handle_delete_action_variations(
     [
         ("training_resource", "trainingResource"),
         ("interoperability_record", "interoperabilityRecord"),
+        ("adapter", "adapter"),
         ("unknown", None),
     ],
 )
@@ -196,6 +199,7 @@ def test_extract_data_from_frame(
     collection_key: Optional[str],
     training_resource: Dict,
     interoperability_guideline_resource: Dict,
+    adapter_resource: Dict,
 ) -> None:
     """Extract and return data from a frame based on collection key."""
     frame_body = {}
@@ -203,6 +207,8 @@ def test_extract_data_from_frame(
         frame_body[collection_key] = training_resource
     elif collection_key == "interoperabilityRecord":
         frame_body[collection_key] = interoperability_guideline_resource
+    elif collection_key == "adapter":
+        frame_body[collection_key] = adapter_resource
 
     collection, data, data_id = extract_data_from_frame(raw_collection, frame_body)
 
@@ -214,6 +220,10 @@ def test_extract_data_from_frame(
         assert collection == settings.GUIDELINE
         assert data == [interoperability_guideline_resource]
         assert data_id == interoperability_guideline_resource[ID]
+    elif raw_collection == "adapter":
+        assert collection == settings.ADAPTER
+        assert data == [adapter_resource]
+        assert data_id == adapter_resource[ID]
     else:
         assert collection == "unknown"
         assert data is None

@@ -8,6 +8,14 @@ from app.settings import settings
 from app.tasks.solr.delete_data_by_id import delete_data_by_id
 from app.tasks.transform.batch import transform_batch
 
+APPROVED_TRAINING_STATUS = "approved resource"
+APPROVED_GUIDELINE_STATUS = "approved interoperability record"
+APPROVED_ADAPTER_STATUS = "approved adapter"
+APPROVED_STATUSES = (
+    APPROVED_TRAINING_STATUS,
+    APPROVED_GUIDELINE_STATUS,
+    APPROVED_ADAPTER_STATUS,
+)
 logger = logging.getLogger(__name__)
 
 
@@ -22,7 +30,7 @@ def process_message(frame) -> None:
         frame: The JMS message frame containing details like action type, data, and status.
     """
     action = frame.headers["destination"].split(".")[-1]
-    raw_collection = frame.headers["destination"].split("/")[-1].split(".")[0]
+    raw_collection = frame.headers["destination"].split("/")[-1].split(".")[-2]
     frame_body = json.loads(frame.body)
 
     active = frame_body["active"]
@@ -30,7 +38,6 @@ def process_message(frame) -> None:
     status = frame_body["status"]
 
     collection, data, data_id = extract_data_from_frame(raw_collection, frame_body)
-
     logger.info(f"Started to process message, type: {raw_collection}, id: {data_id}")
 
     if action == "create":
@@ -60,6 +67,11 @@ def extract_data_from_frame(raw_collection, frame_body):
         collection = settings.GUIDELINE
         data = [frame_body["interoperabilityRecord"]]
         data_id = data[0]["id"]
+    elif raw_collection == "adapter":
+        logger.info(f"{frame_body['adapter']=}")
+        collection = settings.ADAPTER
+        data = [frame_body["adapter"]]
+        data_id = data[0]["id"]
     else:
         collection = raw_collection
         data = None
@@ -80,13 +92,13 @@ def handle_create_action(active, suspended, status, collection, data, data_id):
         data (dict): The data to be processed.
         data_id (str): The ID of the data.
     """
-    if (
-        active
-        and not suspended
-        and status in ["approved resource", "approved interoperability record"]
-    ):
+    if active and not suspended and status in APPROVED_STATUSES:
         logger.info(f"Creating action - {collection=}, ID: {data_id}")
         transform_batch.delay(collection, data, full_update=False)
+    else:
+        logger.info(
+            f"Aborting create action {collection=}, {data_id=}. Not active or suspended or status not approved."
+        )
 
 
 def handle_update_action(active, suspended, status, collection, data, data_id):
@@ -101,11 +113,8 @@ def handle_update_action(active, suspended, status, collection, data, data_id):
         data (dict): The data to be processed.
         data_id (str): The ID of the data.
     """
-    if (
-        active
-        and not suspended
-        and status in ["approved resource", "approved interoperability record"]
-    ):
+    logger.info(f"{data=}, {data_id=}")
+    if active and not suspended and status in APPROVED_STATUSES:
         logger.info(f"Update action - {collection=}, ID: {data_id}")
         transform_batch.delay(collection, data, full_update=False)
     else:

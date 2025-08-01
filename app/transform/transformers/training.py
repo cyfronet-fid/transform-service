@@ -181,6 +181,10 @@ class TrainingTransformer(BaseTransformer):
         E.g.
         tr_expertise_level-beginner -> Beginner
         tr_expertise_level-all -> All"""
+        if LVL_OF_EXPERTISE not in df.columns:
+            logger.debug(f"`{LVL_OF_EXPERTISE}` not found in df columns")
+            self.harvested_properties[LVL_OF_EXPERTISE] = [None] * df.count()
+            return df
 
         lvl_of_exp_raw = df.select(LVL_OF_EXPERTISE).collect()
         lvl_of_exp_column = [
@@ -207,7 +211,7 @@ class TrainingTransformer(BaseTransformer):
                 elif ga == "EO":
                     geo_av_row.append("Europe")
                 else:
-                    geo_av_row.append(pycountry.countries.get(alpha_2=ga).name)
+                    geo_av_row.append(pycountry.countries.get(alpha_2=ga))
             geo_av_column.append(geo_av_row)
 
         self.harvested_properties[GEO_AV] = geo_av_column
@@ -218,6 +222,11 @@ class TrainingTransformer(BaseTransformer):
         """Map language values.
         E.g.
         en -> English"""
+        if LANGUAGE not in df.columns:
+            logger.debug(f"`{LANGUAGE}` not found in df columns")
+            self.harvested_properties[LANGUAGE] = [None] * df.count()
+            return df
+
         lang_raw = df.select(LANGUAGE).collect()
         lang_column = []
 
@@ -233,6 +242,11 @@ class TrainingTransformer(BaseTransformer):
         E.g.
         tr_dcmi_type-lesson_plan -> Lesson Plan
         tr_dcmi_type-activity_plan -> Activity Plan"""
+
+        if RESOURCE_TYPE not in df.columns:
+            logger.debug(f"`{RESOURCE_TYPE}` not found in df columns")
+            self.harvested_properties[RESOURCE_TYPE] = [None] * df.count()
+            return df
 
         # Keys are mapped into values
         mapping_dict = {
@@ -287,6 +301,11 @@ class TrainingTransformer(BaseTransformer):
                     logger.warning(f"Unexpected scientific domain: {sd_raw=}")
                 return None  # Don't add unexpected scientific domain to not destroy filter's tree structure
 
+        if SCIENTIFIC_DOMAINS not in df.columns:
+            logger.debug(f"`{SCIENTIFIC_DOMAINS}` not found in df columns")
+            self.harvested_properties[SCIENTIFIC_DOMAINS] = [None] * df.count()
+            return df
+
         sci_domains_raw = df.select(SCIENTIFIC_DOMAINS).collect()
         sci_domains_column = []
 
@@ -304,17 +323,39 @@ class TrainingTransformer(BaseTransformer):
         return df.drop(SCIENTIFIC_DOMAINS)
 
     def standardize_publication_date(self, df: DataFrame) -> DataFrame:
-        """Convert ISO datetime strings with offsets to UTC-aware datetime objects (for Spark TimestampType)."""
+        """Convert ISO datetime strings or UNIX timestamps (in ms) to UTC-aware datetime objects."""
+        if PUBLICATION_DATE not in df.columns:
+            logger.debug(f"`{PUBLICATION_DATE}` not found in df columns")
+            self.harvested_properties[PUBLICATION_DATE] = [None] * df.count()
+            return df
+
         pub_date_raw = df.select(PUBLICATION_DATE).collect()
+        pub_date_column = []
 
-        pub_date_column = [
-            parser.isoparse(row[PUBLICATION_DATE])
-            .astimezone(timezone.utc)
-            .replace(microsecond=0)
-            for row in pub_date_raw
-        ]
+        for row in pub_date_raw:
+            raw_value = row[PUBLICATION_DATE]
+            if raw_value is None:
+                pub_date_column.append(None)
+                continue
+
+            try:
+                if isinstance(raw_value, int) or (
+                    isinstance(raw_value, str) and raw_value.isdigit()
+                ):
+                    # Handle UNIX timestamp in milliseconds
+                    ts = int(raw_value) / 1000.0
+                    dt = datetime.fromtimestamp(ts, tz=timezone.utc)
+                else:
+                    # Handle ISO 8601 string
+                    dt = parser.isoparse(raw_value).astimezone(timezone.utc)
+
+                dt = dt.replace(microsecond=0)
+                pub_date_column.append(dt)
+            except Exception as e:
+                logger.warning(f"Failed to parse publication date '{raw_value}': {e}")
+                pub_date_column.append(None)
+
         self.harvested_properties[PUBLICATION_DATE] = pub_date_column
-
         return df.drop(PUBLICATION_DATE)
 
     def serialize_alternative_ids(self, df: DataFrame, _col: str) -> DataFrame:
@@ -324,14 +365,17 @@ class TrainingTransformer(BaseTransformer):
             raw_prop_col = df.select(_col).collect()
             serialized_prop_col = []
 
-            for rows in chain.from_iterable(raw_prop_col):
-                row_list = []
-                for row in rows:
-                    row_list.append(json.dumps(row.asDict()))
-                serialized_prop_col.append(row_list)
+            for row in raw_prop_col:
+                value = row[_col]
+                if value is None:
+                    serialized_prop_col.append([])
+                else:
+                    serialized_row = []
+                    for item in value:
+                        serialized_row.append(json.dumps(item.asDict()))
+                    serialized_prop_col.append(serialized_row)
 
             self.harvested_properties[_col] = serialized_prop_col
-
             return df.drop(_col)
         else:
             length = df.count()

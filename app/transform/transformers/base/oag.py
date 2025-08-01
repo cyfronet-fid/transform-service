@@ -4,7 +4,7 @@ import logging
 from abc import abstractmethod
 
 from pyspark.sql import DataFrame, SparkSession
-from pyspark.sql.functions import array, col, lit, udf, year, when
+from pyspark.sql.functions import array, col, lit, udf, when, year
 from pyspark.sql.types import (
     ArrayType,
     BooleanType,

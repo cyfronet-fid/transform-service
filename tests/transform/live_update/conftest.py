@@ -10,17 +10,17 @@ class MockDependencies:
     def __init__(self, mocker: MockerFixture):
         """Initialize with patches"""
         self.transform_batch = mocker.patch(
-            "app.transform.live_update.training_ig.transform_batch.delay"
+            "app.transform.live_update.process_message.transform_batch.delay"
         )
         self.delete_data_by_id = mocker.patch(
-            "app.transform.live_update.training_ig.delete_data_by_id.delay"
+            "app.transform.live_update.process_message.delete_data_by_id.delay"
         )
         self.check_document_exists = mocker.patch(
-            "app.transform.live_update.training_ig.check_document_exists",
+            "app.transform.live_update.process_message.check_document_exists",
             return_value=True,
         )
         self.logger_info = mocker.patch(
-            "app.transform.live_update.training_ig.logger.info"
+            "app.transform.live_update.process_message.logger.info"
         )
 
 
@@ -146,4 +146,28 @@ def interoperability_guideline_resource() -> Dict:
         "status": "ir_status-candidate",
         "title": "00_test_00",
         "updated": "1715065184415",
+    }
+
+
+@pytest.fixture
+def adapter_resource() -> Dict:
+    """Provides a mock adapter."""
+    return {
+        "id": "21.15126/CWTM65",
+        "name": "ChatGPT Python Interface",
+        "catalogueId": "eosc",
+        "node": "node-sandbox",
+        "description": "\u003cp\u003eTest adapter\u003c/p\u003e",
+        "linkedResource": {"type": "Guideline", "id": "21.11171/joPIp4"},
+        "tagline": "llm, chatgpt",
+        "logo": "https://i0.wp.com/www.getautismactive.com/wp-content/uploads/2021/01/Test-Logo-Circle-black-transparent.png?fit=1200%2C1200&ssl=1&w=640",
+        "documentation": "https://platform.openai.com/docs/guides/text?api-mode=responses",
+        "repository": "https://platform.openai.com/",
+        "releases": ["v4.0.0"],
+        "programmingLanguage": "adapter_programming_language-python",
+        "license": "adapter_license-apache2",
+        "version": "4",
+        "changeLog": "https://platform.openai.com/",
+        "lastUpdate": "2025-07-07T00:00:00.000+00:00",
+        "admins": None,
     }
