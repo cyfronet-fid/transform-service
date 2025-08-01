@@ -20,7 +20,11 @@ def delete_data_by_id(
     delete: bool = True,
 ) -> list[dict]:
     """Delete solr resource based on its ID"""
-    raw_id = data[0]["id"] if col_name == "interoperability guideline" else data["id"]
+    raw_id = (
+        data[0]["id"]
+        if col_name in ("interoperability guideline", "adapter")
+        else data["id"]
+    )
     id_to_delete = ids_mapping(raw_id, col_name)
 
     if not delete:

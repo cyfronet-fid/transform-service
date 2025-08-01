@@ -97,7 +97,7 @@ S3
 - ``S3_ENDPOINT``: ``str = ""`` - S3 endpoint. Example: ``https://s3.cloud.com``.
 - ``S3_BUCKET``: ``str = ""`` - S3 bucket. Example: ``ess-mock-dumps``.
 
-STOMP
+STOMP (JMS)
 -----
 - ``STOMP_SUBSCRIPTION``: ``bool = True`` - Subscribe to JMS?
     - ``STOMP_HOST``: ``str = "127.0.0.1"`` - The hostname or IP address of the STOMP broker.
@@ -106,6 +106,7 @@ STOMP
     - ``STOMP_PASS``: ``str = "guest"``- The password for connecting to the STOMP broker.
     - ``STOMP_CLIENT_NAME``: ``str = "transformer-client"`` - A name to identify this STOMP client instance.
     - ``STOMP_SSL``: ``bool = False`` - Set to ``True`` to enable SSL for the STOMP connection. Ensure SSL certificates are properly configured if this is enabled.
+    - ``STOMP_TOPIC_PREFIX``: ``str = ""`` - Prefix that is added to STOMP base topics. E.g. "adapter.update" -> "beta.adapter.update".
 
 Sources of Data
 ^^^^^^^^^^^^^^^

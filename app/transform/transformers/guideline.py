@@ -264,14 +264,83 @@ def harvest_related_standards(df: DataFrame) -> None:
 
 
 def ts_to_iso(df: DataFrame, cols: list[str]) -> None:
-    """Reformat certain columns from unix ts into iso format
-    timestamp is provided with millisecond-precision -> 13digits"""
+    """
+    Reformat specified columns from either unix timestamp (in ms)
+    or ISO date strings into ISO 8601 format with seconds precision.
+    Optimized version using pandas vectorized operations.
+    """
+
+    def convert_value(value):
+        if pd.isna(value):
+            return value
+
+        if isinstance(value, (int, float)) or (
+            isinstance(value, str) and value.isdigit()
+        ):
+            # Handle Unix timestamp in milliseconds
+            ts = int(value)
+            dt = datetime.utcfromtimestamp(ts / 1000)
+        else:
+            # Try parsing as ISO date string
+            try:
+                dt = datetime.fromisoformat(str(value))
+            except ValueError:
+                raise ValueError(f"Cannot parse value '{value}'")
+
+        return dt.isoformat(timespec="seconds")
+
     for col in cols:
-        date_col = [
-            datetime.utcfromtimestamp(int(row) / 1000).isoformat(timespec="seconds")
-            for row in df[col]
-        ]
-        df[col] = date_col
+        df[col] = df[col].apply(convert_value)
+
+
+# Even more optimized version using pandas datetime functions where possible
+def ts_to_iso_vectorized(df: DataFrame, cols: list[str]) -> None:
+    """
+    Highly optimized version that tries to use pandas native datetime functions
+    when all values in a column are of the same type.
+    """
+    for col in cols:
+        series = df[col]
+
+        # Check if all non-null values are numeric (timestamps)
+        non_null = series.dropna()
+        if len(non_null) == 0:
+            continue
+
+        # Try to detect if all values are timestamps
+        is_all_numeric = non_null.apply(
+            lambda x: isinstance(x, (int, float))
+            or (isinstance(x, str) and x.isdigit())
+        ).all()
+
+        if is_all_numeric:
+            # Convert all as timestamps - much faster
+            numeric_series = pd.to_numeric(series, errors="coerce")
+            df[col] = pd.to_datetime(numeric_series, unit="ms", utc=True).dt.strftime(
+                "%Y-%m-%dT%H:%M:%S"
+            )
+        else:
+            # Mixed types - fall back to apply
+            df[col] = series.apply(lambda x: convert_timestamp_or_iso(x))
+
+
+def convert_timestamp_or_iso(value):
+    """Helper function for mixed-type conversion"""
+    if pd.isna(value):
+        return value
+
+    if isinstance(value, (int, float)) or (
+        isinstance(value, str) and str(value).isdigit()
+    ):
+        ts = int(value)
+        dt = datetime.utcfromtimestamp(ts / 1000)
+    else:
+        try:
+            dt = datetime.fromisoformat(str(value))
+        except ValueError:
+            raise ValueError(f"Cannot parse value '{value}'")
+
+    return dt.isoformat(timespec="seconds")
 
 
 def harvest_rights(df: DataFrame) -> None:
