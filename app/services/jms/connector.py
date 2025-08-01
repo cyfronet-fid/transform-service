@@ -11,7 +11,7 @@ import stomp
 from stomp.exception import ConnectFailedException
 
 from app.settings import settings
-from app.transform.live_update.training_ig import process_message
+from app.transform.live_update.process_message import process_message
 
 logger = logging.getLogger(__name__)
 

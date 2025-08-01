@@ -51,19 +51,37 @@ class GlobalSettings(BaseSettings):
     STOMP_PORT: int = 61613
     STOMP_LOGIN: str = "guest"
     STOMP_PASS: str = "guest"
-    STOMP_TOPICS: list[str] = [
-        "/topic/training_resource.update",
-        "/topic/training_resource.create",
-        "/topic/training_resource.delete",
-        "/topic/interoperability_record.update",
-        "/topic/interoperability_record.create",
-        "/topic/interoperability_record.delete",
-        "/topic/adapter.update",
-        "/topic/adapter.create",
-        "/topic/adapter.delete",
-    ]
     STOMP_CLIENT_NAME: str = "transformer-client"
     STOMP_SSL: bool = False
+    STOMP_TOPIC_PREFIX: str = ""
+    STOMP_TOPICS: list[str] = []  # Will be populated dynamically
+
+    # Base topic templates without prefix
+    _BASE_TOPICS: list[str] = [
+        "training_resource.update",
+        "training_resource.create",
+        "training_resource.delete",
+        "interoperability_record.update",
+        "interoperability_record.create",
+        "interoperability_record.delete",
+        "adapter.update",
+        "adapter.create",
+        "adapter.delete",
+    ]
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.STOMP_TOPICS = self._generate_stomp_topics()
+
+    def _generate_stomp_topics(self) -> list[str]:
+        """Generate STOMP topics using the prefix"""
+        if self.STOMP_TOPIC_PREFIX:
+            return [
+                f"/topic/{self.STOMP_TOPIC_PREFIX}.{topic}"
+                for topic in self._BASE_TOPICS
+            ]
+        else:
+            return [f"/topic/{topic}" for topic in self._BASE_TOPICS]
 
     # Sources of data
     # - Local storage with OAG data

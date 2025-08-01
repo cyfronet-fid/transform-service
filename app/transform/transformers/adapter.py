@@ -1,6 +1,6 @@
 # pylint: disable=line-too-long, wildcard-import, invalid-name, unused-wildcard-import, duplicate-code
 """Transform adapters"""
-from datetime import timezone
+from datetime import datetime, timezone
 from logging import getLogger
 
 from dateutil import parser
@@ -101,15 +101,34 @@ class AdapterTransformer(BaseTransformer):
         }
 
     def standardize_publication_date(self, df: DataFrame) -> DataFrame:
-        """Convert ISO datetime strings with offsets to UTC-aware datetime objects (for Spark TimestampType)."""
+        """Convert ISO datetime strings with offsets or Unix timestamps to
+        UTC-aware datetime objects (for Spark TimestampType)."""
         pub_date_raw = df.select(PUBLICATION_DATE).collect()
 
-        pub_date_column = [
-            parser.isoparse(row[PUBLICATION_DATE])
-            .astimezone(timezone.utc)
-            .replace(microsecond=0)
-            for row in pub_date_raw
-        ]
+        pub_date_column = []
+        for row in pub_date_raw:
+            pub_date_value = row[PUBLICATION_DATE]
+
+            if isinstance(pub_date_value, str):
+                # Handle ISO datetime string
+                parsed_date = (
+                    parser.isoparse(pub_date_value)
+                    .astimezone(timezone.utc)
+                    .replace(microsecond=0)
+                )
+            elif isinstance(pub_date_value, (int, float)):
+                # Handle Unix timestamp in milliseconds
+                timestamp_seconds = pub_date_value / 1000
+                parsed_date = datetime.fromtimestamp(
+                    timestamp_seconds, tz=timezone.utc
+                ).replace(microsecond=0)
+            else:
+                raise ValueError(
+                    f"Unexpected publication date format: {type(pub_date_value)} - {pub_date_value}"
+                )
+
+            pub_date_column.append(parsed_date)
+
         self.harvested_properties[PUBLICATION_DATE] = pub_date_column
 
         return df.drop(PUBLICATION_DATE)
