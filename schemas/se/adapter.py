@@ -15,7 +15,7 @@ class AdapterSESchema(BaseModel):
             A list of catalogues associated with the adapter. Used in filters.
         changelog (List[str]):
             The change log information for the adapter. Used in detail page.
-        code_repository_url (str):
+        repository (str):
             URL to the adapter's source code repository. Used in detail page.
         description (str):
             A detailed description of the adapter. Used in searching.
@@ -39,7 +39,7 @@ class AdapterSESchema(BaseModel):
             A list of related services associated with the adapter. Used in resource view.
         releases (List[str]):
             A list of release versions or information. Used in detail page.
-        tagline (Optional[str]):
+        keywords (Optional[str]):
             A brief tagline or summary for the adapter. Used in detail page.
         title (str):
             The title/name of the adapter. Used in searching.
@@ -51,7 +51,7 @@ class AdapterSESchema(BaseModel):
 
     catalogues: List[str]
     changelog: List[str]
-    code_repository_url: str
+    repository: str
     description: str
     documentation_url: str
     id: str
@@ -63,7 +63,7 @@ class AdapterSESchema(BaseModel):
     related_guidelines: Optional[List[str]]
     related_services: Optional[List[str]]
     releases: List[str]
-    tagline: Optional[str]
+    keywords: Optional[str]
     title: str
     type: str
     version: str

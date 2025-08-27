@@ -17,7 +17,7 @@ class AdapterDBSchema(BaseModel):
             The catalogue identifiers for the adapter (cast to array).
         changelog (List[str]):
             The change log information (cast to array).
-        code_repository_url (AnyHttpUrl):
+        repository (AnyHttpUrl):
             URL to the adapter's source code repository.
         description (str):
             A detailed description of the adapter.
@@ -41,7 +41,7 @@ class AdapterDBSchema(BaseModel):
             A list of related services for the adapter.
         releases (List[str]):
             A list of release versions or information.
-        tagline (Optional[str]):
+        keywords (Optional[str]):
             A brief tagline or summary for the adapter.
         title (str):
             The title/name of the adapter.
@@ -54,7 +54,7 @@ class AdapterDBSchema(BaseModel):
     admins: Optional[List[str]]
     catalogues: List[str]
     changelog: List[str]
-    code_repository_url: AnyHttpUrl
+    repository: AnyHttpUrl
     description: str
     documentation_url: AnyHttpUrl
     id: str
@@ -66,7 +66,7 @@ class AdapterDBSchema(BaseModel):
     related_guidelines: Optional[List[str]]
     related_services: Optional[List[str]]
     releases: List[str]
-    tagline: Optional[str]
+    keywords: Optional[str]
     title: str
     type: str
     version: str
