@@ -93,11 +93,11 @@ class AdapterTransformer(BaseTransformer):
         return {
             "catalogueId": "catalogues",
             "changeLog": "changelog",
-            "repository": "code_repository_url",
             "documentation": "documentation_url",
             "name": "title",
             "lastUpdate": "publication_date",
             "programmingLanguage": "programming_language",
+            "tagline": "keywords",
         }
 
     def standardize_publication_date(self, df: DataFrame) -> DataFrame:
