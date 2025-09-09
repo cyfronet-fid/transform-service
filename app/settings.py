@@ -9,7 +9,9 @@ from pydantic import AnyUrl
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from schemas.old.input import *
+from schemas.old.input.deployable_service import deployable_service_input_schema
 from schemas.old.output import *
+from schemas.old.output.deployable_service import deployable_service_output_schema
 
 logger = logging.getLogger(__name__)
 EnvironmentType = Literal["dev", "test", "production"]
@@ -141,6 +143,7 @@ class GlobalSettings(BaseSettings):
     TRAINING: str = "training"
     CATALOGUE: str = "catalogue"
     ADAPTER: str = "adapter"
+    DEPLOYABLE_SERVICE: str = "deployable service"
     RESULT_ORGANISATION: str = "resultOrganisation"
     RESULT_PROJECT: str = "resultProject"
     ORGANISATION_PROJECT: str = "organisationProject"
@@ -173,6 +176,7 @@ class GlobalSettings(BaseSettings):
         "training",
         "catalogue",
         "adapter",
+        "deployable_service",
     ]
 
     # IDs incrementors
@@ -182,6 +186,7 @@ class GlobalSettings(BaseSettings):
     BUNDLE_IDS_INCREMENTOR: int = 1_000_000
     DATA_SOURCE_IDS_INCREMENTOR: int = 10_000_000
     CATALOGUE_IDS_INCREMENTOR: int = 100_000_000
+    DEPLOYABLE_SERVICE_IDS_INCREMENTOR: int = 1_000_000_000
 
     # Get config from .env
     model_config = SettingsConfigDict(
@@ -304,6 +309,11 @@ class TransformSettings(GlobalSettings):
                 OUTPUT_SCHEMA: catalogue_output_schema,
                 INPUT_SCHEMA: catalogue_input_schema,
             },
+            self.DEPLOYABLE_SERVICE: {
+                ADDRESS: mp_api + "deployable_services",
+                OUTPUT_SCHEMA: deployable_service_output_schema,
+                INPUT_SCHEMA: deployable_service_input_schema,
+            },
             self.ADAPTER: {
                 ADDRESS: str(self.ADAPTER_ADDRESS),
                 OUTPUT_SCHEMA: adapter_output_schema,
@@ -336,6 +346,10 @@ class TransformSettings(GlobalSettings):
             self.GUIDELINE: (prefix + "all_collection", prefix + "guideline"),
             self.TRAINING: (prefix + "all_collection", prefix + "training"),
             self.ADAPTER: (prefix + "all_collection", prefix + "adapter"),
+            self.DEPLOYABLE_SERVICE: (
+                prefix + "all_collection",
+                prefix + "deployable_service",
+            ),
             self.PROVIDER: (prefix + "provider",),
             self.OFFER: (prefix + "offer",),
             self.CATALOGUE: (prefix + "catalogue",),
