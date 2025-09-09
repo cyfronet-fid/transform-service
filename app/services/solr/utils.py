@@ -16,6 +16,8 @@ def ids_mapping(id_: int | str, col_name: str) -> str:
             return str(id_ + settings.BUNDLE_IDS_INCREMENTOR)
         case "catalogue":
             return str(id_ + settings.CATALOGUE_IDS_INCREMENTOR)
+        case "deployable service":
+            return str(id_ + settings.DEPLOYABLE_SERVICE_IDS_INCREMENTOR)
         case _:
             return id_
 

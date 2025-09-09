@@ -26,6 +26,7 @@ async def batch_update(
         "training",
         "catalogue",
         "adapter",
+        "deployable service",
     ],
     action: Literal[
         "update",

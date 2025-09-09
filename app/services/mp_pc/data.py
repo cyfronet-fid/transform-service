@@ -24,6 +24,7 @@ async def get_data(data_type: str, data_address: str) -> list[dict] | None:
             settings.OFFER,
             settings.BUNDLE,
             settings.CATALOGUE,
+            settings.DEPLOYABLE_SERVICE,
         ):
             headers["X-User-Token"] = settings.MP_API_TOKEN
             data = requests.get(
