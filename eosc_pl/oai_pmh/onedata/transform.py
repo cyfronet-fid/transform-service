@@ -42,5 +42,6 @@ def transform_metadata_dc(metadata_dc: dict) -> dict:
 
     # Add static source tag
     transformed["datasource_pids"] = ["eosc.cyfronet.onedata"]
+    transformed["type"] = ["dataset"]
 
     return transformed

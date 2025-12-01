@@ -131,7 +131,7 @@ Data from API
 -------------
 Marketplace
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-- ``MP_API_ADDRESS``: ``AnyUrl = "https://marketplace.sandbox.eosc-beyond.eu"`` - A Marketplace API address.
+- ``MP_API_ADDRESS``: ``AnyUrl = "https://userspace.sandbox.eosc-beyond.eu"`` - A Marketplace API address.
 - ``MP_API_TOKEN``: ``str`` - An authorization token for the Marketplace API.
 
 Provider Component

@@ -100,7 +100,7 @@ class GlobalSettings(BaseSettings):
     ORG_PROJ_REL_PATH: str = "input/organizationProject"
 
     # - Marketplace
-    MP_API_ADDRESS: AnyUrl = "https://marketplace.sandbox.eosc-beyond.eu"
+    MP_API_ADDRESS: AnyUrl = "https://userspace.sandbox.eosc-beyond.eu"
     MP_API_TOKEN: str = ""
 
     # - Provider Component
