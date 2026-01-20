@@ -47,18 +47,8 @@ class GlobalSettings(BaseSettings):
     S3_ENDPOINT: AnyUrl = "https://example.com"
     S3_BUCKET: str = ""
 
-    # - STOMP
-    STOMP_SUBSCRIPTION: bool = True
-    STOMP_HOST: str = "127.0.0.1"
-    STOMP_PORT: int = 61613
-    STOMP_LOGIN: str = "guest"
-    STOMP_PASS: str = "guest"
-    STOMP_CLIENT_NAME: str = "transformer-client"
-    STOMP_SSL: bool = False
-    STOMP_TOPIC_PREFIX: str = ""
-    STOMP_TOPICS: list[str] = []  # Will be populated dynamically
-
-    # Base topic templates without prefix
+    # Base JMS topic templates without prefix
+    # JMS . (dot), AMS - (minus)
     _BASE_TOPICS: list[str] = [
         "training_resource.update",
         "training_resource.create",
@@ -71,9 +61,33 @@ class GlobalSettings(BaseSettings):
         "adapter.delete",
     ]
 
+    # - AMS
+    AMS_SUBSCRIPTION: bool = False
+    AMS_API_BASE_URL: str = "https://api-new.msg.argo.grnet.gr/v1"
+    AMS_PROJECT_NAME: str = "eosc-beyond-providers"
+    AMS_API_TOKEN: str = "CHANGE_ME"
+    AMS_POLL_INTERVAL: int = 30  # Poll interval (seconds)
+    AMS_PULL_MAX_MESSAGES: int = 50  # Batch size (default 50 messages per request)
+    AMS_PULL_TIMEOUT_SECONDS: int = 90
+    AMS_TOPICS: list[str] = []  # Will be populated dynamically
+
+    # - STOMP
+    STOMP_SUBSCRIPTION: bool = False
+    STOMP_HOST: str = "127.0.0.1"
+    STOMP_PORT: int = 61613
+    STOMP_LOGIN: str = "guest"
+    STOMP_PASS: str = "guest"
+    STOMP_CLIENT_NAME: str = "transformer-client"
+    STOMP_SSL: bool = False
+    STOMP_TOPIC_PREFIX: str = ""
+    STOMP_TOPICS: list[str] = []  # Will be populated dynamically
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.STOMP_TOPICS = self._generate_stomp_topics()
+        if self.AMS_SUBSCRIPTION:
+            self.AMS_TOPICS = self._generate_ams_topics()
+        if self.STOMP_SUBSCRIPTION:
+            self.STOMP_TOPICS = self._generate_stomp_topics()
 
     def _generate_stomp_topics(self) -> list[str]:
         """Generate STOMP topics using the prefix"""
@@ -84,6 +98,12 @@ class GlobalSettings(BaseSettings):
             ]
         else:
             return [f"/topic/{topic}" for topic in self._BASE_TOPICS]
+
+    def _generate_ams_topics(self) -> list[str]:
+        return [
+            f"/projects/{self.AMS_PROJECT_NAME}/topics/{topic.replace('.', '-')}"
+            for topic in self._BASE_TOPICS
+        ]
 
     # Sources of data
     # - Local storage with OAG data
