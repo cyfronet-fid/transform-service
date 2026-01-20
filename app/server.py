@@ -10,6 +10,7 @@ from sentry_sdk.integrations.redis import RedisIntegration
 
 from app.api.endpoints import solr_api_router, transform_api_router
 from app.logger import LOGGING_CONFIG
+from app.services.ams.startup import start_ams_subscription
 from app.services.jms.connector import close_jms_subscription, start_jms_subscription
 from app.settings import settings
 
@@ -34,15 +35,20 @@ def get_app():
             traces_sample_rate=1.0,
         )
 
-    if settings.STOMP_SUBSCRIPTION:
+    @app.on_event("startup")
+    async def startup_event():
+        logging.config.dictConfig(LOGGING_CONFIG)
 
-        @app.on_event("startup")
-        async def startup_event():
-            logging.config.dictConfig(LOGGING_CONFIG)
+        if settings.STOMP_SUBSCRIPTION:
             await start_jms_subscription()
 
-        @app.on_event("shutdown")
-        async def shutdown_event():
+        if settings.AMS_SUBSCRIPTION:
+            print("AMS subscription starting...")
+            await start_ams_subscription()
+
+    @app.on_event("shutdown")
+    async def shutdown_event():
+        if settings.STOMP_SUBSCRIPTION:
             await close_jms_subscription()
 
     return app
