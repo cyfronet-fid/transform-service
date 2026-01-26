@@ -12,7 +12,7 @@ class EgaOutput(BaseModel):
     best_access_right: str = Field(..., description="The dataset access type")
     publication_date: str | None = Field(None, description="The dataset released date")
     node: str = "EOSC PL"
-    dataset_types: list[str] = Field(..., description="The dataset types")
+    document_type: list[str] = Field(..., description="The dataset types")
     technologies: list[str] | None = Field(None, description="The dataset technologies")
     num_samples: int = Field(..., ge=0, description="The dataset number of samples")
     is_in_beacon: bool = Field(..., description="The dataset is in beacon")

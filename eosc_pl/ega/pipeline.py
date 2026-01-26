@@ -32,7 +32,7 @@ def transform_to_ega_output(raw: dict) -> EgaOutput:
         description=raw.get("description"),
         best_access_right=access_map.get(access_raw),
         publication_date=raw.get("released_date"),
-        dataset_types=raw.get("dataset_types"),
+        document_type=raw.get("dataset_types"),
         technologies=raw.get("technologies"),
         num_samples=raw.get("num_samples"),
         is_in_beacon=raw.get("is_in_beacon"),
