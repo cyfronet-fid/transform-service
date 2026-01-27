@@ -19,6 +19,8 @@ available transformers are:
 - OrganisationTransformer
 - ProjectTransformer
 - CatalogueTransformer
+- AdapterTransformer
+- DeployableServiceTransformer
 
 The `transformers` dictionary maps settings to their corresponding transformer classes.
 
@@ -38,6 +40,7 @@ from .bundle import BundleTransformer
 from .catalogue import CatalogueTransformer
 from .data_source import DataSourceTransformer
 from .dataset import DatasetTransformer
+from .deployable_service import DeployableServiceTransformer
 from .guideline import transform_guidelines
 from .offer import OfferTransformer
 from .organisation import OrganisationTransformer
@@ -67,4 +70,5 @@ transformers = {
     settings.PROJECT: ProjectTransformer,
     settings.CATALOGUE: CatalogueTransformer,
     settings.ADAPTER: AdapterTransformer,
+    settings.DEPLOYABLE_SERVICE: DeployableServiceTransformer,
 }

@@ -97,9 +97,16 @@ S3
 - ``S3_ENDPOINT``: ``str = ""`` - S3 endpoint. Example: ``https://s3.cloud.com``.
 - ``S3_BUCKET``: ``str = ""`` - S3 bucket. Example: ``ess-mock-dumps``.
 
+AMS
+-----
+- ``AMS_SUBSCRIPTION``: ``bool = True`` - Subscribe to JMS?
+    - ``AMS_API_BASE_URL``: ``str = "https://api-new.msg.argo.grnet.gr/v1"`` - The address of AMS API.
+    - ``AMS_API_TOKEN``: ``str = "CHANGE_ME"`` - The token used for authorization.
+    - ``AMS_PROJECT_NAME``: ``str = "eosc-beyond-providers"``- The project name.
+
 STOMP (JMS)
 -----
-- ``STOMP_SUBSCRIPTION``: ``bool = True`` - Subscribe to JMS?
+- ``STOMP_SUBSCRIPTION``: ``bool = False`` - Subscribe to JMS?
     - ``STOMP_HOST``: ``str = "127.0.0.1"`` - The hostname or IP address of the STOMP broker.
     - ``STOMP_PORT``: ``int = 61613``- The port on which the STOMP broker is listening.
     - ``STOMP_LOGIN``: ``str = "guest"`` - The username for connecting to the STOMP broker.
@@ -131,7 +138,7 @@ Data from API
 -------------
 Marketplace
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-- ``MP_API_ADDRESS``: ``AnyUrl = "https://marketplace.sandbox.eosc-beyond.eu"`` - A Marketplace API address.
+- ``MP_API_ADDRESS``: ``AnyUrl = "https://userspace.sandbox.eosc-beyond.eu"`` - A Marketplace API address.
 - ``MP_API_TOKEN``: ``str`` - An authorization token for the Marketplace API.
 
 Provider Component

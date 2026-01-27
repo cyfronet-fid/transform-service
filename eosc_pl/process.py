@@ -5,7 +5,7 @@ import sys
 
 import transform.transformers.pd as trans
 from settings import Repository, get_config
-from transform.utils.loader import pd_load_datasets, pd_load_datasets_with_pagination
+from transform.utils.loader import pd_load_datasets_with_pagination
 from transform.utils.send import send_json_string_to_solr
 
 logger = logging.getLogger(__name__)

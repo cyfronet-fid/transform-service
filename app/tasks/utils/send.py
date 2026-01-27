@@ -70,34 +70,98 @@ def send_dump_data(
     file_path: str | None,
     s3_client: boto3.client = None,
 ) -> None:
-    """Helper function to send data to S3 and/or Solr based on the task type and a configuration."""
+    """
+    Helper function to send data to S3 and/or Solr based on the task type and configuration.
+
+    Sends serialized DataFrame data to all configured Solr and S3 instances defined
+    in the request body.
+    """
+    if not req_body:
+        logger.error("Request body is missing.")
+        return
+
+    instances = req_body.get("instances", [])
+    if not instances:
+        logger.warning("No instances defined in request body.")
+        return
+
     solr_data, s3_data = serialize_df(collection_name, df)
-    instances = req_body.get("instances")
     input_file_path = extract_after_bucket(file_path, req_body.get("dump_url", ""))
 
-    solr_instance = next(
-        (inst for inst in instances if inst.get("type") == "solr"), None
-    )
-    if solr_instance:
-        solr_url = solr_instance.get("url")
-        solr_collections = solr_instance[COL_UPLOAD_CONFIG][collection_name]
-        send_str_to_solr(solr_data, solr_url, solr_collections, input_file_path)
-        logger.info("%s successfully send to solr.", input_file_path)
+    # -------------------------
+    # Handle Solr uploads
+    # -------------------------
+    solr_instances = [inst for inst in instances if inst.get("type") == "solr"]
+    if not solr_instances:
+        logger.info("No Solr instances configured.")
+    else:
+        for solr_instance in solr_instances:
+            solr_url = solr_instance.get("url")
+            solr_collections = solr_instance.get(COL_UPLOAD_CONFIG, {}).get(
+                collection_name
+            )
 
-    s3_instance = next((inst for inst in instances if inst.get("type") == "s3"), None)
+            if not solr_url or not solr_collections:
+                logger.warning(
+                    "Skipping Solr instance due to missing URL or collection config: %s",
+                    solr_instance,
+                )
+                continue
 
-    if s3_instance:
+            try:
+                send_str_to_solr(solr_data, solr_url, solr_collections, input_file_path)
+                logger.info(
+                    "%s successfully sent to Solr instance at %s (collections: %s).",
+                    input_file_path,
+                    solr_url,
+                    solr_collections,
+                )
+            except Exception as e:
+                logger.exception(
+                    "Failed to send data to Solr instance at %s (collections: %s): %s",
+                    solr_url,
+                    solr_collections,
+                    e,
+                )
+
+    # -------------------------
+    # Handle S3 uploads
+    # -------------------------
+    s3_instances = [inst for inst in instances if inst.get("type") == "s3"]
+    if not s3_instances:
+        logger.info("No S3 instances configured.")
+    else:
         if not s3_client:
-            logger.error("No S3 client provided.")
+            logger.error("S3 client not provided but S3 instances exist.")
             raise S3ClientError()
-        s3_send_gz_data(
-            s3_data,
-            collection_name,
-            s3_instance.get("s3_output_url"),
-            input_file_path,
-            s3_client,
-        )
-        logger.info("%s successfully send to s3", input_file_path)
+
+        for s3_instance in s3_instances:
+            s3_output_url = s3_instance.get("s3_output_url")
+            if not s3_output_url:
+                logger.warning(
+                    "Skipping S3 instance with missing output URL: %s", s3_instance
+                )
+                continue
+
+            try:
+                s3_send_gz_data(
+                    s3_data,
+                    collection_name,
+                    s3_output_url,
+                    input_file_path,
+                    s3_client,
+                )
+                logger.info(
+                    "%s successfully sent to S3 bucket at %s.",
+                    input_file_path,
+                    s3_output_url,
+                )
+            except Exception as e:
+                logger.exception(
+                    "Failed to send data to S3 bucket at %s: %s",
+                    s3_output_url,
+                    e,
+                )
 
 
 def send_live_data(

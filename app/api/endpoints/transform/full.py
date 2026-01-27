@@ -24,6 +24,7 @@ async def full_update(
         "training",
         "catalogue",
         "adapter",
+        "deployable service",
     ],
 ) -> dict[str, str | None]:
     """Perform a full update of data collection/collections"""
@@ -37,6 +38,7 @@ async def full_update(
         settings.TRAINING: None,
         settings.CATALOGUE: None,
         settings.ADAPTER: None,
+        settings.DEPLOYABLE_SERVICE: None,
     }
 
     if data_type == "all":
@@ -51,6 +53,7 @@ async def full_update(
             settings.GUIDELINE,
             settings.TRAINING,
             settings.ADAPTER,
+            settings.DEPLOYABLE_SERVICE,
         ):
             await update_single_col(col, tasks_ids)
     else:
