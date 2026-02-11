@@ -211,7 +211,8 @@ class TrainingTransformer(BaseTransformer):
                 elif ga == "EO":
                     geo_av_row.append("Europe")
                 else:
-                    geo_av_row.append(pycountry.countries.get(alpha_2=ga))
+                    c = pycountry.countries.get(alpha_2=ga)
+                    geo_av_row.append(c.name if c else None)
             geo_av_column.append(geo_av_row)
 
         self.harvested_properties[GEO_AV] = geo_av_column
