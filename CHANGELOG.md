@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.1](https://github.com/cyfronet-fid/transform-service/compare/v1.5.0...v1.5.1) (2026-02-16)
+
+
+### Bug Fixes
+
+* country transformation in trainings ([8cc5322](https://github.com/cyfronet-fid/transform-service/commit/8cc532225a70b714f7126e42785d2b46e5ac553d))
+
 ## [1.5.0](https://github.com/cyfronet-fid/transform-service/compare/v1.4.0...v1.5.0) (2026-01-27)
 
 
