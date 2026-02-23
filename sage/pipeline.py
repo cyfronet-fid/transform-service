@@ -10,7 +10,7 @@ from sage.transfomer import transform_raw_dataset
 
 def flatten_datasets(catalogs):
     """
-    Extract all raw dataset dicts from all catalogs.
+    Extract all raw dataset dicts and attach a readable `catalogue` label.
     """
     datasets = []
 
@@ -20,9 +20,11 @@ def flatten_datasets(catalogs):
 
     for catalog in catalogs:
         raw_list = catalog.get("dcat:dataset", [])
+
         if isinstance(raw_list, list):
             for ds in raw_list:
                 if isinstance(ds, dict):
+                    ds["catalogue"] = catalog.get("dspace:participantId") or ""
                     datasets.append(ds)
 
     return datasets
