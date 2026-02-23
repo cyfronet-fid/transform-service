@@ -98,6 +98,7 @@ def transform_raw_dataset(raw: Dict[str, Any]) -> Dict[str, Any]:
     return {
         "id": raw.get("id") or raw.get("@id"),
         "type": "dataset",
+        "catalogue": raw.get("catalogue"),
         "url": raw.get("baseUrl"),
         "version": raw.get("version"),
         "title": raw.get("name"),

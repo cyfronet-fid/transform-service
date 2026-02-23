@@ -22,9 +22,10 @@ from pydantic import BaseModel, HttpUrl
 
 
 class Dataset(BaseModel):
-    id: str  # required minimal invariant
+    id: str
 
     type: str = "dataset"
+    catalogue: str = None
 
     url: Optional[HttpUrl] = None
     version: Optional[str] = None
