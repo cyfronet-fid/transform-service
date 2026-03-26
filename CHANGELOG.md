@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.6.0](https://github.com/cyfronet-fid/transform-service/compare/v1.5.1...v1.6.0) (2026-03-26)
+
+
+### Features
+
+* sage add catalogue filter ([67ebd20](https://github.com/cyfronet-fid/transform-service/commit/67ebd201aef63e2b3f2133d3eae96a0e3cab8a96))
+* sage metadata mvp ([1020d13](https://github.com/cyfronet-fid/transform-service/commit/1020d1340cb4c2b7aa98ad3d3f588001f8d1a2e6))
+
+
+### Bug Fixes
+
+* handle new mp catalogue tag_list and empty links for data sources ([89a55f2](https://github.com/cyfronet-fid/transform-service/commit/89a55f213d109d8b6786eaf0a67fe7f5c32fcecc))
+
 ## [1.5.1](https://github.com/cyfronet-fid/transform-service/compare/v1.5.0...v1.5.1) (2026-02-16)
 
 
