@@ -1,8 +1,8 @@
 # pylint: disable=line-too-long, wildcard-import, unused-wildcard-import, invalid-name, duplicate-code
 """Transform Marketplace's resources"""
 from pyspark.sql import DataFrame, SparkSession
-from pyspark.sql.functions import col, lit
-from pyspark.sql.types import StringType, StructType
+from pyspark.sql.functions import col, lit, transform
+from pyspark.sql.types import ArrayType, StringType, StructType
 
 from app.settings import settings
 from app.transform.transformers.base.base import BaseTransformer
@@ -42,6 +42,7 @@ class CatalogueTransformer(BaseTransformer):
         Simple in a way that there is a possibility to manipulate the main dataframe
         without a need to create another dataframe and merging"""
         df = df.withColumn(TYPE, lit(self.type))
+        df = self.normalize_tag_list(df)
         df = self.rename_cols(df)
         df = df.withColumn(ID, (col(ID) + self.id_increment))
 
@@ -101,3 +102,39 @@ class CatalogueTransformer(BaseTransformer):
             "updated_at",
             "webpage_url",
         )
+
+    def normalize_tag_list(self, df: DataFrame) -> DataFrame:
+        """
+        Ensure tag_list is always array<string>.
+
+        Expected format:
+            ["biology", "chemistry"]
+
+        New format from MP:
+            [
+                {"id": 1, "name": "biology"},
+                {"id": 2, "name": "chemistry"}
+            ]
+        """
+
+        if TAG_LIST not in df.columns:
+            return df
+
+        tag_schema = df.schema[TAG_LIST].dataType
+
+        # already correct format
+        if isinstance(tag_schema, ArrayType) and isinstance(
+            tag_schema.elementType, StringType
+        ):
+            return df
+
+        # new structure: array<struct>
+        if isinstance(tag_schema, ArrayType) and isinstance(
+            tag_schema.elementType, StructType
+        ):
+            return df.withColumn(
+                TAG_LIST,
+                transform(col(TAG_LIST), lambda x: x["name"]),
+            )
+
+        return df
