@@ -5,7 +5,7 @@ from itertools import chain
 
 from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql.functions import col, lit
-from pyspark.sql.types import StringType
+from pyspark.sql.types import ArrayType, StringType, StructType
 from pyspark.sql.utils import AnalysisException
 
 from app.settings import settings
@@ -84,7 +84,10 @@ class MarketplaceBaseTransformer(BaseTransformer):
             )
 
         if self.type == settings.SERVICE:
-            url_cols_to_simplify = ("multimedia_urls", "use_cases_urls")
+            url_cols_to_simplify = (
+                "multimedia_urls",
+                "use_cases_urls",
+            )
         else:
             url_cols_to_simplify = (
                 "multimedia_urls",
@@ -93,11 +96,22 @@ class MarketplaceBaseTransformer(BaseTransformer):
                 "research_product_licensing_urls",
             )
 
-        for urls in url_cols_to_simplify:
-            try:
-                df = df.withColumn(urls, col(urls)[URL])
-            except AnalysisException:
-                df = df.withColumn(urls, lit(None))
+        for c in url_cols_to_simplify:
+            if c not in df.columns:
+                df = df.withColumn(c, lit(None))
+                continue
+
+            schema = df.schema[c].dataType
+
+            # only attempt extraction when structs exist
+            if isinstance(schema, ArrayType) and isinstance(
+                schema.elementType, StructType
+            ):
+                if URL in schema.elementType.fieldNames():
+                    df = df.withColumn(c, col(c)[URL])
+
+            # otherwise leave as-is (already array<string> or empty list)
+
         return df
 
     def harvest_persistent_id_systems(self, df: DataFrame) -> DataFrame:
