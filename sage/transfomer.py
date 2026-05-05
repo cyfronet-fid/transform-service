@@ -68,6 +68,26 @@ def pick_latest_date(val: Any) -> Optional[str]:
     return None
 
 
+def extract_catalogue_name(catalogue: Optional[str]) -> Optional[str]:
+    _CATALOGUE_NAME_MAP = {
+        "edwin": "EDWIN",
+        "sage-public": "Sage Public",
+    }
+
+    if not catalogue or not isinstance(catalogue, str):
+        return None
+
+    last_segment = catalogue.rsplit(":", 1)[-1].strip()
+    if not last_segment:
+        return None
+
+    if last_segment in _CATALOGUE_NAME_MAP:
+        return _CATALOGUE_NAME_MAP[last_segment]
+
+    # Fallback: kebab-case -> Title Case
+    return last_segment.replace("-", " ").title()
+
+
 def extract_metadata(meta: Optional[Dict[str, Any]]) -> Dict[str, Any]:
     """
     Safely extract known metadata fields.
@@ -98,10 +118,12 @@ def transform_raw_dataset(raw: Dict[str, Any]) -> Dict[str, Any]:
     return {
         "id": raw.get("id") or raw.get("@id"),
         "type": "dataset",
-        "catalogue": raw.get("catalogue"),
+        "catalogue": extract_catalogue_name(raw.get("catalogue")),
+        "participant_id": raw.get("participant_id"),
         "url": raw.get("baseUrl"),
         "version": raw.get("version"),
         "title": raw.get("name"),
+        "originator": raw.get("originator"),
         **meta,
         "content_type": raw.get("contenttype"),
     }
