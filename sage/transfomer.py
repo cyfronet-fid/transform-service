@@ -1,10 +1,19 @@
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
+
+FOAF_NAME_KEY = "http://xmlns.com/foaf/0.1/name"
+
+
+def first_nonempty_string(values: List[Any]) -> Optional[str]:
+    for value in values:
+        if isinstance(value, str) and value.strip():
+            return value
+    return None
 
 
 def safe_publisher(meta: Dict[str, Any]) -> Optional[str]:
     """
-    Extract publisher.name or publisher.@id.
+    Extract publisher.name, publisher.foaf:name or publisher.@id.
     Handles:
     - dict
     - list of dicts
@@ -17,21 +26,35 @@ def safe_publisher(meta: Dict[str, Any]) -> Optional[str]:
 
     # Case 1: publisher is a dict
     if isinstance(value, dict):
-        return value.get("name") or value.get("@id")
+        return first_nonempty_string(
+            [
+                value.get("name"),
+                value.get(FOAF_NAME_KEY),
+                value.get("@id"),
+            ]
+        )
 
     # Case 2: publisher is a list of dicts
     if isinstance(value, list) and value:
         first = value[0]
         if isinstance(first, dict):
-            return first.get("name") or first.get("@id")
+            return first_nonempty_string(
+                [
+                    first.get("name"),
+                    first.get(FOAF_NAME_KEY),
+                    first.get("@id"),
+                ]
+            )
 
     return None
 
 
 def clean_list(values):
     """
-    Remove empty strings, None, and non-string items from a list.
+    Normalize a string or list of strings and remove empty values.
     """
+    if isinstance(values, str):
+        return [values] if values.strip() else []
     if not isinstance(values, list):
         return []
     return [v for v in values if isinstance(v, str) and v.strip()]
