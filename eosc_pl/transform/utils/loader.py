@@ -1,5 +1,6 @@
 # pylint: disable=invalid-name, broad-exception-caught, logging-too-many-args
 """Load data"""
+
 import logging
 import urllib.parse
 from typing import Optional

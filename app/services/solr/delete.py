@@ -1,5 +1,6 @@
 # pylint: disable=line-too-long, logging-fstring-interpolation
 """Delete resource based on its ID"""
+
 import json
 import logging
 

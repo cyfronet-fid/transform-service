@@ -1,5 +1,6 @@
 # pylint: disable=line-too-long, wildcard-import, invalid-name, unused-wildcard-import, duplicate-code
 """Transform trainings"""
+
 import json
 from datetime import datetime, timezone
 from itertools import chain

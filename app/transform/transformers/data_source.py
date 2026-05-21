@@ -1,5 +1,6 @@
 # pylint: disable=duplicate-code
 """Transform data sources"""
+
 from pyspark.sql.types import (
     ArrayType,
     BooleanType,

@@ -1,5 +1,6 @@
 # pylint: disable-all
 """Fixtures for schemas tests"""
+
 import pytest
 from pyspark.sql.types import (
     ArrayType,

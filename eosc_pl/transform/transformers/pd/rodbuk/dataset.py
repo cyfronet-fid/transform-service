@@ -1,5 +1,6 @@
 # pylint: disable=invalid-name, line-too-long
 """Dataset transformer"""
+
 from logging import getLogger
 
 from pandas import DataFrame, to_datetime

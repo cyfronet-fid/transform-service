@@ -64,8 +64,8 @@ def map_nodes(data: dict[str, Any]) -> dict[str, Any]:
     # Only apply mapping if any node labels were found
     if node_mapping:
         for item in data.get("results", []):
-            original_node = item.get("node")
+            original_node = item.get("nodePID")
             if isinstance(original_node, str) and original_node in node_mapping:
                 item["node"] = node_mapping[original_node]
-
+            del item["nodePID"]
     return data

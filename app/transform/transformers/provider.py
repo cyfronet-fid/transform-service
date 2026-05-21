@@ -1,5 +1,6 @@
 # pylint: disable=line-too-long, wildcard-import, unused-wildcard-import, invalid-name, duplicate-code
 """Transform Marketplace's resources"""
+
 from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql.functions import col, lit, split
 from pyspark.sql.types import IntegerType, StringType, StructField, StructType

@@ -8,6 +8,7 @@ Outputs NDJSON (one JSON object per line). Each object contains:
   - metadata_flat: compact, query-friendly JSON (attributes -> @attributes, text -> #text)
   - raw: original XML (string)
 """
+
 import argparse
 import datetime
 import json
