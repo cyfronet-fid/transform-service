@@ -1,5 +1,6 @@
 # pylint: disable=too-few-public-methods
 """Configs for all the environments"""
+
 import logging
 import os
 from typing import Literal, Optional
@@ -8,10 +9,12 @@ from dotenv import load_dotenv
 from pydantic import AnyUrl
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from schemas.input.adapter import AdapterInputSchema
 from schemas.old.input import *
 from schemas.old.input.deployable_service import deployable_service_input_schema
 from schemas.old.output import *
 from schemas.old.output.deployable_service import deployable_service_output_schema
+from schemas.se.adapter import AdapterSESchema
 
 logger = logging.getLogger(__name__)
 EnvironmentType = Literal["dev", "test", "production"]
@@ -336,8 +339,8 @@ class TransformSettings(GlobalSettings):
             },
             self.ADAPTER: {
                 ADDRESS: str(self.ADAPTER_ADDRESS),
-                OUTPUT_SCHEMA: adapter_output_schema,
-                INPUT_SCHEMA: adapter_input_schema,
+                OUTPUT_SCHEMA: AdapterSESchema,
+                INPUT_SCHEMA: AdapterInputSchema,
             },
         }
 

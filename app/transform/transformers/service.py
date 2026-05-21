@@ -1,5 +1,6 @@
 # pylint: disable=duplicate-code
 """Transform services"""
+
 from pyspark.sql.types import (
     BooleanType,
     IntegerType,

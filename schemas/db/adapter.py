@@ -1,6 +1,6 @@
 """Expected db adapter schema"""
 
-from datetime import datetime
+from datetime import date
 from typing import List, Optional
 
 from pydantic import AnyHttpUrl, BaseModel
@@ -39,10 +39,14 @@ class AdapterDBSchema(BaseModel):
             A list of related guidelines for the adapter.
         related_services (Optional[List[str]]):
             A list of related services for the adapter.
-        releases (List[str]):
-            A list of release versions or information.
+        package (List[str]):
+            A list of release/package URLs.
         keywords (Optional[str]):
             A brief tagline or summary for the adapter.
+        sqa_badge (Optional[List[str]]):
+            Software quality assurance badge labels.
+        sqa_url (Optional[str]):
+            Software quality assurance report URL.
         title (str):
             The title/name of the adapter.
         type (str):
@@ -51,25 +55,34 @@ class AdapterDBSchema(BaseModel):
             The current version of the adapter.
     """
 
-    admins: Optional[List[str]]
     catalogues: List[str]
     changelog: List[str]
     repository: AnyHttpUrl
     description: str
     documentation_url: AnyHttpUrl
     id: str
-    last_update: datetime
-    license: str
+    publication_date: Optional[date]
+    last_update: Optional[date]
+    license: Optional[str]
     logo: Optional[str]
     node: Optional[str]
     programming_language: str
     related_guidelines: Optional[List[str]]
     related_services: Optional[List[str]]
-    releases: List[str]
+    package: List[str]
     keywords: Optional[str]
+    sqa_badge: Optional[List[str]]
+    sqa_url: Optional[str]
     title: str
     type: str
     version: str
+    url: List[str]
+    alternative_ids: Optional[str]
+    resource_owner: str
+    creator_names: Optional[List[str]]
+    creator_identifiers: Optional[List[str]]
+    creator_affiliations: Optional[List[str]]
+    public_contacts: List[str]
 
     """
     Transformations necessary to convert AdapterInputSchema to AdapterDBSchema:

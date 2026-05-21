@@ -1,5 +1,6 @@
 # pylint: disable=invalid-name, logging-too-many-args
 """Validate loaded data"""
+
 from logging import getLogger
 
 import pandas as pd

@@ -1,5 +1,6 @@
 # pylint: disable=line-too-long, wildcard-import, unused-wildcard-import, invalid-name, too-many-arguments
 """Transform Marketplace's resources"""
+
 from abc import abstractmethod
 from itertools import chain
 

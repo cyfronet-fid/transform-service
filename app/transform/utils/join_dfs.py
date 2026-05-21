@@ -1,5 +1,6 @@
 # pylint: disable=invalid-name, unbalanced-tuple-unpacking
 """Join dataframes"""
+
 from functools import reduce
 
 from pyspark.sql import DataFrame, SparkSession, Window

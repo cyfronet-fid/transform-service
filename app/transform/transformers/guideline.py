@@ -1,5 +1,6 @@
 # pylint: disable=line-too-long, invalid-name, logging-fstring-interpolation, too-many-locals, duplicate-code, fixme
 """Transform interoperability guidelines"""
+
 import json
 import logging
 from datetime import datetime

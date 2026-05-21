@@ -1,5 +1,6 @@
 # pylint: disable=line-too-long, logging-fstring-interpolation
 """Retrieve data from the APIs of both the Marketplace and the Provider Component"""
+
 import asyncio
 from logging import getLogger
 
