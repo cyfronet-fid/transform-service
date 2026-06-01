@@ -1,430 +1,185 @@
-# pylint: disable=line-too-long, invalid-name, logging-fstring-interpolation, too-many-locals, duplicate-code, fixme
-"""Transform interoperability guidelines"""
+# pylint: disable=line-too-long, logging-fstring-interpolation
+"""Transform interoperability guidelines."""
 
 import json
 import logging
-from datetime import datetime
+import re
+from html import unescape
+from typing import Any
 
 import pandas as pd
 from pandas import DataFrame
 
-from app.services.mp_pc.data import get_providers_mapping
-from app.services.solr.validate.schema.validate import validate_pd_schema
+from app.services.solr.validate.schema.validate import validate_pydantic_data
 from app.settings import settings
-from schemas.old.input.guideline import guideline_input_schema
-from schemas.old.output.guideline import guideline_output_schema
-from schemas.properties.data import (
-    ALTERNATIVE_IDS,
-    AUTHOR_NAMES,
-    AUTHOR_NAMES_TG,
-    DOI,
-    TYPE,
-    URI,
-)
+from schemas.input.guideline import GuidelineInputSchema
+from schemas.se.guideline import GuidelineSESchema
 
 logger = logging.getLogger(__name__)
 
-IDENTIFIER_INFO = "identifierInfo"
-IDENTIFIER = "identifier"
-IDENTIFIER_TYPE = "identifierType"
-RESOURCE_TYPE_INFO = "resourceTypesInfo"
 
-CREATORS = "creators"
-AUTHOR_TYPES = "author_types"
-AUTHOR_GIVEN_NAMES = "author_given_names"
-AUTHOR_FAMILY_NAMES = "author_family_names"
-AUTHOR_NAMES_ID = "author_names_id"
-AUTHOR_AFFILIATIONS = "author_affiliations"
-AUTHOR_AFFILIATIONS_ID = "author_affiliations_id"
-
-TYPE_INFO = "type_info"
-TYPE_GENERAL = "type_general"
-
-RELATED_STANDARDS = "relatedStandards"
-RELATED_STANDARDS_ID = "related_standards_id"
-RELATED_STANDARDS_URI = "related_standards_uri"
-
-RIGHTS = "rights"
-RIGHT_TITLE_RAW = "rightTitle"
-RIGHT_URI_RAW = "rightURI"
-RIGHT_ID_RAW = "rightIdentifier"
-RIGHT_TITLE = "right_title"
-RIGHT_URI = "right_uri"
-RIGHT_ID = "right_id"
+def _list(value: list | None) -> list:
+    """Return an empty list for null multi-value fields."""
+    return value or []
 
 
-def harvest_identifiers(df: DataFrame) -> None:
-    """Harvest DOI  and URI from identifierInfo of interoperability guideline"""
-    column = df[IDENTIFIER_INFO]
-    doi = []
-    uri = []
-
-    for row in column:
-        match row[IDENTIFIER_TYPE]:
-            case "ir_identifier_type-doi":
-                doi.append([row[IDENTIFIER]])
-                uri.append([])
-            case "ir_identifier_type-uri":
-                doi.append([])
-                uri.append([row[IDENTIFIER]])
-            case _:
-                doi.append([])
-                uri.append([])
-                logger.warning(f"Unknown identifier type: {row[IDENTIFIER_TYPE]}")
-
-    df[DOI] = doi
-    df[URI] = uri
-    df.drop(IDENTIFIER_INFO, inplace=True, axis=1)
+def _compact(values: list[Any]) -> list[str]:
+    """Drop empty values and cast kept values to strings."""
+    return [str(value) for value in values if value not in (None, "")]
 
 
-def harvest_authors_names(df: DataFrame) -> None:
-    """Harvest creators from interoperability guideline"""
+def _clean_html(value: str | None) -> str:
+    """Remove basic HTML tags and HTML entities from a Provider Component string."""
+    if not value:
+        return ""
 
-    def rename_creators(creators: df) -> df:
-        """Rename creators properties"""
-        if creators is None:
-            return None
-
-        for creator in creators:
-            if creator.get("creatorNameTypeInfo"):
-                creator["author_name_type_info"] = creator.pop("creatorNameTypeInfo")
-                if "creatorName" in creator["author_name_type_info"]:
-                    creator["author_name_type_info"]["author_names"] = creator[
-                        "author_name_type_info"
-                    ].pop("creatorName")
-                if "nameType" in creator["author_name_type_info"]:
-                    creator["author_name_type_info"]["author_types"] = creator[
-                        "author_name_type_info"
-                    ].pop("nameType")
-
-            if "givenName" in creator:
-                creator["author_given_names"] = creator.pop("givenName")
-
-            if "familyName" in creator:
-                creator["author_family_names"] = creator.pop("familyName")
-
-            if "nameIdentifier" in creator:
-                creator["author_names_id"] = creator.pop("nameIdentifier")
-
-            if creator.get("creatorAffiliationInfo"):
-                creator["author_affiliation_info"] = creator.pop(
-                    "creatorAffiliationInfo"
-                )
-                if "affiliation" in creator["author_affiliation_info"]:
-                    creator["author_affiliation_info"]["author_affiliations"] = creator[
-                        "author_affiliation_info"
-                    ].pop("affiliation")
-                if "affiliationIdentifier" in creator["author_affiliation_info"]:
-                    creator["author_affiliation_info"]["author_affiliations_id"] = (
-                        creator["author_affiliation_info"].pop("affiliationIdentifier")
-                    )
-
-        return creators
-
-    def replace_empty_str(attr: str) -> [str, None]:
-        """Replace empty string with None"""
-        if not attr:
-            return None
-        return attr
-
-    column = df[CREATORS]
-    auth_col = []
-    auth_typ_col = []
-    given_name_col = []
-    family_name_col = []
-    name_id_col = []
-    affiliation_col = []
-    affiliation_id_col = []
-
-    for authors in column:
-        auth_row = []
-        auth_typ_row = []
-        given_name_row = []
-        family_name_row = []
-        name_id_row = []
-        affiliation_row = []
-        affiliation_id_row = []
-
-        for author in authors:
-            try:
-                auth_name = replace_empty_str(
-                    author["creatorNameTypeInfo"]["creatorName"]
-                )
-                auth_typ = replace_empty_str(author["creatorNameTypeInfo"]["nameType"])
-            except TypeError:
-                auth_name = None
-                auth_typ = None
-            auth_given_name = replace_empty_str(author["givenName"])
-            auth_family_name = replace_empty_str(author["familyName"])
-            auth_name_id = replace_empty_str(author["nameIdentifier"])
-            try:
-                auth_aff = replace_empty_str(
-                    author["creatorAffiliationInfo"]["affiliation"]
-                )
-                auth_aff_id = replace_empty_str(
-                    author["creatorAffiliationInfo"]["affiliationIdentifier"]
-                )
-            except TypeError:
-                auth_aff = None
-                auth_aff_id = None
-
-            auth_row.append(auth_name)
-            auth_typ_row.append(auth_typ)
-            given_name_row.append(auth_given_name)
-            family_name_row.append(auth_family_name)
-            name_id_row.append(auth_name_id)
-            affiliation_row.append(auth_aff)
-            affiliation_id_row.append(auth_aff_id)
-
-        auth_col.append(auth_row)
-        auth_typ_col.append(auth_typ_row)
-        given_name_col.append(given_name_row)
-        family_name_col.append(family_name_row)
-        name_id_col.append(name_id_row)
-        affiliation_col.append(affiliation_row)
-        affiliation_id_col.append(affiliation_id_row)
-
-    df[AUTHOR_NAMES] = auth_col
-    df[AUTHOR_NAMES_TG] = auth_col
-    df[AUTHOR_TYPES] = auth_typ_col
-    df[AUTHOR_GIVEN_NAMES] = given_name_col
-    df[AUTHOR_FAMILY_NAMES] = family_name_col
-    df[AUTHOR_NAMES_ID] = name_id_col
-    df[AUTHOR_AFFILIATIONS] = affiliation_col
-    df[AUTHOR_AFFILIATIONS_ID] = affiliation_id_col
-
-    df[CREATORS] = df[CREATORS].apply(rename_creators)
-    # Serialize creators
-    df[CREATORS] = df[CREATORS].apply(lambda x: json.dumps(x))
+    without_tags = re.sub(r"</?[a-zA-Z][^>]*>", "", value)
+    return unescape(without_tags).replace("\u00a0", " ").strip()
 
 
-def map_str_to_arr(df: DataFrame, cols: list) -> None:
-    """Map string columns to array columns"""
-    for col in cols:
-        df[col] = [[row] for row in df[col]]
+def _join(values: list[str]) -> str | None:
+    """Serialize Solr text fields that are stored as a single string."""
+    return ", ".join(values) if values else None
 
 
-def rename_cols(df: DataFrame) -> None:
-    """Rename columns"""
+def _creator_name(creator: dict) -> str | None:
+    """Build a creator display name from first and last name fields."""
+    name = " ".join(
+        part
+        for part in (
+            creator.get("firstName"),
+            creator.get("lastName"),
+        )
+        if part
+    )
+    return name or None
 
-    def mapping_dict() -> dict:
-        return {
-            "alternativeIdentifiers": "alternative_ids",
-            "publicationYear": "publication_year",
-            "catalogueId": "catalogues",
-            "created": "publication_date",
-            "updated": "updated_at",
-            "eoscGuidelineType": "eosc_guideline_type",
-            "eoscIntegrationOptions": "eosc_integration_options",
-            "providerId": "providers",
+
+def _transform_record(record: dict) -> dict:
+    """Flatten a validated Provider Component guideline into a Solr document."""
+    guideline = GuidelineInputSchema.model_validate(record)
+    item = guideline.model_dump()
+
+    resource_type_info = item.get("resourceTypeInfo") or {}
+    license_info = item.get("license") or {}
+
+    creators = _list(item.get("creators"))
+    author_given_names = _compact([creator.get("firstName") for creator in creators])
+    author_family_names = _compact([creator.get("lastName") for creator in creators])
+    author_names = _compact([_creator_name(creator) for creator in creators])
+    author_names_tg = author_names
+
+    author_names_id = []
+    author_affiliations = []
+    author_affiliations_id = []
+    author_types = []
+
+    for creator in creators:
+        for pid in _list(creator.get("PIDs")):
+            author_names_id.extend(_compact([pid.get("creatorPID")]))
+
+        for affiliation in _list(creator.get("affiliations")):
+            author_affiliations.extend(_compact([affiliation.get("affiliationName")]))
+            identifier = affiliation.get("affiliationIdentifier") or {}
+            author_affiliations_id.extend(_compact([identifier.get("creatorID")]))
+            author_types.extend(_compact([identifier.get("creatorType")]))
+
+    creators_list = []
+    for creator in creators:
+        first_name = creator.get("firstName")
+        last_name = creator.get("lastName")
+
+        author_name_parts = [part for part in (last_name, first_name) if part]
+        author_name_formatted = ", ".join(author_name_parts)
+
+        pids = _list(creator.get("PIDs"))
+        author_names_id_val = pids[0].get("creatorPID") if pids else None
+
+        affiliations = _list(creator.get("affiliations"))
+        author_affiliation_info = None
+        if affiliations:
+            aff = affiliations[0]
+            ident = aff.get("affiliationIdentifier") or {}
+            author_affiliation_info = {
+                "author_affiliations": aff.get("affiliationName"),
+                "author_affiliations_id": ident.get("creatorID"),
+            }
+
+        creator_obj = {
+            "author_name_type_info": {
+                "author_names": author_name_formatted,
+                "author_types": "ir_name_type-personal",
+            },
+            "author_given_names": first_name,
+            "author_family_names": last_name,
+            "author_names_id": author_names_id_val,
+            "author_affiliation_info": author_affiliation_info,
         }
+        creators_list.append(creator_obj)
 
-    df.rename(columns=mapping_dict(), inplace=True)
+    creators_json = json.dumps(creators_list, ensure_ascii=False)
 
+    related_standards = _list(item.get("relatedStandards"))
+    related_standards_id = _compact(
+        [standard.get("relatedStandardIdentifier") for standard in related_standards]
+    )
+    related_standards_uri = _compact(
+        [standard.get("relatedStandardURI") for standard in related_standards]
+    )
 
-def harvest_type_info(df: DataFrame) -> None:
-    """Harvest resourceTypesInfo"""
-    column = df[RESOURCE_TYPE_INFO]
-    type_info_col = []
-    type_gen_col = []
+    alternative_pids = _list(item.get("alternativePIDs"))
+    alternative_ids = _compact([pid.get("pid") for pid in alternative_pids])
+    alternative_id_schemes = _compact(
+        [pid.get("pidSchema") for pid in alternative_pids]
+    )
 
-    for row in column:
-        type_info_row = []
-        type_gen_row = []
-        for type_ in row:
-            type_info_row.append(type_["resourceType"])
-            type_gen_row.append(type_["resourceTypeGeneral"])
+    publication_date = item.get("publishingDate")
+    publication_year = publication_date.year if publication_date else None
+    publication_date_value = publication_date.isoformat() if publication_date else None
+    resource_owner = item.get("resourceOwner")
+    provider = record.get("provider")
+    node = record.get("node") or item.get("nodePID")
 
-        type_info_col.append(type_info_row)
-        type_gen_col.append(type_gen_row)
-
-    df[TYPE_INFO] = type_info_col
-    df[TYPE_GENERAL] = type_gen_col
-    df.drop(RESOURCE_TYPE_INFO, inplace=True, axis=1)
-
-
-def harvest_related_standards(df: DataFrame) -> None:
-    """Harvest relatedStandards"""
-    column = df[RELATED_STANDARDS]
-    related_standards_id_col = []
-    related_standards_uri_col = []
-
-    for row in column:
-        related_standards_id_row = []
-        related_standards_uri_row = []
-        for st in row:
-            related_standards_id_row.append(st["relatedStandardIdentifier"])
-            related_standards_uri_row.append(st["relatedStandardURI"])
-
-        related_standards_id_col.append(related_standards_id_row)
-        related_standards_uri_col.append(related_standards_uri_row)
-
-    df[RELATED_STANDARDS_ID] = related_standards_id_col
-    df[RELATED_STANDARDS_URI] = related_standards_uri_col
-    df.drop(RELATED_STANDARDS, inplace=True, axis=1)
-
-
-def ts_to_iso(df: DataFrame, cols: list[str]) -> None:
-    """
-    Reformat specified columns from either unix timestamp (in ms)
-    or ISO date strings into ISO 8601 format with seconds precision.
-    Optimized version using pandas vectorized operations.
-    """
-
-    def convert_value(value):
-        if pd.isna(value):
-            return value
-
-        if isinstance(value, (int, float)) or (
-            isinstance(value, str) and value.isdigit()
-        ):
-            # Handle Unix timestamp in milliseconds
-            ts = int(value)
-            dt = datetime.utcfromtimestamp(ts / 1000)
-        else:
-            # Try parsing as ISO date string
-            try:
-                dt = datetime.fromisoformat(str(value))
-            except ValueError:
-                raise ValueError(f"Cannot parse value '{value}'")
-
-        return dt.isoformat(timespec="seconds")
-
-    for col in cols:
-        df[col] = df[col].apply(convert_value)
+    return {
+        "alternative_id_schemes": alternative_id_schemes,
+        "alternative_ids": _join(alternative_ids),
+        "author_affiliations": author_affiliations,
+        "author_affiliations_id": author_affiliations_id,
+        "author_family_names": author_family_names,
+        "author_given_names": author_given_names,
+        "author_names": author_names,
+        "author_names_id": author_names_id,
+        "author_names_tg": author_names_tg,
+        "author_types": author_types,
+        "catalogue": "eosc",
+        "catalogues": ["eosc"],
+        "creators": creators_json,
+        "description": _compact([_clean_html(item.get("description"))]),
+        "id": item["id"],
+        "license": license_info.get("licenseName"),
+        "license_url": license_info.get("licenseURL"),
+        "node": node,
+        "provider": provider,
+        "providers": [provider],
+        "publication_date": publication_date_value,
+        "publication_year": publication_year,
+        "public_contacts": _list(item.get("publicContacts")),
+        "related_standards_id": related_standards_id,
+        "related_standards_uri": related_standards_uri,
+        "resource_owner": resource_owner,
+        "title": _compact([item.get("name")]),
+        "type": settings.GUIDELINE,
+        "type_general": _compact([resource_type_info.get("resourceTypeGeneral")]),
+        "type_info": _compact([resource_type_info.get("resourceType")]),
+    }
 
 
-# Even more optimized version using pandas datetime functions where possible
-def ts_to_iso_vectorized(df: DataFrame, cols: list[str]) -> None:
-    """
-    Highly optimized version that tries to use pandas native datetime functions
-    when all values in a column are of the same type.
-    """
-    for col in cols:
-        series = df[col]
+def transform_guidelines(data: dict | list[dict]) -> DataFrame:
+    """Transform Provider Component interoperability records into Solr documents."""
+    records = data if isinstance(data, list) else [data]
 
-        # Check if all non-null values are numeric (timestamps)
-        non_null = series.dropna()
-        if len(non_null) == 0:
-            continue
+    validate_pydantic_data(records, GuidelineInputSchema, settings.GUIDELINE, "input")
+    transformed = [_transform_record(record) for record in records]
+    validate_pydantic_data(transformed, GuidelineSESchema, settings.GUIDELINE, "output")
 
-        # Try to detect if all values are timestamps
-        is_all_numeric = non_null.apply(
-            lambda x: isinstance(x, (int, float))
-            or (isinstance(x, str) and x.isdigit())
-        ).all()
-
-        if is_all_numeric:
-            # Convert all as timestamps - much faster
-            numeric_series = pd.to_numeric(series, errors="coerce")
-            df[col] = pd.to_datetime(numeric_series, unit="ms", utc=True).dt.strftime(
-                "%Y-%m-%dT%H:%M:%S"
-            )
-        else:
-            # Mixed types - fall back to apply
-            df[col] = series.apply(lambda x: convert_timestamp_or_iso(x))
-
-
-def convert_timestamp_or_iso(value):
-    """Helper function for mixed-type conversion"""
-    if pd.isna(value):
-        return value
-
-    if isinstance(value, (int, float)) or (
-        isinstance(value, str) and str(value).isdigit()
-    ):
-        ts = int(value)
-        dt = datetime.utcfromtimestamp(ts / 1000)
-    else:
-        try:
-            dt = datetime.fromisoformat(str(value))
-        except ValueError:
-            raise ValueError(f"Cannot parse value '{value}'")
-
-    return dt.isoformat(timespec="seconds")
-
-
-def harvest_rights(df: DataFrame) -> None:
-    """Harvest rights"""
-    column = df[RIGHTS]
-    right_title_col = []
-    right_uri_col = []
-    right_id_col = []
-
-    for rights in column:
-        right_title_row = []
-        right_uri_row = []
-        right_id_row = []
-
-        for right in rights:
-            right_title_row.append(right[RIGHT_TITLE_RAW])
-            right_uri_row.append(right[RIGHT_URI_RAW])
-            right_id_row.append(right[RIGHT_ID_RAW])
-
-        right_title_col.append(right_title_row)
-        right_uri_col.append(right_uri_row)
-        right_id_col.append(right_id_row)
-
-    df[RIGHT_TITLE] = right_title_col
-    df[RIGHT_URI] = right_uri_col
-    df[RIGHT_ID] = right_id_col
-    df.drop(RIGHTS, inplace=True, axis=1)
-
-
-def serialize_alternative_ids(df: DataFrame) -> None:
-    """Serialize alternative_ids"""
-    column = df[ALTERNATIVE_IDS]
-    df[ALTERNATIVE_IDS] = [json.dumps(alter_ids) for alter_ids in column]
-
-
-def map_providers(df: DataFrame) -> None:
-    """Map pids into names - providers column"""
-    providers_mapping = get_providers_mapping()
-    df["providers"] = df["providers"].replace(providers_mapping)
-
-
-def transform_guidelines(data: str) -> DataFrame:
-    """Transform guidelines"""
-    df = pd.DataFrame(data)
-
-    try:  # validate input schema
-        validate_pd_schema(df, guideline_input_schema, settings.GUIDELINE, "input")
-    except AssertionError:
-        logger.warning(
-            f"Schema validation of raw input data for type={settings.GUIDELINE} has failed. Input schema is different than excepted"
-        )
-
-    df[TYPE] = settings.GUIDELINE
-    rename_cols(df)
-    df["catalogue"] = df["catalogues"].copy()  # TODO delete
-    map_providers(df)
-    df["provider"] = df["providers"].copy()  # TODO delete
-    map_str_to_arr(df, ["title", "description", "catalogues", "providers"])
-    ts_to_iso(df, ["publication_date", "updated_at"])
-
-    if ALTERNATIVE_IDS in df.columns:
-        serialize_alternative_ids(df)
-    else:
-        del guideline_output_schema[ALTERNATIVE_IDS]
-
-    harvest_identifiers(df)
-    harvest_authors_names(df)
-    harvest_type_info(df)
-    harvest_related_standards(df)
-    harvest_rights(df)
-    df = df.reindex(sorted(df.columns), axis=1)
-
-    try:  # validate output schema
-        validate_pd_schema(df, guideline_output_schema, settings.GUIDELINE, "output")
-    except AssertionError:
-        logger.warning(
-            f"Schema validation after transformation failed for type={settings.GUIDELINE} has failed. Output schema is different than excepted"
-        )
-
-    columns_to_get = [
-        _col for _col in guideline_output_schema.keys() if _col in df.columns
-    ]
-    # Take only those columns that are present in the expected output schema and exists in df
-    df = df[columns_to_get]
-
-    return df
+    return pd.DataFrame(transformed)

@@ -10,11 +10,13 @@ from pydantic import AnyUrl
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from schemas.input.adapter import AdapterInputSchema
+from schemas.input.guideline import GuidelineInputSchema
 from schemas.old.input import *
 from schemas.old.input.deployable_service import deployable_service_input_schema
 from schemas.old.output import *
 from schemas.old.output.deployable_service import deployable_service_output_schema
 from schemas.se.adapter import AdapterSESchema
+from schemas.se.guideline import GuidelineSESchema
 
 logger = logging.getLogger(__name__)
 EnvironmentType = Literal["dev", "test", "production"]
@@ -134,10 +136,10 @@ class GlobalSettings(BaseSettings):
     )
     PC_CLIENT_ID: str = "providers-api-token-client"
     GUIDELINE_ADDRESS: AnyUrl = (
-        "https://integration.providers.sandbox.eosc-beyond.eu/api/public/interoperabilityRecord/all?catalogue_id=all&active=true&suspended=false&quantity=10000"
+        "https://integration.providers.sandbox.eosc-beyond.eu/api/public/interoperabilityRecord/all?active=true&suspended=false&quantity=10000"
     )
     TRAINING_ADDRESS: AnyUrl = (
-        "https://integration.providers.sandbox.eosc-beyond.eu/api/public/trainingResource/all?catalogue_id=all&active=true&suspended=false&quantity=10000"
+        "https://integration.providers.sandbox.eosc-beyond.eu/api/public/trainingResource/all?active=true&suspended=false&quantity=10000"
     )
     ADAPTER_ADDRESS: AnyUrl = (
         "https://integration.providers.sandbox.eosc-beyond.eu/api/public/adapter/all?active=true&suspended=false&quantity=10000"
@@ -309,8 +311,8 @@ class TransformSettings(GlobalSettings):
             },
             self.GUIDELINE: {
                 ADDRESS: str(self.GUIDELINE_ADDRESS),
-                OUTPUT_SCHEMA: guideline_output_schema,
-                INPUT_SCHEMA: guideline_input_schema,
+                OUTPUT_SCHEMA: GuidelineSESchema,
+                INPUT_SCHEMA: GuidelineInputSchema,
             },
             self.TRAINING: {
                 ADDRESS: str(self.TRAINING_ADDRESS),
