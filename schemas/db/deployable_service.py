@@ -32,13 +32,17 @@ class DeployableServiceDBSchema(BaseModel):
         last_update (Optional[datetime]):
             The date when the deployable service was last updated.
         license (str):
-            The software license under which the deployable service is distributed.
+            The name of the software license associated with the deployable service.
+        license_url (str):
+            The URL pointing to the software license details.
         node (str):
             Name of the node associated with the deployable service.
         pid (str):
             Persistent identifier for the deployable service.
         publication_date (datetime):
             The date when the deployable service was published.
+        public_contacts (List[str]):
+            Public contact email addresses associated with the deployable service.
         resource_organisation (str):
             The organisation responsible for the deployable service.
         scientific_domains (List[str]):
@@ -76,9 +80,11 @@ class DeployableServiceDBSchema(BaseModel):
     keywords: List[str]
     last_update: Optional[datetime]
     license: str
+    license_url: str
     node: str
     pid: str
     publication_date: datetime
+    public_contacts: List[str]
     resource_organisation: str
     scientific_domains: List[str]
     slug: str
@@ -91,20 +97,3 @@ class DeployableServiceDBSchema(BaseModel):
     upstream_id: int
     url: AnyHttpUrl
     version: str
-
-    """
-    Transformations necessary to convert DeployableServiceInputSchema to DeployableServiceDBSchema:
-        - add type = "deployable service"
-        - add creator_names, creator_identifiers, creator_affiliations, creators_searchable from creators
-        - rename name to title
-        - rename tag_list to keywords
-        - rename software_license to license
-        - rename catalogue to catalogues (and convert to array)
-        - cast:
-            .withColumn("publication_date", col("publication_date").cast("date"))
-            .withColumn("last_update", col("last_update").cast("date"))
-            .withColumn("synchronized_at", col("synchronized_at").cast("date"))
-            .withColumn("updated_at", col("updated_at").cast("date"))
-            .withColumn("id", col("id").cast(StringType()))
-            .withColumn("upstream_id", col("upstream_id").cast("bigint"))
-    """

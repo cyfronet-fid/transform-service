@@ -72,8 +72,9 @@ class DeployableServiceTransformer(BaseTransformer):
         return {
             "name": "title",
             "tag_list": "keywords",
-            "software_license": "license",
+            "license_name": "license",
             "catalogue": "catalogues",
+            "public_contact_emails": "public_contacts",
         }
 
     @property
@@ -84,7 +85,11 @@ class DeployableServiceTransformer(BaseTransformer):
     @property
     def cols_to_drop(self) -> tuple[str, ...]:
         """Drop those columns from the dataframe"""
-        return ()
+        return (
+            "resource_type",
+            "publishing_date",  # TODO MP AI hallucination?
+            "urls",  # TODO MP AI hallucination?
+        )
 
     @staticmethod
     def transform_creators(df: DataFrame) -> DataFrame:

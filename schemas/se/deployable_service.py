@@ -27,12 +27,18 @@ class DeployableServiceSESchema(BaseModel):
             A list of keywords/tags categorizing the deployable service. Used in secondary tags.
         keywords_tg (List[str]):
             The same data as 'keywords' but in solr text general type. Used in searching.
+        license (str):
+            The name of the software license associated with the deployable service.
+        license_url (str):
+            The URL pointing to the software license details.
         node (Optional[str]):
             Name of the node associated with the deployable service. Used in filters.
         pid (str):
             Persistent identifier for the deployable service. Used in resource view.
         publication_date (date):
             The date when the deployable service was published. Used in sorting.
+        public_contacts (List[str]):
+            Public contact email addresses associated with the deployable service.
         resource_organisation (str):
             The organisation responsible for the deployable service. Used in filters.
         scientific_domains (List[str]):
@@ -55,31 +61,15 @@ class DeployableServiceSESchema(BaseModel):
     id: str
     keywords: List[str]
     keywords_tg: List[str]
+    license: str
+    license_url: str
     node: Optional[str]
     pid: str
     publication_date: date
+    public_contacts: List[str]
     resource_organisation: str
     scientific_domains: List[str]
     slug: str
     title: str
     type: str
     version: str
-
-    """
-    Transformations necessary to convert DeployableServiceDBSchema to DeployableServiceSESchema:
-        - delete: 
-            - abbreviation (internal field)
-            - creator_identifiers (sensitive URLs, keep internal)
-            - last_update (not needed for search)
-            - license (internal field)
-            - status (internal field)
-            - synchronized_at (internal field)
-            - tagline (not needed for search)
-            - updated_at (not needed for search)
-            - upstream_id (internal field)
-            - url (internal field)
-        - keep keywords_tg (for text_general searching)
-        - cast:
-            .withColumn("publication_date", col("publication_date").cast("date"))
-        - apply text_general transformations for keywords_tg
-    """
