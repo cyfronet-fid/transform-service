@@ -10,12 +10,12 @@ from pydantic import AnyUrl
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from schemas.input.adapter import AdapterInputSchema
+from schemas.input.deployable_service import DeployableServiceInputSchema
 from schemas.input.guideline import GuidelineInputSchema
 from schemas.old.input import *
-from schemas.old.input.deployable_service import deployable_service_input_schema
 from schemas.old.output import *
-from schemas.old.output.deployable_service import deployable_service_output_schema
 from schemas.se.adapter import AdapterSESchema
+from schemas.se.deployable_service import DeployableServiceSESchema
 from schemas.se.guideline import GuidelineSESchema
 
 logger = logging.getLogger(__name__)
@@ -336,8 +336,8 @@ class TransformSettings(GlobalSettings):
             },
             self.DEPLOYABLE_SERVICE: {
                 ADDRESS: mp_api + "deployable_services",
-                OUTPUT_SCHEMA: deployable_service_output_schema,
-                INPUT_SCHEMA: deployable_service_input_schema,
+                OUTPUT_SCHEMA: DeployableServiceSESchema,
+                INPUT_SCHEMA: DeployableServiceInputSchema,
             },
             self.ADAPTER: {
                 ADDRESS: str(self.ADAPTER_ADDRESS),
