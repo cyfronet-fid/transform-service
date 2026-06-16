@@ -1,6 +1,7 @@
 # pylint: disable=duplicate-code
 """Transform services"""
-
+from pyspark.sql import DataFrame
+from pyspark.sql.functions import col
 from pyspark.sql.types import (
     BooleanType,
     IntegerType,
@@ -55,3 +56,28 @@ class ServiceTransformer(MarketplaceBaseTransformer):
     def cols_to_drop(self) -> tuple[str, ...]:
         """Drop those columns from the dataframe"""
         return ("public_contacts",)
+
+    @property
+    def cols_to_rename(self) -> dict[str, str]:
+        """Columns to rename. Keys are mapped to the values"""
+        return {
+            "nodes": "node",
+            "name": "title",
+            "order_type": "best_access_right",
+            # "resource_type": "type",
+            "urls": "url",
+
+        }
+
+    @staticmethod
+    def cast_columns(df: DataFrame) -> DataFrame:
+        """Cast certain columns"""
+        df = (
+            df.withColumn("id", col("id").cast(StringType()))
+            .withColumn("updated_at", col("updated_at").cast("date"))
+            .withColumn("publication_date", col("publication_date").cast("date"))
+            .withColumn("synchronized_at", col("synchronized_at").cast("date"))
+            # .withColumn("node", col("node").cast("string"))
+        )
+
+        return df

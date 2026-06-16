@@ -32,15 +32,58 @@ def validate_pydantic_data(
         try:
             expected_schema.model_validate(record)
         except ValidationError as err:
-            errors.append({"index": index, "errors": err.errors()})
+            errors.append({"index": index, "errors": err.errors(), "record_id": record.get("id"),
+                    "record_name": record.get("name"),})
 
     if errors:
-        logger.warning(
-            "%s - %s Pydantic schema validation failure. Errors: %s",
-            collection,
-            source,
-            errors,
-        )
+        # logger.warning(
+        #     "%s - %s Pydantic schema validation failure. Errors: %s",
+        #     collection,
+        #     source,
+        #     errors,
+        # )
+
+        # logger.warning(
+        #     "%s - %s Pydantic schema validation failure. Errors count: %i",
+        #     collection,
+        #     source,
+        #     len(errors),
+        # )
+        # # logger.warning("First error: %s", errors[0])
+        #
+        # logger.warning("Error keys: ")
+        # logger.warning(type(errors))
+        # for error in errors[:10]:
+        #     logger.warning(f"\n\n\n\n\nError {error['index']}--------------------")
+        #     # del error["input"]
+        #     for e in error["errors"]:
+        #         # logger.warning(e.keys())
+        #         id_value = e['input']['id']
+        #         name = e['input']['name']
+        #         logger.warning(f"Error for id: {id_value} name: {name}")
+        #         del e["input"]
+        #         logger.warning(e)
+        #         # logger.warning(f"Type: {e['type']}, ")
+        #     # logger.warning(error["errors"]["type"])
+        #     # logger.warning(error["errors"]["loc"])
+        #     # logger.warning(error["errors"]["message"])
+        for record_error in errors[:20]:
+            logger.warning(
+                "\nRecord index=%s id=%s name=%s",
+                record_error["index"],
+                record_error["record_id"],
+                record_error["record_name"],
+            )
+
+            for err in record_error["errors"]:
+                field = ".".join(str(x) for x in err["loc"])
+
+                logger.warning(
+                    "  field=%s | type=%s | msg=%s",
+                    field,
+                    err["type"],
+                    err["msg"],
+                )
 
 
 def validate_pydantic_schema(

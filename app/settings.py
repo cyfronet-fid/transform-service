@@ -11,12 +11,14 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from schemas.input.adapter import AdapterInputSchema
 from schemas.input.guideline import GuidelineInputSchema
+from schemas.input.service import ServiceInputSchema
 from schemas.old.input import *
 from schemas.old.input.deployable_service import deployable_service_input_schema
 from schemas.old.output import *
 from schemas.old.output.deployable_service import deployable_service_output_schema
 from schemas.se.adapter import AdapterSESchema
 from schemas.se.guideline import GuidelineSESchema
+from schemas.se.service import ServiceSESchema
 
 logger = logging.getLogger(__name__)
 EnvironmentType = Literal["dev", "test", "production"]
@@ -261,7 +263,7 @@ class TransformSettings(GlobalSettings):
         PATH = "PATH"
         ADDRESS = "ADDRESS"
 
-        mp_api = str(self.MP_API_ADDRESS) + "/api/v1/ess/"
+        mp_api = str(self.MP_API_ADDRESS) + "api/v1/ess/"
 
         collections = {
             self.SOFTWARE: {
@@ -296,8 +298,8 @@ class TransformSettings(GlobalSettings):
             },
             self.SERVICE: {
                 ADDRESS: mp_api + "services",
-                OUTPUT_SCHEMA: service_output_schema,
-                INPUT_SCHEMA: service_input_schema,
+                OUTPUT_SCHEMA: ServiceSESchema,
+                INPUT_SCHEMA: ServiceInputSchema,
             },
             self.DATASOURCE: {
                 ADDRESS: mp_api + "datasources",

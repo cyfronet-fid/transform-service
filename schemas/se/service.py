@@ -79,39 +79,82 @@ class ServiceSESchema(BaseModel):
             The number of times the service has been viewed. Part of popularity.
     """
 
-    best_access_right: str
-    catalogue: str  # TODO delete
-    catalogues: List[str]
-    categories: List[str]
-    dedicated_for: List[str]
+    # best_access_right: str
+    # # catalogue: str  # TODO delete
+    # # catalogues: List[str]
+    # categories: List[str]
+    # dedicated_for: List[str]
+    # description: str
+    # eosc_if: List[str]
+    # eosc_if_tg: List[str]
+    # guidelines: List[str]
+    # geographical_availabilities: List[str]
+    # horizontal: bool
+    # id: str
+    # keywords: List[str]
+    # keywords_tg: List[str]
+    # language: List[str]
+    # node: Optional[str]
+    # open_access: bool
+    # pid: str
+    # platforms: List[str]
+    # popularity: int
+    # providers: List[str]
+    # publication_date: date
+    # rating: str
+    # resource_organisation: str
+    # scientific_domains: List[str]
+    # slug: str
+    # tag_list: List[str]
+    # tag_list_tg: List[str]
+    # title: str
+    # type: str
+    # unified_categories: List[str]
+    # usage_counts_downloads: int
+    # usage_counts_views: int
+
+
+    access_policies_url: str
+    access_types: list[str]
+    categories: list[str]
     description: str
-    eosc_if: List[str]
-    eosc_if_tg: List[str]
-    guidelines: List[str]
-    geographical_availabilities: List[str]
-    horizontal: bool
+    guidelines: list[str]
     id: str
-    keywords: List[str]
-    keywords_tg: List[str]
-    language: List[str]
-    node: Optional[str]
+    jurisdiction: str
+    logo: str
+    keywords: list[str]
+    keywords_tg: list[str]
+    logo: str
+    node: list[str]
+    offers_count: int
     open_access: bool
+    order_right: str  # mapowane z best_access_right
+    order_url: str
     pid: str
-    platforms: List[str]
     popularity: int
-    providers: List[str]
+    privacy_policy_url: str
+    providers: list[str]
     publication_date: date
+    # public_contact_emails: list[str]
     rating: str
     resource_organisation: str
-    scientific_domains: List[str]
+    scientific_domains: list[str]
+    service_opinion_count: int
     slug: str
-    tag_list: List[str]
-    tag_list_tg: List[str]
-    title: str
+    status: str
+    synchronized_at: date
+    tag_list: list[str]
+    tag_list_tg: list[str]
+    terms_of_use_url: str
+    name: str  # mapowane z title
+    trls: str
     type: str
-    unified_categories: List[str]
+    updated_at: date
+    upstream_id: int
+    url: Optional[List[str]]
     usage_counts_downloads: int
     usage_counts_views: int
+    webpage_url: str
 
     """
     Transformations necessary to convert ServiceInputSchema to ServiceSESchema

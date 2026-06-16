@@ -1,6 +1,6 @@
 # pylint: disable=line-too-long
 """Endpoint for full collection update"""
-
+import json
 from typing import Literal
 
 from fastapi import APIRouter
@@ -68,6 +68,11 @@ async def update_single_col(data_type: str, tasks_id: dict) -> None:
     """Update whole, single collection"""
     data_address = settings.COLLECTIONS[data_type]["ADDRESS"]
     data = await get_data(data_type, data_address)
+
+    # with open("service.json") as file:
+    #     data = json.load(file)
+
+    # print("\n\n\n" + str(data) + "\n\n")
 
     if data:
         # Get data, transform data, delete current data of the same type, upload data
