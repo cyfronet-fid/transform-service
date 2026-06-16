@@ -7,7 +7,7 @@ service_output_schema = {
     "access_policies_url": "string",
     "access_types": "array<string>",
     # "activate_message": "string",
-    "best_access_right": "string", # mapowanie do order_right
+    "best_access_right": "string",  # mapowanie do order_right
     # "catalogue": "string",  # TODO delete
     # "catalogues": "array<string>",
     "categories": "array<string>",
@@ -66,7 +66,7 @@ service_output_schema = {
     "tag_list_tg": "array<string>",
     # "tagline": "string",
     "terms_of_use_url": "string",
-    "title": "string", # mapowanie do name
+    "title": "string",  # mapowanie do name
     # "training_information_url": "string",
     # "trl": "string", # zamiast tego trls
     "trls": "string",

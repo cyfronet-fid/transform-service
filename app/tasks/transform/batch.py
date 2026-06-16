@@ -49,27 +49,27 @@ def transform_batch(
             df = load_request_data(spark, data, input_schema, type_)
             df_trans = transformer(spark)(df)
 
-        try:
-            logger.info("Transformed data:\n%s", df_trans.to_string())
-        except Exception as e:
-            pass
-        try:
-            # df_trans.printSchema()
-            df_trans.show(truncate=False)
-        except Exception as e:
-            pass
+        # try:
+        #     logger.info("Transformed data:\n%s", df_trans.to_string())
+        # except Exception as e:
+        #     pass
+        # try:
+        #     # df_trans.printSchema()
+        #     df_trans.show(truncate=False)
+        # except Exception as e:
+        #     pass
 
-        # if full_update:
-        #     # Delete all resources of a certain type only if that is a full collection update
-        #     delete_data_by_type(type_)
-        #
-        # task_status = send_data(
-        #     df=df_trans,
-        #     collection_name=type_,
-        # )
-        #
-        # if task_status["status"] == FAILURE:
-        #     raise Exception(task_status["reason"], "Unknown error")
+        if full_update:
+            # Delete all resources of a certain type only if that is a full collection update
+            delete_data_by_type(type_)
+
+        task_status = send_data(
+            df=df_trans,
+            collection_name=type_,
+        )
+
+        if task_status["status"] == FAILURE:
+            raise Exception(task_status["reason"], "Unknown error")
 
         logger.info(f"{type_} data update has been successful")
         return CeleryTaskStatus(status=SUCCESS).dict()

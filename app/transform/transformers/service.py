@@ -1,5 +1,6 @@
 # pylint: disable=duplicate-code
 """Transform services"""
+
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import col
 from pyspark.sql.types import (
@@ -13,8 +14,8 @@ from pyspark.sql.types import (
 from app.settings import settings
 from app.transform.transformers.base.marketplace import MarketplaceBaseTransformer
 from app.transform.utils.utils import sort_schema
-from schemas.old.output.service import service_output_schema
 from schemas.properties.data import BEST_ACCESS_RIGHT, OPEN_ACCESS, POPULARITY
+from schemas.se.service import ServiceSESchema
 
 
 class ServiceTransformer(MarketplaceBaseTransformer):
@@ -23,7 +24,7 @@ class ServiceTransformer(MarketplaceBaseTransformer):
     def __init__(self, spark):
         self.type = settings.SERVICE
         id_increment = settings.SERVICE_IDS_INCREMENTOR
-        self.exp_output_schema = service_output_schema
+        self.exp_output_schema = ServiceSESchema
 
         super().__init__(
             id_increment,
@@ -64,9 +65,8 @@ class ServiceTransformer(MarketplaceBaseTransformer):
             "nodes": "node",
             "name": "title",
             "order_type": "best_access_right",
-            # "resource_type": "type",
             "urls": "url",
-
+            "trls": "trl",
         }
 
     @staticmethod
@@ -77,7 +77,6 @@ class ServiceTransformer(MarketplaceBaseTransformer):
             .withColumn("updated_at", col("updated_at").cast("date"))
             .withColumn("publication_date", col("publication_date").cast("date"))
             .withColumn("synchronized_at", col("synchronized_at").cast("date"))
-            # .withColumn("node", col("node").cast("string"))
         )
 
         return df

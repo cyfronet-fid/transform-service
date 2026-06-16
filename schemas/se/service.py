@@ -8,210 +8,102 @@ from pydantic import BaseModel
 
 class ServiceSESchema(BaseModel):
     """
-    Pydantic model representing the expected search engine schema for a service after transformations.
+    Search Engine schema representing a transformed EOSC service document.
+
+    The model contains fields optimized for indexing, filtering, sorting,
+    and full-text search in the search engine.
 
     Attributes:
-        best_access_right (str):
-            The best access right for the service. Used in filters.
-        catalogue (str):
-            # TODO move only to catalogues
-            The catalogue associated with the service.
-        catalogues (List[str]):
-            # TODO is it used?
-            A list of catalogues associated with the service.
-        categories (List[str]):
-            A list of categories applicable to the service. Used in filters.
-        dedicated_for (List[str]):
-            A list of dedicated purposes for the service. Used in filters.
-        description (str):
-            A detailed description of the service. Used in searching.
-        eosc_if (List[str]):
-            TODO add description. Used in filters and secondary tags.
-        eosc_if_tg (List[str]):
-            The same data as 'eosc_if' but in solr text general type. Used in searching.
-        guidelines (List[str]):
-            A list of guidelines available for this service. Used in filters and tags.
-        geographical_availabilities (List[str]):
-            A list of geographical locations where the service is available. Used in filters.
-        horizontal (bool):
-            Indicates whether the service is horizontal. Used in filters and resource view.
-        id (str):
-            Unique identifier for the service.
-        language (List[str]):
-            A list of languages in which the service is available. Used in filters and resource view.
-        node (Optional[str]):
-            Name of the node associated with the service. Used in filters.
-        open_access (bool):
-            # TODO is it used?
-            Indicates whether the service is open access.
-        pid (str):
-            Persistent identifier for the service. Used in resource view.
-        platforms (List[str]):
-            A list of platforms where the service is available. Used in filers.
-        popularity (int):
-            Popularity score of the service. Used in sorting.
-        providers (List[str]):
-            A list of providers associated with the service. Used in filters.
-        publication_date (date):
-            The date when the service was published. Used in sorting.
-        rating (str):
-            The rating of the service. Used in filters.
-        resource_organisation (str):
-            The organisation responsible for the service. Used in filters.
-        scientific_domains (List[str]):
-            A list of scientific domains associated with the service. Used in filters and tags.
-        slug (str):
-            # TODO is it used?
-            The slug (URL-friendly identifier) for the service.
-        tag_list (List[str]):
-            A list of tags categorizing the service. Used in secondary tags.
-        tag_list_tg (List[str]):
-            The same data as 'tag_list' but in solr text general type. Used in searching.
-        title (str):
-            The title of the service. Used in searching.
-        type (str):
-            Data type = "service". Used in routing and resource view.
-        unified_categories (List[str]):
-            A list of unified categories for the service. Used in filters.
-        usage_counts_downloads (int):
-            The number of times the service has been downloaded. Part of popularity.
-        usage_counts_views (int):
-            The number of times the service has been viewed. Part of popularity.
+        id: Unique identifier of the indexed service document.
+        pid: Persistent identifier of the service.
+        slug: Human-readable identifier used in URLs.
+        title: Service title used for display and search.
+        description: Service description used for full-text search.
+        type: Resource type identifier (typically ``"service"``).
+
+        publication_date: Service publication date.
+        updated_at: Date of the most recent update.
+        synchronized_at: Date of the last synchronization.
+        upstream_id: Identifier of the source record.
+
+        status: Current service status.
+        rating: Service rating or evaluation score.
+        popularity: Calculated popularity score used for sorting.
+
+        resource_organisation: Organisation responsible for the service.
+        providers: Organisations providing the service.
+        node: EOSC nodes associated with the service.
+
+        categories: Service categories used for filtering.
+        scientific_domains: Scientific domains supported by the service.
+        tag_list: Tags assigned to the service.
+        tag_list_tg: Search-optimized representation of ``tag_list``.
+        keywords: Keywords used for filtering and search.
+        keywords_tg: Search-optimized representation of ``keywords``.
+
+        access_types: Available access methods or conditions.
+        best_access_right: Highest available access level.
+        access_policies_url: URL to access and usage policies.
+        open_access: Indicates whether the service is openly accessible.
+        order_right: Method or conditions for obtaining access.
+        order_url: URL for ordering or requesting the service.
+
+        jurisdiction: Legal or geographical jurisdiction.
+        privacy_policy_url: URL to the privacy policy.
+        terms_of_use_url: URL to the terms of use.
+
+        webpage_url: Main service webpage URL.
+        url: Additional service-related URLs.
+        logo: URL of the service logo.
+
+        public_contact_emails: Public contact email addresses.
+        offers_count: Number of associated offers.
+        service_opinion_count: Number of user opinions or reviews.
+        usage_counts_downloads: Total number of downloads.
+        usage_counts_views: Total number of page views.
+
+        guidelines: Documentation, guides, or best practices.
+        trl: Technology Readiness Level (TRL) information.
     """
 
-    # best_access_right: str
-    # # catalogue: str  # TODO delete
-    # # catalogues: List[str]
-    # categories: List[str]
-    # dedicated_for: List[str]
-    # description: str
-    # eosc_if: List[str]
-    # eosc_if_tg: List[str]
-    # guidelines: List[str]
-    # geographical_availabilities: List[str]
-    # horizontal: bool
-    # id: str
-    # keywords: List[str]
-    # keywords_tg: List[str]
-    # language: List[str]
-    # node: Optional[str]
-    # open_access: bool
-    # pid: str
-    # platforms: List[str]
-    # popularity: int
-    # providers: List[str]
-    # publication_date: date
-    # rating: str
-    # resource_organisation: str
-    # scientific_domains: List[str]
-    # slug: str
-    # tag_list: List[str]
-    # tag_list_tg: List[str]
-    # title: str
-    # type: str
-    # unified_categories: List[str]
-    # usage_counts_downloads: int
-    # usage_counts_views: int
-
-
-    access_policies_url: str
-    access_types: list[str]
-    categories: list[str]
+    access_policies_url: Optional[str] = None
+    access_types: Optional[list[str]] = None
+    best_access_right: Optional[str] = None
+    categories: Optional[list[str]] = None
     description: str
-    guidelines: list[str]
+    guidelines: Optional[list[str]] = None
     id: str
-    jurisdiction: str
-    logo: str
-    keywords: list[str]
-    keywords_tg: list[str]
-    logo: str
-    node: list[str]
-    offers_count: int
-    open_access: bool
-    order_right: str  # mapowane z best_access_right
-    order_url: str
+    jurisdiction: Optional[str] = None
+    keywords: Optional[list[str]] = None
+    keywords_tg: Optional[list[str]] = None
+    logo: Optional[str] = None
+    node: Optional[list[str]] = None
+    offers_count: Optional[int] = None
+    open_access: bool = False
+    order_right: Optional[str] = None
+    order_url: Optional[str] = None
     pid: str
-    popularity: int
-    privacy_policy_url: str
-    providers: list[str]
-    publication_date: date
-    # public_contact_emails: list[str]
+    popularity: int = 0
+    privacy_policy_url: Optional[str] = None
+    providers: Optional[list[str]] = None
+    publication_date: Optional[date] = None
+    public_contact_emails: Optional[list[str]] = None
     rating: str
     resource_organisation: str
-    scientific_domains: list[str]
-    service_opinion_count: int
+    scientific_domains: Optional[list[str]] = None
+    service_opinion_count: Optional[int] = None
     slug: str
     status: str
-    synchronized_at: date
-    tag_list: list[str]
-    tag_list_tg: list[str]
-    terms_of_use_url: str
-    name: str  # mapowane z title
-    trls: str
+    synchronized_at: Optional[date] = None
+    tag_list: Optional[list[str]] = None
+    tag_list_tg: Optional[list[str]] = None
+    terms_of_use_url: Optional[str] = None
+    title: str
+    trl: Optional[str] = None
     type: str
-    updated_at: date
-    upstream_id: int
-    url: Optional[List[str]]
-    usage_counts_downloads: int
-    usage_counts_views: int
+    updated_at: Optional[date] = None
+    upstream_id: Optional[int] = None
+    url: Optional[list[str]] = None
+    usage_counts_downloads: Optional[int] = None
+    usage_counts_views: Optional[int] = None
     webpage_url: str
-
-    """
-    Transformations necessary to convert ServiceInputSchema to ServiceSESchema
-        - add type = "service"
-        - delete: 
-            - abbreviation
-            - access_modes
-            - access_policies_url
-            - access_types
-            - activate_message
-            - certifications
-            - changelog
-            - funding_bodies
-            - funding_programs
-            - grant_project_names
-            - helpdesk_email
-            - helpdesk_url
-            - last_update
-            - life_cycle_status
-            - maintenance_url
-            - manual_url
-            - multimedia_urls
-            - offers_count
-            - open_source_technologies
-            - order_url
-            - payment_model_url
-            - phase
-            - pricing_url
-            - privacy_policy_url
-            - related_platforms
-            - resource_geographic_locations
-            - restrictions
-            - security_contact_email
-            - service_opinion_count
-            - sla_url
-            - standards
-            - status
-            - status_monitoring_url
-            - synchronized_at
-            - tagline
-            - terms_of_use_url
-            - training_information_url
-            - trl
-            - updated_at
-            - upstream_id
-            - use_cases_urls
-            - version
-            - webpage_url
-        - add popularity
-        - add open_access
-        - rename order_type to best_access_right
-        - rename language_availability to language
-        - rename name to title
-        - cast:
-            .withColumn("publication_date", col("publication_date").cast("date"))
-            .withColumn("last_update", col("last_update").cast("date"))
-            .withColumn("synchronized_at", col("synchronized_at").cast("date"))
-            .withColumn("updated_at", col("updated_at").cast("date"))
-        - apply current transformations if needed.
-    """
