@@ -49,16 +49,6 @@ def transform_batch(
             df = load_request_data(spark, data, input_schema, type_)
             df_trans = transformer(spark)(df)
 
-        # try:
-        #     logger.info("Transformed data:\n%s", df_trans.to_string())
-        # except Exception as e:
-        #     pass
-        # try:
-        #     # df_trans.printSchema()
-        #     df_trans.show(truncate=False)
-        # except Exception as e:
-        #     pass
-
         if full_update:
             # Delete all resources of a certain type only if that is a full collection update
             delete_data_by_type(type_)

@@ -8,62 +8,91 @@ from pydantic import BaseModel
 
 class ServiceSESchema(BaseModel):
     """
-    Search Engine schema representing a transformed EOSC service document.
-
-    The model contains fields optimized for indexing, filtering, sorting,
-    and full-text search in the search engine.
+    Search engine schema representing a transformed EOSC service document.
 
     Attributes:
-        id: Unique identifier of the indexed service document.
-        pid: Persistent identifier of the service.
-        slug: Human-readable identifier used in URLs.
-        title: Service title used for display and search.
-        description: Service description used for full-text search.
-        type: Resource type identifier (typically ``"service"``).
-
-        publication_date: Service publication date.
-        updated_at: Date of the most recent update.
-        synchronized_at: Date of the last synchronization.
-        upstream_id: Identifier of the source record.
-
-        status: Current service status.
-        rating: Service rating or evaluation score.
-        popularity: Calculated popularity score used for sorting.
-
-        resource_organisation: Organisation responsible for the service.
-        providers: Organisations providing the service.
-        node: EOSC nodes associated with the service.
-
-        categories: Service categories used for filtering.
-        scientific_domains: Scientific domains supported by the service.
-        tag_list: Tags assigned to the service.
-        tag_list_tg: Search-optimized representation of ``tag_list``.
-        keywords: Keywords used for filtering and search.
-        keywords_tg: Search-optimized representation of ``keywords``.
-
-        access_types: Available access methods or conditions.
-        best_access_right: Highest available access level.
-        access_policies_url: URL to access and usage policies.
-        open_access: Indicates whether the service is openly accessible.
-        order_right: Method or conditions for obtaining access.
-        order_url: URL for ordering or requesting the service.
-
-        jurisdiction: Legal or geographical jurisdiction.
-        privacy_policy_url: URL to the privacy policy.
-        terms_of_use_url: URL to the terms of use.
-
-        webpage_url: Main service webpage URL.
-        url: Additional service-related URLs.
-        logo: URL of the service logo.
-
-        public_contact_emails: Public contact email addresses.
-        offers_count: Number of associated offers.
-        service_opinion_count: Number of user opinions or reviews.
-        usage_counts_downloads: Total number of downloads.
-        usage_counts_views: Total number of page views.
-
-        guidelines: Documentation, guides, or best practices.
-        trl: Technology Readiness Level (TRL) information.
+        access_policies_url (Optional[str]):
+            URL describing access and usage policies.
+        access_types (Optional[List[str]]):
+            Available access methods or access conditions.
+        best_access_right (Optional[str]):
+            Highest available access level for the service.
+        categories (Optional[List[str]]):
+            Classification categories used for filtering.
+        description (str):
+            Detailed service description used for indexing and searching.
+        guidelines (Optional[List[str]]):
+            Documentation, guides, or best practices related to the service.
+        id (str):
+            Unique identifier of the indexed service document.
+        jurisdiction (Optional[str]):
+            Legal or geographical jurisdiction under which the service operates.
+        keywords (Optional[List[str]]):
+            Keywords used for filtering and search.
+        keywords_tg (Optional[List[str]]):
+            Search-optimized representation of keywords.
+        logo (Optional[str]):
+            URL of the service logo.
+        node (Optional[List[str]]):
+            EOSC nodes associated with the service.
+        offers_count (Optional[int]):
+            Number of offers associated with the service.
+        open_access (bool):
+            Indicates whether the service is openly accessible.
+        order_right (Optional[str]):
+            Method or conditions for obtaining access to the service.
+        order_url (Optional[str]):
+            URL for ordering, requesting, or accessing the service.
+        pid (str):
+            Persistent identifier assigned to the service.
+        popularity (int):
+            Calculated popularity score used for sorting.
+        privacy_policy_url (Optional[str]):
+            URL to the privacy policy.
+        providers (Optional[List[str]]):
+            Organisations providing the service.
+        publication_date (Optional[date]):
+            Official publication date of the service.
+        public_contact_emails (Optional[List[str]]):
+            Public contact email addresses for support or inquiries.
+        rating (str):
+            Overall service rating or evaluation score.
+        resource_organisation (str):
+            Organisation responsible for operating or maintaining the service.
+        scientific_domains (Optional[List[str]]):
+            Scientific disciplines or research domains supported by the service.
+        service_opinion_count (Optional[int]):
+            Number of user opinions or reviews.
+        slug (str):
+            Human-readable unique identifier used in URLs.
+        status (str):
+            Current operational or publication status of the service.
+        synchronized_at (Optional[date]):
+            Date of the last synchronization with the source system.
+        tag_list (Optional[List[str]]):
+            Keywords describing the service and its capabilities.
+        tag_list_tg (Optional[List[str]]):
+            Search-optimized representation of tag_list.
+        terms_of_use_url (Optional[str]):
+            URL to the service terms and conditions.
+        title (str):
+            Service title used for display and full-text search.
+        trl (Optional[str]):
+            Technology Readiness Level (TRL) information.
+        type (str):
+            Resource type identifier used for routing and indexing.
+        updated_at (Optional[date]):
+            Date of the most recent update.
+        upstream_id (Optional[int]):
+            Identifier of the source record in an external system.
+        url (Optional[List[str]]):
+            Additional URLs related to the service.
+        usage_counts_downloads (Optional[int]):
+            Total number of service downloads.
+        usage_counts_views (Optional[int]):
+            Total number of service page views.
+        webpage_url (str):
+            URL of the main service webpage.
     """
 
     access_policies_url: Optional[str] = None
