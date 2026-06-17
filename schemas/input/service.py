@@ -91,6 +91,7 @@ class ServiceInputSchema(BaseModel):
 
     access_policies_url: Optional[str] = None
     access_types: Optional[List[str]] = None
+    catalogues: Optional[List[str]] = None
     categories: Optional[List[str]] = None
     created_at: Optional[datetime] = None
     description: str

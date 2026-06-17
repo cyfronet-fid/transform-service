@@ -98,6 +98,8 @@ class ServiceSESchema(BaseModel):
     access_policies_url: Optional[str] = None
     access_types: Optional[list[str]] = None
     best_access_right: Optional[str] = None
+    catalogue: str
+    catalogues: list[str]
     categories: Optional[list[str]] = None
     description: str
     guidelines: Optional[list[str]] = None

@@ -2,7 +2,7 @@
 """Transform services"""
 
 from pyspark.sql import DataFrame
-from pyspark.sql.functions import col
+from pyspark.sql.functions import array, col, lit
 from pyspark.sql.types import (
     BooleanType,
     IntegerType,
@@ -34,6 +34,17 @@ class ServiceTransformer(MarketplaceBaseTransformer):
             self.exp_output_schema,
             spark,
         )
+
+    def apply_simple_trans(self, df: DataFrame) -> DataFrame:
+        """Apply simple transformations.
+        Simple in a way that there is a possibility to manipulate the main dataframe
+        without a need to create another dataframe and merging"""
+        df = super().apply_simple_trans(df)
+
+        df = df.withColumn("catalogues", array(lit("eosc")))
+        df = df.withColumn("catalogue", col("catalogues")[0])
+
+        return df
 
     @property
     def harvested_schema(self) -> StructType:
