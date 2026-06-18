@@ -5,7 +5,7 @@ from abc import abstractmethod
 from itertools import chain
 
 from pyspark.sql import DataFrame, SparkSession
-from pyspark.sql.functions import col, lit
+from pyspark.sql.functions import array, col, lit
 from pyspark.sql.types import ArrayType, StringType, StructType
 from pyspark.sql.utils import AnalysisException
 
@@ -58,6 +58,7 @@ class MarketplaceBaseTransformer(BaseTransformer):
         df = self.rename_cols(df)
         df = self.simplify_urls(df)
         df = df.withColumn(ID, (col(ID) + self.id_increment))
+        df = df.withColumn("catalogues", array(lit("eosc")))
         df = df.withColumn(
             "catalogue", self.get_first_element(df["catalogues"])
         )  # TODO delete
@@ -72,8 +73,6 @@ class MarketplaceBaseTransformer(BaseTransformer):
         df = map_best_access_right(df, self.harvested_properties, self.type)
         create_open_access(self.harvested_properties)
         harvest_popularity(df, self.harvested_properties)
-        if self.type == settings.DATASOURCE:
-            df = self.harvest_persistent_id_systems(df)
 
         return df
 
@@ -151,7 +150,6 @@ class MarketplaceBaseTransformer(BaseTransformer):
         df = (
             df.withColumn("id", col("id").cast(StringType()))
             .withColumn("publication_date", col("publication_date").cast("date"))
-            .withColumn("last_update", col("last_update").cast("date"))
             .withColumn("synchronized_at", col("synchronized_at").cast("date"))
             .withColumn("updated_at", col("updated_at").cast("date"))
         )
