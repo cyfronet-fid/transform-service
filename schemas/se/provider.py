@@ -1,6 +1,6 @@
 """Provider expected search engine schema"""
 
-from datetime import date
+from datetime import date, datetime
 from typing import List, Optional
 
 from pydantic import BaseModel
@@ -13,106 +13,66 @@ class ProviderSESchema(BaseModel):
     Attributes:
         abbreviation (str):
             The abbreviation of the provider. Used in resource view.
-        areas_of_activity (List[str]):
-            A list of areas of activity for the provider. Used in filters and tags.
-        catalogue (str):
-            # TODO move only to catalogues
-            The catalogue associated with the provider.
-        catalogues (List[str]):
-            # TODO is it used?
+        catalogue (Optional[str]):
+            The primary catalogue associated with the provider.
+        catalogues (Optional[List[str]]):
             A list of catalogues associated with the provider.
+        country (str):
+            The country where the provider is located or operates. Used in filters and resource view.
         description (str):
             A detailed description of the provider. Used in searching.
-        id (str):
+        hosting_legal_entity (Optional[str]):
+            The name of the legal entity hosting the provider.
+        id (int):
             Unique identifier for the provider.
-        legal_status (str):
+        legal_entity (Optional[bool]):
+            Indicates whether the provider is a legal entity.
+        legal_status (Optional[str]):
             The legal status of the provider. Used in filters and tags.
-        meril_scientific_domains (List[str]):
-            # TODO add description. Used in filters and tags.
+        multimedia_urls (List[str]):
+            A list of URLs pointing to multimedia resources related to the provider.
         node (Optional[str]):
             Name of the node associated with the provider. Used in filters.
         pid (str):
             Persistent identifier for the provider. Used in resource view.
         popularity (int):
             Popularity score of the provider. Used in sorting.
-        publication_date (date):
+        publication_date (datetime):
             The date when the provider's information was published. Used in sorting.
-        scientific_domains (List[str]):
-            A list of scientific domains associated with the provider. Used in filters and tags.
         slug (str):
-            # TODO check if it is used
-            The slug (URL-friendly identifier) for the provider.
-        tag_list (List[str]):
-            A list of tags categorizing the provider. Used in tags.
-        tag_list_tg (List[str]):
-            The same data as 'tag_list' but in solr text general type. Used in searching.
+            URL-friendly identifier of the provider.
         title (str):
-            The title of the provider. Used in searching.
+            The title of the provider. Used in searching and resource view.
         type (str):
             Data type = "provider". Used in routing and resource view.
+        updated_at (datetime):
+            The date and time when the provider record was last updated.
         usage_counts_downloads (int):
             The number of times the provider's resources have been downloaded. Part of popularity.
         usage_counts_views (int):
             The number of times the provider's resources have been viewed. Part of popularity.
+        webpage_url (str):
+            The primary webpage URL of the provider. Used in resource view and navigation.
     """
 
     abbreviation: str
-    areas_of_activity: List[str]
-    catalogue: str  # TODO delete
-    catalogues: List[str]
+    catalogue: Optional[str]
+    catalogues: Optional[List[str]]
+    country: str
     description: str
-    id: str
-    keywords: List[str]
-    keywords_tg: List[str]
-    legal_status: str
-    meril_scientific_domains: List[str]
+    hosting_legal_entity: Optional[str]
+    id: int
+    legal_entity: Optional[bool]
+    legal_status: Optional[str]
+    multimedia_urls: List[str]
     node: Optional[str]
     pid: str
     popularity: int
-    publication_date: date
-    scientific_domains: List[str]
+    publication_date: datetime
     slug: str
-    tag_list: List[str]
-    tag_list_tg: List[str]
     title: str
     type: str
+    updated_at: datetime
     usage_counts_downloads: int
     usage_counts_views: int
-
-    """
-    Transformations necessary to convert ProviderInputSchema to ProviderSESchema
-        - add type = "provider"
-        - add popularity
-        - delete:
-            - affiliations
-            - certifications
-            - city
-            - country
-            - esfri_domains
-            - esfri_type
-            - hosting_legal_entity
-            - legal_entity
-            - life_cycle_status
-            - multimedia_urls
-            - national_roadmaps
-            - networks
-            - participating_countries
-            - postal_code
-            - region
-            - societal_grand_challenges
-            - street_name_and_number
-            - structure_types
-            - updated_at
-            - webpage_url
-            
-        - rename:
-            "language_availability": "language", # TODO there is no such a property in input schema
-            "name": "title",
-            "provider_life_cycle_status": "life_cycle_status",
-        - cast:
-            .withColumn("webpage_url", split(col("webpage_url"), ","))
-            .withColumn("country", split(col("country"), ","))
-            .withColumn("publication_date", col("publication_date").cast("date"))
-            .withColumn("updated_at", col("updated_at").cast("date"))
-        - apply current transformations if needed.
-    """
+    webpage_url: str
