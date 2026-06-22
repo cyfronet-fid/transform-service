@@ -2,7 +2,6 @@
 """Transform data sources"""
 
 from pyspark.sql.types import (
-    ArrayType,
     BooleanType,
     IntegerType,
     StringType,
@@ -37,8 +36,6 @@ class DataSourceTransformer(MarketplaceBaseTransformer):
             self.exp_output_schema,
             spark,
         )
-
-        logger.error("yoo 3")
 
     @property
     def harvested_schema(self) -> StructType:
