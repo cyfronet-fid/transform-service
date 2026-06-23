@@ -118,7 +118,7 @@ class ServiceSESchema(BaseModel):
     privacy_policy_url: Optional[str] = None
     providers: Optional[list[str]] = None
     publication_date: Optional[date] = None
-    public_contact_emails: Optional[list[str]] = None
+    public_contacts: Optional[list[str]] = None
     rating: str
     resource_organisation: str
     scientific_domains: Optional[list[str]] = None

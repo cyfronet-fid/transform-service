@@ -1,8 +1,6 @@
 # pylint: disable=duplicate-code
 """Transform services"""
 
-from pyspark.sql import DataFrame
-from pyspark.sql.functions import array, col, lit
 from pyspark.sql.types import (
     BooleanType,
     IntegerType,
@@ -35,17 +33,6 @@ class ServiceTransformer(MarketplaceBaseTransformer):
             spark,
         )
 
-    def apply_simple_trans(self, df: DataFrame) -> DataFrame:
-        """Apply simple transformations.
-        Simple in a way that there is a possibility to manipulate the main dataframe
-        without a need to create another dataframe and merging"""
-        df = super().apply_simple_trans(df)
-
-        df = df.withColumn("catalogues", array(lit("eosc")))
-        df = df.withColumn("catalogue", col("catalogues")[0])
-
-        return df
-
     @property
     def harvested_schema(self) -> StructType:
         """Schema of harvested properties"""
@@ -65,9 +52,9 @@ class ServiceTransformer(MarketplaceBaseTransformer):
         return None
 
     @property
-    def cols_to_drop(self) -> tuple[str, ...]:
+    def cols_to_drop(self) -> None:
         """Drop those columns from the dataframe"""
-        return ("public_contacts",)
+        return None
 
     @property
     def cols_to_rename(self) -> dict[str, str]:
@@ -78,16 +65,5 @@ class ServiceTransformer(MarketplaceBaseTransformer):
             "order_type": "best_access_right",
             "urls": "url",
             "trls": "trl",
+            "public_contact_emails": "public_contacts",
         }
-
-    @staticmethod
-    def cast_columns(df: DataFrame) -> DataFrame:
-        """Cast certain columns"""
-        df = (
-            df.withColumn("id", col("id").cast(StringType()))
-            .withColumn("updated_at", col("updated_at").cast("date"))
-            .withColumn("publication_date", col("publication_date").cast("date"))
-            .withColumn("synchronized_at", col("synchronized_at").cast("date"))
-        )
-
-        return df

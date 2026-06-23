@@ -5,7 +5,7 @@ from abc import abstractmethod
 from itertools import chain
 
 from pyspark.sql import DataFrame, SparkSession
-from pyspark.sql.functions import col, lit
+from pyspark.sql.functions import array, col, lit
 from pyspark.sql.types import ArrayType, StringType, StructType
 from pyspark.sql.utils import AnalysisException
 
@@ -58,9 +58,10 @@ class MarketplaceBaseTransformer(BaseTransformer):
         df = self.rename_cols(df)
         df = self.simplify_urls(df)
         df = df.withColumn(ID, (col(ID) + self.id_increment))
-        # df = df.withColumn(
-        #     "catalogue", self.get_first_element(df["catalogues"])
-        # )  # TODO delete
+        df = df.withColumn("catalogues", array(lit("eosc")))
+        df = df.withColumn(
+            "catalogue", self.get_first_element(df["catalogues"])
+        )  # TODO delete
         df = df.withColumn(UPSTREAM_ID, col(UPSTREAM_ID).cast("bigint"))
 
         return df
@@ -151,7 +152,6 @@ class MarketplaceBaseTransformer(BaseTransformer):
         df = (
             df.withColumn("id", col("id").cast(StringType()))
             .withColumn("publication_date", col("publication_date").cast("date"))
-            .withColumn("last_update", col("last_update").cast("date"))
             .withColumn("synchronized_at", col("synchronized_at").cast("date"))
             .withColumn("updated_at", col("updated_at").cast("date"))
         )
