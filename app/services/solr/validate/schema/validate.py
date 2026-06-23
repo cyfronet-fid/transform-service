@@ -32,7 +32,14 @@ def validate_pydantic_data(
         try:
             expected_schema.model_validate(record)
         except ValidationError as err:
-            errors.append({"index": index, "errors": err.errors()})
+            errors.append(
+                {
+                    "index": index,
+                    "errors": err.errors(),
+                    "record_id": record.get("id"),
+                    "record_name": record.get("name"),
+                }
+            )
 
     if errors:
         logger.warning(

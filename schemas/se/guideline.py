@@ -64,8 +64,6 @@ class GuidelineSESchema(BaseModel):
             URIs of standards related to the guideline.
         resource_owner (Optional[str]):
             Organization or entity responsible for the guideline.
-        right_uri (List[str]):
-            Rights-related URIs associated with the guideline.
         title (List[str]):
             Title of the guideline.
         type (str):
@@ -102,7 +100,6 @@ class GuidelineSESchema(BaseModel):
     related_standards_id: List[str]
     related_standards_uri: List[str]
     resource_owner: Optional[str] = None
-    right_uri: List[str]
     title: List[str]
     type: str
     type_general: List[str]

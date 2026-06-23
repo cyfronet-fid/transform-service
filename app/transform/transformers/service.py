@@ -12,8 +12,8 @@ from pyspark.sql.types import (
 from app.settings import settings
 from app.transform.transformers.base.marketplace import MarketplaceBaseTransformer
 from app.transform.utils.utils import sort_schema
-from schemas.old.output.service import service_output_schema
 from schemas.properties.data import BEST_ACCESS_RIGHT, OPEN_ACCESS, POPULARITY
+from schemas.se.service import ServiceSESchema
 
 
 class ServiceTransformer(MarketplaceBaseTransformer):
@@ -22,7 +22,7 @@ class ServiceTransformer(MarketplaceBaseTransformer):
     def __init__(self, spark):
         self.type = settings.SERVICE
         id_increment = settings.SERVICE_IDS_INCREMENTOR
-        self.exp_output_schema = service_output_schema
+        self.exp_output_schema = ServiceSESchema
 
         super().__init__(
             id_increment,
@@ -52,6 +52,18 @@ class ServiceTransformer(MarketplaceBaseTransformer):
         return None
 
     @property
-    def cols_to_drop(self) -> tuple[str, ...]:
+    def cols_to_drop(self) -> None:
         """Drop those columns from the dataframe"""
-        return ("public_contacts",)
+        return None
+
+    @property
+    def cols_to_rename(self) -> dict[str, str]:
+        """Columns to rename. Keys are mapped to the values"""
+        return {
+            "nodes": "node",
+            "name": "title",
+            "order_type": "best_access_right",
+            "urls": "url",
+            "trls": "trl",
+            "public_contact_emails": "public_contacts",
+        }

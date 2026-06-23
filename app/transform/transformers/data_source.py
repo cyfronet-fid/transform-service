@@ -2,7 +2,6 @@
 """Transform data sources"""
 
 from pyspark.sql.types import (
-    ArrayType,
     BooleanType,
     IntegerType,
     StringType,
@@ -10,17 +9,15 @@ from pyspark.sql.types import (
     StructType,
 )
 
-from app.settings import settings
+from app.settings import logger, settings
 from app.transform.transformers.base.marketplace import MarketplaceBaseTransformer
 from app.transform.utils.utils import sort_schema
-from schemas.old.output.data_source import data_source_output_schema
 from schemas.properties.data import (
     BEST_ACCESS_RIGHT,
     OPEN_ACCESS,
-    PERSIST_ID_SYS_ENTITY_TYPE,
-    PERSIST_ID_SYS_ENTITY_TYPE_SCHEMES,
     POPULARITY,
 )
+from schemas.se.data_source import DataSourceSESchema
 
 
 class DataSourceTransformer(MarketplaceBaseTransformer):
@@ -29,7 +26,7 @@ class DataSourceTransformer(MarketplaceBaseTransformer):
     def __init__(self, spark):
         self.type = settings.DATASOURCE
         id_increment = settings.DATA_SOURCE_IDS_INCREMENTOR
-        self.exp_output_schema = data_source_output_schema
+        self.exp_output_schema = DataSourceSESchema
 
         super().__init__(
             id_increment,
@@ -48,16 +45,6 @@ class DataSourceTransformer(MarketplaceBaseTransformer):
                 [
                     StructField(BEST_ACCESS_RIGHT, StringType(), True),
                     StructField(OPEN_ACCESS, BooleanType(), True),
-                    StructField(
-                        PERSIST_ID_SYS_ENTITY_TYPE,
-                        ArrayType(StringType()),
-                        True,
-                    ),
-                    StructField(
-                        PERSIST_ID_SYS_ENTITY_TYPE_SCHEMES,
-                        ArrayType(ArrayType(StringType())),
-                        True,
-                    ),
                     StructField(POPULARITY, IntegerType(), True),
                 ]
             )
@@ -69,6 +56,17 @@ class DataSourceTransformer(MarketplaceBaseTransformer):
         return None
 
     @property
-    def cols_to_drop(self) -> tuple[str, ...]:
+    def cols_to_drop(self) -> None:
         """Drop those columns from the dataframe"""
-        return ("public_contacts",)
+        return None
+
+    @property
+    def cols_to_rename(self) -> dict[str, str]:
+        """Columns to rename. Keys are mapped to the values"""
+        return {
+            "order_type": "best_access_right",
+            "name": "title",
+            "public_contact_emails": "public_contacts",
+            "trls": "trl",
+            "urls": "url",
+        }
