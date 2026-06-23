@@ -73,8 +73,6 @@ class MarketplaceBaseTransformer(BaseTransformer):
         df = map_best_access_right(df, self.harvested_properties, self.type)
         create_open_access(self.harvested_properties)
         harvest_popularity(df, self.harvested_properties)
-        if self.type == settings.DATASOURCE:
-            df = self.harvest_persistent_id_systems(df)
 
         return df
 

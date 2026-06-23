@@ -10,12 +10,14 @@ from pydantic import AnyUrl
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from schemas.input.adapter import AdapterInputSchema
+from schemas.input.data_source import DataSourceInputSchema
 from schemas.input.deployable_service import DeployableServiceInputSchema
 from schemas.input.guideline import GuidelineInputSchema
 from schemas.input.service import ServiceInputSchema
 from schemas.old.input import *
 from schemas.old.output import *
 from schemas.se.adapter import AdapterSESchema
+from schemas.se.data_source import DataSourceSESchema
 from schemas.se.deployable_service import DeployableServiceSESchema
 from schemas.se.guideline import GuidelineSESchema
 from schemas.se.service import ServiceSESchema
@@ -303,8 +305,8 @@ class TransformSettings(GlobalSettings):
             },
             self.DATASOURCE: {
                 ADDRESS: mp_api + "datasources",
-                OUTPUT_SCHEMA: data_source_output_schema,
-                INPUT_SCHEMA: data_source_input_schema,
+                OUTPUT_SCHEMA: DataSourceSESchema,
+                INPUT_SCHEMA: DataSourceInputSchema,
             },
             self.BUNDLE: {
                 ADDRESS: mp_api + "bundles",
