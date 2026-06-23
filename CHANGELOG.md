@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.7.0](https://github.com/cyfronet-fid/transform-service/compare/v1.6.0...v1.7.0) (2026-06-23)
+
+
+### Features
+
+* [[#106](https://github.com/cyfronet-fid/transform-service/issues/106)] update adapter's profile ([c88b1ec](https://github.com/cyfronet-fid/transform-service/commit/c88b1ec9795081e4205265e741cf78216b74f7d9))
+* [[#133](https://github.com/cyfronet-fid/transform-service/issues/133)] service new profile ([21ccf0a](https://github.com/cyfronet-fid/transform-service/commit/21ccf0a5681bce90caf7c87b813881d68abc802c))
+* data source profiles v6 ([#117](https://github.com/cyfronet-fid/transform-service/issues/117)) ([e8a113a](https://github.com/cyfronet-fid/transform-service/commit/e8a113aaefc852727e58b38e7a8305c806a26c56))
+* deployable applications new profile ([0e06159](https://github.com/cyfronet-fid/transform-service/commit/0e06159db6b4e90240cb08ecd04854f96a306751))
+* originator, participant_id and catalogue pretty name ([c61e4e7](https://github.com/cyfronet-fid/transform-service/commit/c61e4e7a3591bbace1aac4999eef404fc8d8f1f6))
+* provider profile v6 ([#119](https://github.com/cyfronet-fid/transform-service/issues/119)) ([3e535b5](https://github.com/cyfronet-fid/transform-service/commit/3e535b5838100df721cb4ff9af8e095dda32e5e2))
+* update guideline's profile ([0a437d9](https://github.com/cyfronet-fid/transform-service/commit/0a437d92c6b9d1384512d08ae84d924f6328991d))
+
+
+### Bug Fixes
+
+* publisher filter and keywords ([473af1d](https://github.com/cyfronet-fid/transform-service/commit/473af1db0bd6f87eab68fc590677b500e87bf3dd))
+* sage license attribute for geodcat ([087217f](https://github.com/cyfronet-fid/transform-service/commit/087217fe13d70285989c757b2abf572a928c1bd1))
+
 ## [1.6.0](https://github.com/cyfronet-fid/transform-service/compare/v1.5.1...v1.6.0) (2026-03-26)
 
 
