@@ -13,6 +13,7 @@ from schemas.input.adapter import AdapterInputSchema
 from schemas.input.data_source import DataSourceInputSchema
 from schemas.input.deployable_service import DeployableServiceInputSchema
 from schemas.input.guideline import GuidelineInputSchema
+from schemas.input.provider import ProviderInputSchema
 from schemas.input.service import ServiceInputSchema
 from schemas.old.input import *
 from schemas.old.output import *
@@ -20,6 +21,7 @@ from schemas.se.adapter import AdapterSESchema
 from schemas.se.data_source import DataSourceSESchema
 from schemas.se.deployable_service import DeployableServiceSESchema
 from schemas.se.guideline import GuidelineSESchema
+from schemas.se.provider import ProviderSESchema
 from schemas.se.service import ServiceSESchema
 
 logger = logging.getLogger(__name__)
@@ -325,8 +327,8 @@ class TransformSettings(GlobalSettings):
             },
             self.PROVIDER: {
                 ADDRESS: mp_api + "providers",
-                OUTPUT_SCHEMA: provider_output_schema,
-                INPUT_SCHEMA: provider_input_schema,
+                OUTPUT_SCHEMA: ProviderSESchema,
+                INPUT_SCHEMA: ProviderInputSchema,
             },
             self.OFFER: {
                 ADDRESS: mp_api + "offers",
