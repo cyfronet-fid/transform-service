@@ -1,6 +1,6 @@
-"""Guideline expected search engine schema"""
+"""Guideline expected search engine schema."""
 
-from datetime import datetime
+from datetime import date
 from typing import List, Optional
 
 from pydantic import BaseModel
@@ -8,82 +8,74 @@ from pydantic import BaseModel
 
 class GuidelineSESchema(BaseModel):
     """
-    Pydantic model representing the expected search engine schema for a interoperability guideline after transformations.
+    Pydantic model representing a flattened interoperability guideline record
+    transformed for indexing in Solr.
 
     Attributes:
-        alternative_ids (str):
-            Alternative identifiers for the guideline.
+        alternative_id_schemes (List[str]):
+            Schemes corresponding to alternative identifiers.
+        alternative_ids (Optional[str]):
+            Alternative identifiers associated with the guideline.
         author_affiliations (List[str]):
-            A list of author affiliations.
+            Names of creator affiliations.
         author_affiliations_id (List[str]):
-            A list of author affiliation IDs.
+            Identifiers of creator affiliations.
         author_family_names (List[str]):
-            A list of author family names.
+            Family names of authors.
         author_given_names (List[str]):
-            A list of author given names.
+            Given names of authors.
         author_names (List[str]):
-            A list of author names.
+            Names of authors extracted for indexing.
         author_names_id (List[str]):
-            A list of author name IDs.
+            Persistent identifiers of authors.
         author_names_tg (List[str]):
-            A list of target group author names, the same data as 'author_names' but in text general type.
+            Tokenized or normalized author names used for search and aggregation.
         author_types (List[str]):
-            A list of author types.
-        catalogue (str):
-            The catalogue associated with the guideline.
+            Types of creator affiliation identifiers.
+        catalogue (Optional[str]):
+            Primary catalogue associated with the guideline.
         catalogues (List[str]):
-            A list of catalogues associated with the guideline.
+            Catalogues in which the guideline is available.
         creators (str):
-            The creators of the guideline.
+            JSON string representing list of author/creator objects.
         description (List[str]):
-            A list of descriptions for the guideline.
-        doi (List[str]):
-            A list of DOIs (Digital Object Identifiers) for the guideline.
-        domain (str):
-            The domain of the guideline.
-        eosc_guideline_type (str):
-            The type of EOSC guideline.
-        eosc_integration_options (List[str]):
-            A list of EOSC integration options.
+            Description of the guideline.
         id (str):
-            Unique identifier for the guideline.
+            Unique identifier of the guideline.
+        license (Optional[str]):
+            License name associated with the guideline.
+        license_url (Optional[str]):
+            URL pointing to the license information.
         node (Optional[str]):
-            Name of the node associated with the guideline. Used in filters.
-        provider (str):  # TODO delete
-            The provider associated with the guideline.
-        providers (List[str]):
-            A list of providers associated with the guideline.
-        publication_date (datetime):
-            The date when the guideline was published.
-        publication_year (int):
-            The year when the guideline was published.
+            Name of the node associated with the guideline.
+        provider (Optional[str]):
+            Name of the provider associated with the guideline.
+        providers (Optional[List[str]]):
+            List of providers associated with the guideline.
+        publication_date (Optional[date]):
+            Publication date of the guideline.
+        publication_year (Optional[int]):
+            Publication year of the guideline.
+        public_contacts (List[str]):
+            Public contact information associated with the guideline.
         related_standards_id (List[str]):
-            A list of related standards IDs.
+            Identifiers of standards related to the guideline.
         related_standards_uri (List[str]):
-            A list of related standards URIs.
-        right_id (List[str]):
-            A list of rights IDs.
-        right_title (List[str]):
-            A list of rights titles.
-        right_uri (List[str]):
-            A list of rights URIs.
-        status (str):
-            The status of the guideline.
+            URIs of standards related to the guideline.
+        resource_owner (Optional[str]):
+            Organization or entity responsible for the guideline.
         title (List[str]):
-            A list of titles for the guideline.
+            Title of the guideline.
         type (str):
-            Data type = "interoperability guideline".
+            Type or category of the guideline.
         type_general (List[str]):
-            A list of general types for the guideline.
+            General resource type classifications.
         type_info (List[str]):
-            A list of type information for the guideline.
-        updated_at (datetime):
-            The date and time when the guideline was last updated.
-        uri (List[str]):
-            A list of URIs for the guideline.
+            Specific resource type information.
     """
 
-    alternative_ids: str
+    alternative_id_schemes: List[str]
+    alternative_ids: Optional[str] = None
     author_affiliations: List[str]
     author_affiliations_id: List[str]
     author_family_names: List[str]
@@ -92,47 +84,23 @@ class GuidelineSESchema(BaseModel):
     author_names_id: List[str]
     author_names_tg: List[str]
     author_types: List[str]
-    catalogue: str  # TODO delete
+    catalogue: Optional[str] = None
     catalogues: List[str]
     creators: str
     description: List[str]
-    doi: List[str]
-    domain: str
-    eosc_guideline_type: str
-    eosc_integration_options: List[str]
     id: str
-    node: Optional[str]
-    provider: str  # TODO delete
-    providers: List[str]
-    publication_date: datetime
-    publication_year: int
+    license: Optional[str] = None
+    license_url: Optional[str] = None
+    node: Optional[str] = None
+    provider: Optional[str] = None
+    providers: Optional[List[str]] = None
+    publication_date: Optional[date] = None
+    publication_year: Optional[int] = None
+    public_contacts: List[str]
     related_standards_id: List[str]
     related_standards_uri: List[str]
-    right_id: List[str]
-    right_title: List[str]
-    right_uri: List[str]
-    status: str
+    resource_owner: Optional[str] = None
     title: List[str]
     type: str
     type_general: List[str]
     type_info: List[str]
-    updated_at: datetime
-    uri: List[str]
-
-    """
-    Transformations necessary to convert GuidelineInputSchema to GuidelineSESchema
-        - add type = "interoperability guideline"
-        - do mappings:
-            - map_nodes
-        - rename:
-            "alternativeIdentifiers": "alternative_ids",
-            "publicationYear": "publication_year",
-            "catalogueId": "catalogues",
-            "created": "publication_date",
-            "updated": "updated_at",
-            "eoscGuidelineType": "eosc_guideline_type",
-            "eoscIntegrationOptions": "eosc_integration_options",
-            "providerId": "providers",
-        - for now lets keep those variables as they are, refactor backend/frontend to use data from the db and then change schema kept in SE
-        
-    """

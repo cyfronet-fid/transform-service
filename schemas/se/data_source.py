@@ -1,6 +1,6 @@
 """Data source expected search engine schema"""
 
-from datetime import date
+from datetime import date, datetime
 from typing import List, Optional
 
 from pydantic import AnyHttpUrl, BaseModel, EmailStr
@@ -8,167 +8,137 @@ from pydantic import AnyHttpUrl, BaseModel, EmailStr
 
 class DataSourceSESchema(BaseModel):
     """
-    Pydantic model representing the expected search engine schema for a data source after transformations.
+    Pydantic model representing a search engine document schema for a data source.
 
     Attributes:
-        best_access_right (str):
-            The best access right for the data source. Used in filters.
-        catalogue (str):
-            TODO replace with catalogues. Make sure that backend/frontend are not using it.
-            The catalogue associated with the data source.
-        catalogues (List[str]):
-            TODO is it used anywhere for data sources?
-            A list of catalogues associated with the data source.
-        categories (List[str]):
-            A list of categories applicable to the data source. Used in filters.
-        dedicated_for (List[str]):
-            A list of dedicated purposes for the data source. Used in filters.
-        description (str):
-            A detailed description of the data source. Used in searching.
-        eosc_if (List[str]):
-            TODO add description. Used in filters and secondary tags
-        eosc_if_tg (List[str]):
-            The same data as 'eosc_if' but in solr text general type. Used in searching.
-        guidelines (List[str]):
-            A list of guidelines available for this data source. Used in tags
-        geographical_availabilities (List[str]):
-            A list of geographical locations where the data source is available. Used in filters.
-        horizontal (bool):
-            Indicates whether the data source is horizontal. Used in resource view and filters.
-        id (str):
-            Unique identifier for the data source.
-        language (List[str]):
-            A list of languages in which the data source is available. Used in resource view and filters.
-        node (Optional[str]):
-            Name of the node associated with the data source. Used in filters
-        open_access (bool):
-            TODO Saw no usage in the code. Dive deeper.
-            Indicates whether the data source is open access.
+        access_policies_url (Optional[str]):
+            URL describing access policies for the data source.
+        access_types (Optional[List[str]]):
+            List of access types available for the data source.
+        best_access_right (Optional[str]):
+            Highest level of access rights available for the data source.
+        catalogue (Optional[str]):
+            Primary catalogue associated with the data source.
+        catalogues (Optional[List[st`r]]):
+            Catalogues in which the data source is registered.
+        categories (Optional[List[str]]):
+            Categories assigned to the data source.
+        created_at (Optional[datetime]):
+            Timestamp when the data source record was created.
+        datasource_classification (Optional[str]):
+            Classification of the data source.
+        description (Optional[str]):
+            Detailed description of the data source.
+        guidelines (Optional[List[str]]):
+            Guidelines related to the use or management of the data source.
+        id (int):
+            Unique identifier of the data source.
+        jurisdiction (Optional[str]):
+            Jurisdiction under which the data source operates.
+        keywords (Optional[List[str]]):
+            Keywords associated with the data source.
+        keywords_tg (Optional[List[str]]):
+            Search-optimized representation of keywords.
+        logo (Optional[str]):
+            URL or path to the data source logo.
+        node (str):
+            Name of the node associated with the data source.
+        open_access (Optional[bool]):
+            Indicates whether the data source is openly accessible.
+        order_url (Optional[str]):
+            URL used to order or request access to the data source.
         pid (str):
-            Persistent identifier for the data source. Used in resource view.
-        platforms (List[str]):
-            A list of platforms where the data source is available. Used in filters
-        popularity (int):
-            Popularity score of the data source. Used in sorting.
-        providers (List[str]):
-            A list of providers associated with the data source. In filters.
-        publication_date (date):
-            The date when the data source was published. Used in sorting
-        resource_organisation (str):
-            The organisation responsible for the data source. Used in tags and filters.
-        scientific_domains (List[str]):
-            A list of scientific domains associated with the data source. Used in tags and filters
-        tag_list (List[str]):
-            TODO rename it to keywords
-            A list of tags categorizing the data source. Used in tags and filters
-        tag_list_tg (List[str]):
-            # TODO rename it to keywords_tg
-            A list of target group tags categorizing the data source, the same data as 'tag_list' but in text general type. Used in searching.
-        title (str):
-            The title of the data source. Used in searching.
-        type (str):
-            Data type = "data source". Used in tabs and resource view.
-        unified_categories (List[str]):
-            A list of unified categories for the data source. Used in filters.
-        usage_counts_downloads (int):
-            The number of times the data source has been downloaded. Part of popularity.
-        usage_counts_views (int):
-            The number of times the data source has been viewed. Part of popularity.
+            Persistent identifier of the data source.
+        popularity (Optional[int]):
+            Popularity score calculated for ranking and sorting purposes.
+        privacy_policy_url (Optional[str]):
+            URL to the privacy policy.
+        providers (Optional[List[str]]):
+            Organizations or entities providing the data source.
+        public_contacts (Optional[List[str]]):
+            Public contact information associated with the data source.
+        publication_date (Optional[datetime]):
+            Date when the data source was published.
+        research_product_types (Optional[List[str]]):
+            Types of research products available through the data source.
+        resource_organisation (Optional[str]):
+            Organization responsible for maintaining the data source.
+        scientific_domains (Optional[List[str]]):
+            Scientific domains related to the data source.
+        status (Optional[str]):
+            Current status of the data source.
+        synchronized_at (Optional[datetime]):
+            Timestamp of the last synchronization.
+        tag_list (Optional[List[str]]):
+            Tags associated with the data source.
+        tag_list_tg (Optional[List[str]]):
+            Search-optimized representation of tags.
+        terms_of_use_url (Optional[str]):
+            URL to the terms of use.
+        title (Optional[str]):
+            Title of the data source used for indexing and searching.
+        thematic (Optional[bool]):
+            Indicates whether the data source is thematic.
+        trl (Optional[str]):
+            Technology Readiness Level associated with the data source.
+        type (Optional[str]):
+            Resource type identifier.
+        updated_at (Optional[datetime]):
+            Timestamp of the last update.
+        upstream_id (Optional[int]):
+            Identifier of the source record in the upstream system.
+        url (Optional[List[str]]):
+            Additional URLs related to the data source.
+        usage_counts_downloads (Optional[int]):
+            Number of downloads recorded for the data source.
+        usage_counts_views (Optional[int]):
+            Number of views recorded for the data source.
+        version_control (Optional[bool]):
+            Indicates whether version control is supported.
+        webpage_url (Optional[str]):
+            Main webpage URL of the data source.
     """
 
-    best_access_right: str
-    catalogue: str  # TODO replace with catalogues. Make sure that backend/frontend are not using it.
-    catalogues: List[str]  # TODO is it used anywhere for data sources?
-    categories: List[str]
-    dedicated_for: List[str]
-    description: str
-    eosc_if: List[str]
-    eosc_if_tg: List[str]
-    guidelines: List[str]
-    geographical_availabilities: List[str]
-    horizontal: bool
-    id: str
-    keywords: List[str]
-    keywords_tg: List[str]
-    language: List[str]
-    node: Optional[str]
-    open_access: bool
+    access_policies_url: Optional[str] = None
+    access_types: Optional[List[str]] = None
+    best_access_right: Optional[str] = None
+    catalogue: Optional[str] = None
+    catalogues: Optional[List[str]] = None
+    categories: Optional[List[str]] = None
+    created_at: Optional[datetime] = None
+    datasource_classification: Optional[str] = None
+    description: Optional[str] = None
+    guidelines: Optional[list[str]] = None
+    id: int
+    jurisdiction: Optional[str] = None
+    keywords: Optional[List[str]] = None
+    keywords_tg: Optional[List[str]] = None
+    logo: Optional[str] = None
+    node: str
+    open_access: Optional[bool] = None
+    order_url: Optional[str] = None
     pid: str
-    platforms: List[str]
-    popularity: int
-    providers: List[str]
-    publication_date: date
-    resource_organisation: str
-    scientific_domains: List[str]
-    tag_list: List[str]
-    tag_list_tg: List[str]
-    title: str
-    type: str
-    unified_categories: List[str]
-    usage_counts_downloads: int
-    usage_counts_views: int
-    webpage_url: AnyHttpUrl
-
-    """
-    Transformations necessary to convert DataSourceInputSchema to DataSourceSESchema
-        - add type = "data source"
-        - add popularity
-        - add open_access
-        - rename order_type to best_access_right
-        - rename language_availability to language
-        - rename name to title
-        - cast:
-            .withColumn("publication_date", col("publication_date").cast("date"))
-        - convert IDs
-            .withColumn(ID, (col(ID) + self.id_increment))
-        - delete:
-            - abbreviation
-            - access_modes
-            - access_types
-            - certifications
-            - changelog
-            - datasource_classification
-            - funding_bodies
-            - funding_programs
-            - grant_project_names
-            - helpdesk_email
-            - helpdesk_url
-            - jurisdiction
-            - last_update
-            - life_cycle_status
-            - maintenance_url
-            - manual_url
-            - multimedia_urls
-            - open_source_technologies
-            - order_url
-            - payment_model_url
-            - persistent_identity_systems_entity_type
-            - persistent_identity_systems_entity_type_schemes
-            - preservation_policy_url
-            - pricing_url
-            - privacy_policy_url
-            - research_entity_types
-            - research_product_access_policies
-            - research_product_licensing_urls
-            - research_product_metadata_access_policies
-            - research_product_metadata_license_urls
-            - resource_geographic_locations
-            - resource_level_url
-            - security_contact_email
-            - standards
-            - status
-            - status_monitoring_url
-            - submission_policy_url
-            - synchronized_at
-            - tagline
-            - terms_of_use_url
-            - thematic
-            - training_information_url
-            - trl
-            - updated_at
-            - upstream_id
-            - use_cases_urls
-            - version
-            - version_control
-            - webpage_url
-    """
+    popularity: Optional[int] = None
+    privacy_policy_url: Optional[str] = None
+    providers: Optional[List[str]] = None
+    public_contacts: Optional[List[str]] = None
+    publication_date: Optional[datetime] = None
+    research_product_types: Optional[List[str]] = None
+    resource_organisation: Optional[str] = None
+    scientific_domains: Optional[List[str]] = None
+    status: Optional[str] = None
+    synchronized_at: Optional[datetime] = None
+    tag_list: Optional[List[str]] = None
+    tag_list_tg: Optional[List[str]] = None
+    terms_of_use_url: Optional[str] = None
+    title: Optional[str] = None
+    thematic: Optional[bool] = None
+    trl: Optional[str]
+    type: Optional[str] = None
+    updated_at: Optional[datetime] = None
+    upstream_id: Optional[int] = None
+    url: Optional[List[str]] = None  #
+    usage_counts_downloads: Optional[int] = None
+    usage_counts_views: Optional[int] = None
+    version_control: Optional[bool] = None
+    webpage_url: Optional[str] = None

@@ -47,25 +47,93 @@ def get_access_token_from_refresh_token(
         return None
 
 
-def map_nodes(data: dict[str, Any]) -> dict[str, Any]:
-    """Safely replace 'node' values in results with their corresponding labels from facets."""
-    node_mapping = {}
+def map_nodes(data: dict[str, Any], keep_node_pid: bool = False) -> dict[str, Any]:
+    """Safely replace selected node coded values with their facet labels."""
+    node_mapping = get_facet_mapping(data, "node")
 
-    # Build mapping from facets
-    for facet in data.get("facets", []):
-        if facet.get("field") == "node":
-            for value in facet.get("values", []):
-                node_value = value.get("value")
-                node_label = value.get("label")
-                if node_value and node_label:
-                    node_mapping[node_value] = node_label
-            break  # No need to check other facets once we found 'node'
-
-    # Only apply mapping if any node labels were found
-    if node_mapping:
-        for item in data.get("results", []):
-            original_node = item.get("node")
-            if isinstance(original_node, str) and original_node in node_mapping:
-                item["node"] = node_mapping[original_node]
+    map_node_values(data, node_mapping, keep_node_pid)
 
     return data
+
+
+def map_licenses(data: dict[str, Any]) -> dict[str, Any]:
+    """Safely replace license identifiers with their facet labels."""
+    license_mapping = get_facet_mapping(data, "license")
+
+    map_license_values(data, license_mapping)
+
+    return data
+
+
+def map_resource_owners(data: dict[str, Any]) -> dict[str, Any]:
+    """Add provider label based on resource_owner facet mapping."""
+    resource_owner_mapping = get_facet_mapping(data, "resource_owner")
+
+    map_resource_owner_values(data, resource_owner_mapping)
+
+    return data
+
+
+def get_facet_mapping(data: dict[str, Any], field: str) -> dict[str, str]:
+    """Build a value-to-label mapping from Provider Component facets."""
+    for facet in data.get("facets", []):
+        if facet.get("field") != field:
+            continue
+
+        return {
+            value["value"]: value["label"]
+            for value in facet.get("values", [])
+            if value.get("value") and value.get("label")
+        }
+
+    return {}
+
+
+def map_node_values(
+    data: dict[str, Any], node_mapping: dict[str, str], keep_node_pid: bool
+) -> None:
+    """Map node PID values to labels, optionally preserving the raw nodePID."""
+    if not node_mapping:
+        return
+
+    for item in data.get("results", []):
+        original_node = item.get("nodePID")
+        if isinstance(original_node, str) and original_node in node_mapping:
+            item["node"] = node_mapping[original_node]
+            if not keep_node_pid:
+                del item["nodePID"]
+
+
+def map_license_values(data: dict[str, Any], license_mapping: dict[str, str]) -> None:
+    """Map license identifiers to labels for string and nested license fields."""
+    if not license_mapping:
+        return
+
+    for item in data.get("results", []):
+        license_value = item.get("license")
+
+        if isinstance(license_value, str) and license_value in license_mapping:
+            item["license"] = license_mapping[license_value]
+            continue
+
+        if not isinstance(license_value, dict):
+            continue
+
+        license_name = license_value.get("licenseName")
+        if isinstance(license_name, str) and license_name in license_mapping:
+            license_value["licenseName"] = license_mapping[license_name]
+
+
+def map_resource_owner_values(
+    data: dict[str, Any],
+    resource_owner_mapping: dict[str, str],
+) -> None:
+    """Map resource owner PID to provider label."""
+    if not resource_owner_mapping:
+        return
+
+    for item in data.get("results", []):
+        resource_owner = item.get("resourceOwner")
+
+        if isinstance(resource_owner, str) and resource_owner in resource_owner_mapping:
+            item["provider"] = resource_owner_mapping[resource_owner]

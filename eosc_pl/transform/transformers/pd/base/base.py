@@ -1,5 +1,6 @@
 # pylint: disable=line-too-long, too-many-arguments), invalid-name
 """Base transformer of pandas df"""
+
 import json
 import logging
 from abc import ABC, abstractmethod

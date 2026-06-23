@@ -1,5 +1,6 @@
 # pylint: disable=too-few-public-methods
 """Configs for all the environments"""
+
 import logging
 import os
 from typing import Literal, Optional
@@ -8,10 +9,20 @@ from dotenv import load_dotenv
 from pydantic import AnyUrl
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from schemas.input.adapter import AdapterInputSchema
+from schemas.input.data_source import DataSourceInputSchema
+from schemas.input.deployable_service import DeployableServiceInputSchema
+from schemas.input.guideline import GuidelineInputSchema
+from schemas.input.provider import ProviderInputSchema
+from schemas.input.service import ServiceInputSchema
 from schemas.old.input import *
-from schemas.old.input.deployable_service import deployable_service_input_schema
 from schemas.old.output import *
-from schemas.old.output.deployable_service import deployable_service_output_schema
+from schemas.se.adapter import AdapterSESchema
+from schemas.se.data_source import DataSourceSESchema
+from schemas.se.deployable_service import DeployableServiceSESchema
+from schemas.se.guideline import GuidelineSESchema
+from schemas.se.provider import ProviderSESchema
+from schemas.se.service import ServiceSESchema
 
 logger = logging.getLogger(__name__)
 EnvironmentType = Literal["dev", "test", "production"]
@@ -131,10 +142,10 @@ class GlobalSettings(BaseSettings):
     )
     PC_CLIENT_ID: str = "providers-api-token-client"
     GUIDELINE_ADDRESS: AnyUrl = (
-        "https://integration.providers.sandbox.eosc-beyond.eu/api/public/interoperabilityRecord/all?catalogue_id=all&active=true&suspended=false&quantity=10000"
+        "https://integration.providers.sandbox.eosc-beyond.eu/api/public/interoperabilityRecord/all?active=true&suspended=false&quantity=10000"
     )
     TRAINING_ADDRESS: AnyUrl = (
-        "https://integration.providers.sandbox.eosc-beyond.eu/api/public/trainingResource/all?catalogue_id=all&active=true&suspended=false&quantity=10000"
+        "https://integration.providers.sandbox.eosc-beyond.eu/api/public/trainingResource/all?active=true&suspended=false&quantity=10000"
     )
     ADAPTER_ADDRESS: AnyUrl = (
         "https://integration.providers.sandbox.eosc-beyond.eu/api/public/adapter/all?active=true&suspended=false&quantity=10000"
@@ -291,13 +302,13 @@ class TransformSettings(GlobalSettings):
             },
             self.SERVICE: {
                 ADDRESS: mp_api + "services",
-                OUTPUT_SCHEMA: service_output_schema,
-                INPUT_SCHEMA: service_input_schema,
+                OUTPUT_SCHEMA: ServiceSESchema,
+                INPUT_SCHEMA: ServiceInputSchema,
             },
             self.DATASOURCE: {
                 ADDRESS: mp_api + "datasources",
-                OUTPUT_SCHEMA: data_source_output_schema,
-                INPUT_SCHEMA: data_source_input_schema,
+                OUTPUT_SCHEMA: DataSourceSESchema,
+                INPUT_SCHEMA: DataSourceInputSchema,
             },
             self.BUNDLE: {
                 ADDRESS: mp_api + "bundles",
@@ -306,8 +317,8 @@ class TransformSettings(GlobalSettings):
             },
             self.GUIDELINE: {
                 ADDRESS: str(self.GUIDELINE_ADDRESS),
-                OUTPUT_SCHEMA: guideline_output_schema,
-                INPUT_SCHEMA: guideline_input_schema,
+                OUTPUT_SCHEMA: GuidelineSESchema,
+                INPUT_SCHEMA: GuidelineInputSchema,
             },
             self.TRAINING: {
                 ADDRESS: str(self.TRAINING_ADDRESS),
@@ -316,8 +327,8 @@ class TransformSettings(GlobalSettings):
             },
             self.PROVIDER: {
                 ADDRESS: mp_api + "providers",
-                OUTPUT_SCHEMA: provider_output_schema,
-                INPUT_SCHEMA: provider_input_schema,
+                OUTPUT_SCHEMA: ProviderSESchema,
+                INPUT_SCHEMA: ProviderInputSchema,
             },
             self.OFFER: {
                 ADDRESS: mp_api + "offers",
@@ -331,13 +342,13 @@ class TransformSettings(GlobalSettings):
             },
             self.DEPLOYABLE_SERVICE: {
                 ADDRESS: mp_api + "deployable_services",
-                OUTPUT_SCHEMA: deployable_service_output_schema,
-                INPUT_SCHEMA: deployable_service_input_schema,
+                OUTPUT_SCHEMA: DeployableServiceSESchema,
+                INPUT_SCHEMA: DeployableServiceInputSchema,
             },
             self.ADAPTER: {
                 ADDRESS: str(self.ADAPTER_ADDRESS),
-                OUTPUT_SCHEMA: adapter_output_schema,
-                INPUT_SCHEMA: adapter_input_schema,
+                OUTPUT_SCHEMA: AdapterSESchema,
+                INPUT_SCHEMA: AdapterInputSchema,
             },
         }
 

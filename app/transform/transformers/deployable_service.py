@@ -1,5 +1,6 @@
 # pylint: disable=line-too-long, wildcard-import, unused-wildcard-import, invalid-name, duplicate-code
 """Transform Deployable Services"""
+
 from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql.functions import col, concat, expr, lit, split
 from pyspark.sql.types import StringType, StructType
@@ -71,8 +72,9 @@ class DeployableServiceTransformer(BaseTransformer):
         return {
             "name": "title",
             "tag_list": "keywords",
-            "software_license": "license",
+            "license_name": "license",
             "catalogue": "catalogues",
+            "public_contact_emails": "public_contacts",
         }
 
     @property
@@ -83,7 +85,11 @@ class DeployableServiceTransformer(BaseTransformer):
     @property
     def cols_to_drop(self) -> tuple[str, ...]:
         """Drop those columns from the dataframe"""
-        return ()
+        return (
+            "resource_type",
+            "publishing_date",  # TODO MP AI hallucination?
+            "urls",  # TODO MP AI hallucination?
+        )
 
     @staticmethod
     def transform_creators(df: DataFrame) -> DataFrame:
@@ -109,16 +115,14 @@ class DeployableServiceTransformer(BaseTransformer):
         # Option 4: Create a searchable text field combining all creator info
         df = df.withColumn(
             "creators_searchable",
-            expr(
-                """
+            expr("""
                 transform(creators, x -> 
                     concat(
                         x.creatorNameTypeInfo.creatorName, ' ', 
                         x.creatorAffiliationInfo.affiliation
                     )
                 )
-            """
-            ),
+            """),
         )
 
         return df

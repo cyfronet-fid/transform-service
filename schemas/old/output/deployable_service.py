@@ -15,11 +15,13 @@ deployable_service_output_schema = {
     "node": "string",  # TODO fix in the MP
     "version": "string",
     "license": "string",  # TODO fix in the MP
+    "license_url": "string",  # TODO fix in the MP
     "last_update": "date",
     "publication_date": "date",
     "updated_at": "date",
     "synchronized_at": "date",
     "status": "string",
+    "public_contacts": "array<string>",
     "resource_organisation": "string",
     "catalogues": "array<string>",
     "scientific_domains": "array<string>",

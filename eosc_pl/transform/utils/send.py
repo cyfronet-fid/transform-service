@@ -1,5 +1,6 @@
 # pylint: disable=invalid-name, line-too-long, logging-fstring-interpolation
 """Send data"""
+
 from logging import getLogger
 
 import requests

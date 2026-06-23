@@ -1,5 +1,6 @@
 # pylint: disable=duplicate-code
 """Transform other research products"""
+
 from app.settings import settings
 from app.transform.transformers.base.oag import OagBaseTransformer
 from schemas.old.output.other_rp import other_rp_output_schema

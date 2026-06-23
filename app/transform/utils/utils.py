@@ -1,5 +1,6 @@
 # pylint: disable=invalid-name, line-too-long
 """Useful functions"""
+
 import os
 import traceback
 from logging import getLogger

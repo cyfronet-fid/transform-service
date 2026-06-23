@@ -23,9 +23,11 @@ class AdapterSESchema(BaseModel):
             URL to the adapter's documentation. Used in detail page.
         id (str):
             Unique identifier for the adapter.
+        publication_date (date):
+            The date when the adapter was published. Used in sorting.
         last_update (date):
-            The date when the adapter was last updated. Used in sorting.
-        license (str):
+            The date when the adapter was last updated.
+        license (Optional[str]):
             The license under which the adapter is provided. Used in filters and resource view.
         logo (Optional[str]):
             URL to the adapter's logo image. Used in resource view.
@@ -37,8 +39,8 @@ class AdapterSESchema(BaseModel):
             A list of related guidelines associated with the adapter. Used in resource view.
         related_services (Optional[List[str]]):
             A list of related services associated with the adapter. Used in resource view.
-        releases (List[str]):
-            A list of release versions or information. Used in detail page.
+        package (List[str]):
+            A list of release/package URLs. Used in detail page.
         keywords (Optional[str]):
             A brief tagline or summary for the adapter. Used in detail page.
         title (str):
@@ -47,6 +49,10 @@ class AdapterSESchema(BaseModel):
             Data type = "adapter". Used in filters.
         version (str):
             The current version of the adapter. Used in detail page.
+        sqa_badge (Optional[List[str]]):
+            Software quality assurance badge labels.
+        sqa_url (Optional[str]):
+            Software quality assurance report URL.
     """
 
     catalogues: List[str]
@@ -55,39 +61,25 @@ class AdapterSESchema(BaseModel):
     description: str
     documentation_url: str
     id: str
-    last_update: date
-    license: str
-    logo: Optional[str]
-    node: Optional[str]
+    publication_date: Optional[date] = None
+    last_update: Optional[date] = None
+    license: Optional[str] = None
+    logo: Optional[str] = None
+    node: Optional[str] = None
     programming_language: str
-    related_guidelines: Optional[List[str]]
-    related_services: Optional[List[str]]
-    releases: List[str]
-    keywords: Optional[str]
+    related_guidelines: Optional[List[str]] = None
+    related_services: Optional[List[str]] = None
+    package: List[str]
+    keywords: Optional[str] = None
+    sqa_badge: Optional[List[str]] = None
+    sqa_url: Optional[str] = None
     title: str
     type: str
     version: str
-
-    """
-    Transformations necessary to convert AdapterInputSchema to AdapterSESchema:
-        - add type = "adapter"
-            - get_node_pretty_name
-            - ts_to_iso
-        - rename:
-            "catalogueId": "catalogues",
-            "changeLog": "changelog",
-            "repository": "code_repository_url",
-            "documentation": "documentation_url",
-            "lastUpdate": "last_update",
-            "programmingLanguage": "programming_language",
-            "name": "title",
-        - delete:
-            "admins" (not used)
-        - cast:
-            df.withColumn("catalogues", array(col("catalogueId")))
-            df.withColumn("changelog", split(col("changeLog"), ","))
-            transform_date(df, "last_update", "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
-        - extract from linkedResource:
-            - if linkedResource.type == "Guideline": add to related_guidelines
-            - if linkedResource.type == "Service": add to related_services
-    """
+    url: Optional[List[str]] = None
+    alternative_ids: Optional[str] = None
+    resource_owner: str
+    creator_names: Optional[List[str]] = None
+    creator_identifiers: Optional[List[str]] = None
+    creator_affiliations: Optional[List[str]] = None
+    public_contacts: List[str]

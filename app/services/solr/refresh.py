@@ -1,5 +1,6 @@
 # pylint: disable=line-too-long, logging-fstring-interpolation
 """Refresh solr collection"""
+
 import logging
 
 import requests

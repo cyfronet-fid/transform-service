@@ -1,5 +1,6 @@
 # pylint: disable=invalid-name, logging-fstring-interpolation
 """Celery worker. Responsibilities: get, transform, upload data"""
+
 import logging.config
 import os
 

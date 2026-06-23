@@ -1,4 +1,4 @@
-# pipeline.py
+"""Metadata pipeline for SAGE project"""
 
 import json
 
@@ -25,6 +25,8 @@ def flatten_datasets(catalogs):
             for ds in raw_list:
                 if isinstance(ds, dict):
                     ds["catalogue"] = catalog.get("dspace:participantId") or ""
+                    ds["participant_id"] = catalog.get("dspace:participantId")
+                    ds["originator"] = catalog.get("originator")
                     datasets.append(ds)
 
     return datasets

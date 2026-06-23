@@ -1,5 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-class-docstring
 """Spark logger"""
+
 from pyspark.sql import SparkSession
 
 

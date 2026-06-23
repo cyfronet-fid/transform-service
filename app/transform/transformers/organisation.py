@@ -1,5 +1,6 @@
 # pylint: disable=line-too-long, wildcard-import, invalid-name, unused-wildcard-import
 """Transform organisations"""
+
 import json
 
 from pyspark.sql import DataFrame, SparkSession

@@ -1,21 +1,104 @@
 # pylint: disable=line-too-long, invalid-name, logging-fstring-interpolation
 """Validate transformation"""
+
+# TODO: Improve schema validation #110
+
 import logging
 from itertools import zip_longest
-from typing import KeysView, Literal
+from typing import KeysView, Literal, Type
 
-from pyspark.sql import DataFrame
+from pydantic import BaseModel, ValidationError
+from pyspark.sql import DataFrame, Row
 
 logger = logging.getLogger(__name__)
 
 
+def is_pydantic_schema(expected_schema) -> bool:
+    """Check whether expected schema is a Pydantic model class."""
+    return isinstance(expected_schema, type) and issubclass(expected_schema, BaseModel)
+
+
+def validate_pydantic_data(
+    data: dict | list[dict],
+    expected_schema: Type[BaseModel],
+    collection: str,
+    source: Literal["input", "output"],
+) -> None:
+    """Validate raw dict data against a Pydantic schema."""
+    records = data if isinstance(data, list) else [data]
+    errors = []
+
+    for index, record in enumerate(records):
+        try:
+            expected_schema.model_validate(record)
+        except ValidationError as err:
+            errors.append(
+                {
+                    "index": index,
+                    "errors": err.errors(),
+                    "record_id": record.get("id"),
+                    "record_name": record.get("name"),
+                }
+            )
+
+    if errors:
+        logger.warning(
+            "%s - %s Pydantic schema validation failure. Errors: %s",
+            collection,
+            source,
+            errors,
+        )
+
+
+def validate_pydantic_schema(
+    df: DataFrame,
+    expected_schema: Type[BaseModel],
+    collection: str,
+    source: Literal["input", "output"],
+) -> None:
+    """Validate DataFrame rows against a Pydantic schema."""
+    errors = []
+
+    for index, row in enumerate(df.toLocalIterator()):
+        record = row_to_dict(row)
+        try:
+            expected_schema.model_validate(record)
+        except ValidationError as err:
+            errors.append({"index": index, "errors": err.errors()})
+
+    if errors:
+        logger.warning(
+            "%s - %s Pydantic schema validation failure. Errors: %s",
+            collection,
+            source,
+            errors,
+        )
+
+
+def row_to_dict(value):
+    """Convert Spark Rows recursively into plain Python containers."""
+    if isinstance(value, Row):
+        return {key: row_to_dict(val) for key, val in value.asDict().items()}
+    if isinstance(value, list):
+        return [row_to_dict(item) for item in value]
+    if isinstance(value, tuple):
+        return tuple(row_to_dict(item) for item in value)
+    if isinstance(value, dict):
+        return {key: row_to_dict(val) for key, val in value.items()}
+    return value
+
+
 def validate_schema(
     df: DataFrame,
-    expected_schema: dict[str, list[str] | str],
+    expected_schema: dict[str, list[str] | str] | Type[BaseModel],
     collection: str,
     source: Literal["input", "output"],
 ) -> None:
     """Check whether pyspark dataframe data schema is the same as expected"""
+    if is_pydantic_schema(expected_schema):
+        validate_pydantic_schema(df, expected_schema, collection, source)
+        return
+
     # Assumption: schemas are sorted alphabetically
     df = df.select(*sorted(df.columns))  # Sort pyspark dataframe
     expected_schema = sort_dict_schemas(expected_schema)  # Sort expected schema

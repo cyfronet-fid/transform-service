@@ -1,5 +1,6 @@
 # pylint: disable=line-too-long, wildcard-import, unused-wildcard-import
 """Transform OAG resources"""
+
 import logging
 from abc import abstractmethod
 

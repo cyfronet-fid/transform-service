@@ -1,5 +1,6 @@
 # pylint: disable=line-too-long, wildcard-import, invalid-name, unused-wildcard-import, duplicate-code
 """Transform offers"""
+
 from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql.functions import col, lit
 from pyspark.sql.types import (

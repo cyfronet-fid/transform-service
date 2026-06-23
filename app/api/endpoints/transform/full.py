@@ -1,5 +1,6 @@
 # pylint: disable=line-too-long
 """Endpoint for full collection update"""
+
 from typing import Literal
 
 from fastapi import APIRouter

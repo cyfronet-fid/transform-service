@@ -1,6 +1,7 @@
 # pylint: disable=line-too-long, invalid-name, too-many-nested-blocks, unnecessary-dunder-call
 # pylint: disable=too-many-branches, unsubscriptable-object
 """Common transformations"""
+
 import json
 from collections import defaultdict
 from itertools import chain

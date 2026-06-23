@@ -1,11 +1,17 @@
 # pylint: disable=line-too-long, logging-fstring-interpolation
 """Retrieve data from the APIs of both the Marketplace and the Provider Component"""
+
 import asyncio
 from logging import getLogger
 
 import requests
 
-from app.services.mp_pc.pc import get_access_token_from_refresh_token, map_nodes
+from app.services.mp_pc.pc import (
+    get_access_token_from_refresh_token,
+    map_licenses,
+    map_nodes,
+    map_resource_owners,
+)
 from app.settings import settings
 
 logger = getLogger(__name__)
@@ -47,7 +53,27 @@ async def get_data(data_type: str, data_address: str) -> list[dict] | None:
                 headers["Authorization"] = f"Bearer {access_token}"
 
             response = requests.get(data_address, headers=headers, timeout=20)
-            full_data = map_nodes(response.json())
+            response_json = response.json()
+            full_data = map_nodes(
+                response_json,
+                keep_node_pid=data_type == settings.GUIDELINE,
+            )
+
+            if isinstance(response_json, dict):
+                facets = response_json.get("facets", [])
+
+                if any(
+                    isinstance(facet, dict) and facet.get("field") == "license"
+                    for facet in facets
+                ):
+                    full_data = map_licenses(full_data)
+
+                if any(
+                    isinstance(facet, dict) and facet.get("field") == "resource_owner"
+                    for facet in facets
+                ):
+                    full_data = map_resource_owners(full_data)
+
             data = full_data.get("results", [])
         else:
             data = requests.get(data_address, timeout=20).json()["results"]

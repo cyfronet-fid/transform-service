@@ -17,6 +17,8 @@ adapter_output_schema = {
     "related_services": "array<string>",
     "releases": "array<string>",
     "keywords": "string",
+    "sqa_badge": "array<string>",
+    "sqa_url": "string",
     "title": "string",
     "type": "string",
     "version": "string",
