@@ -12,11 +12,13 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from schemas.input.adapter import AdapterInputSchema
 from schemas.input.deployable_service import DeployableServiceInputSchema
 from schemas.input.guideline import GuidelineInputSchema
+from schemas.input.service import ServiceInputSchema
 from schemas.old.input import *
 from schemas.old.output import *
 from schemas.se.adapter import AdapterSESchema
 from schemas.se.deployable_service import DeployableServiceSESchema
 from schemas.se.guideline import GuidelineSESchema
+from schemas.se.service import ServiceSESchema
 
 logger = logging.getLogger(__name__)
 EnvironmentType = Literal["dev", "test", "production"]
@@ -296,8 +298,8 @@ class TransformSettings(GlobalSettings):
             },
             self.SERVICE: {
                 ADDRESS: mp_api + "services",
-                OUTPUT_SCHEMA: service_output_schema,
-                INPUT_SCHEMA: service_input_schema,
+                OUTPUT_SCHEMA: ServiceSESchema,
+                INPUT_SCHEMA: ServiceInputSchema,
             },
             self.DATASOURCE: {
                 ADDRESS: mp_api + "datasources",

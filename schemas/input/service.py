@@ -1,225 +1,130 @@
 """Service expected input schema"""
 
-from datetime import datetime
+from datetime import date, datetime
 from typing import List, Optional, Union
 
-from pydantic import AnyHttpUrl, BaseModel, EmailStr
-
-from schemas.common.public_contact import PublicContact
-from schemas.common.url import BasicURL
+from pydantic import BaseModel
 
 
 class ServiceInputSchema(BaseModel):
     """
-    Pydantic model representing the expected input schema for a service.
+    Schema representing a service available in the EOSC ecosystem.
 
     Attributes:
-        abbreviation (str):
-            The abbreviation of the service.
-        access_modes (List[str]):
-            A list of access modes available for the service.
-        access_policies_url (AnyHttpUrl):
-            The URL for the access policies.
-        access_types (List[str]):
-            A list of access types available for the service.
-        activate_message (str):
-            The message shown when the service is activated.
-        catalogues (List[str]):
-            A list of catalogues associated with the service.
-        categories (List[str]):
-            A list of categories applicable to the service.
-        certifications (List[str]):
-            # TODO Add description
-        changelog (List[str]):
-            # TODO Add description
-        dedicated_for (List[str]):
-            A list of dedicated purposes for the service.
+        access_policies_url (Optional[str]):
+            URL describing access and usage policies.
+        access_types (Optional[List[str]]):
+            Available access methods or access conditions.
+        categories (Optional[List[str]]):
+            Classification categories assigned to the service.
+        created_at (Optional[datetime]):
+            Timestamp when the service record was created.
         description (str):
-            A detailed description of the service.
-        eosc_if (List[str]):
-            # TODO Add description
-        funding_bodies (List[str]):
-            A list of bodies funding the service.
-        funding_programs (List[str]):
-            A list of funding programs supporting the service.
-        guidelines (List[str]):
-            A list of guidelines available for this service.
-        geographical_availabilities (List[str]):
-            A list of geographical locations where the service is available.
-        grant_project_names (List[str]):
-            A list of grant project names associated with the service.
-        helpdesk_email (EmailStr):
-            The email address for the helpdesk.
-        helpdesk_url (AnyHttpUrl):
-            The URL for the helpdesk.
-        horizontal (bool):
-            Indicates whether the service is horizontal.
+            Detailed description of the service, including its purpose and functionality.
+        guidelines (Optional[List[str]]):
+            Documentation, guides, or best practices related to the service.
         id (int):
-            Unique identifier for the service.
-        language_availability (List[str]):
-            A list of languages in which the service is available.
-        last_update (datetime):
-            The date when the service was last updated (ISO 8601 format).
-        life_cycle_status (str):
-            The life cycle status of the service.
-        maintenance_url (AnyHttpUrl):
-            The URL for maintenance information.
-        manual_url (AnyHttpUrl):
-            The URL for the service manual.
-        multimedia_urls (Union[List[BasicURL], List[str]]):
-            A list of multimedia URLs related to the service.
+            Internal unique identifier of the service.
+        jurisdiction (Optional[str]):
+            Legal or geographical jurisdiction under which the service operates.
+        logo (Optional[str]):
+            URL of the service logo or graphical representation.
         name (str):
-            The name of the service.
-        node (Optional[str]):
-            Name of the node associated with the service.
-        offers_count (int):
-            The count of offers available for the service.
-        open_source_technologies (List[str]):
-            A list of open source technologies used by the service.
+            Official name of the service.
+        nodes (List[str]):
+            EOSC nodes or infrastructures associated with the service.
+        offers_count (Optional[int]):
+            Number of offers associated with the service.
         order_type (str):
-            The order type for accessing the service.
-        order_url (AnyHttpUrl):
-            The URL for ordering the service.
-        payment_model_url (AnyHttpUrl):
-            The URL for the payment model.
-        phase (str):
-            The phase of the service.
+            Method used to request or obtain access to the service.
+        order_url (Optional[str]):
+            URL for ordering, requesting, or accessing the service.
         pid (str):
-            Persistent identifier for the service.
-        platforms (List[str]):
-            A list of platforms where the service is available.
-        pricing_url (AnyHttpUrl):
-            The URL for pricing information.
-        privacy_policy_url (AnyHttpUrl):
-            The URL for the privacy policy.
-        providers (List[str]):
-            A list of providers associated with the service.
-        public_contacts (List[PublicContact]):
-            A list of public contacts for the service.
+            Persistent identifier assigned to the service.
+        ppid (Optional[str]):
+            Parent persistent identifier, if applicable.
+        privacy_policy_url (Optional[str]):
+            URL to the privacy policy.
+        providers (Optional[List[str]]):
+            Organisations providing the service.
+        public_contact_emails (List[str]):
+            Public contact email addresses for support or inquiries.
         publication_date (datetime):
-            The date when the service was published (ISO 8601 format).
+            Official publication date of the service.
+        publishing_date (Optional[str]):
+            Publication date provided by the source system.
         rating (str):
-            The rating of the service.
-        related_platforms (List[str]):
-            A list of related platforms for the service.
-        resource_geographic_locations (List[str]):
-            A list of geographic locations of the resources.
+            Overall service rating or evaluation score.
         resource_organisation (str):
-            The organisation responsible for the service.
-        restrictions (str):
-            Any restrictions associated with the service.
-        scientific_domains (List[str]):
-            A list of scientific domains associated with the service.
-        security_contact_email (EmailStr):
-            The email address for security contact.
-        service_opinion_count (int):
-            The number of opinions or reviews for the service.
-        sla_url (AnyHttpUrl):
-            The URL for the service level agreement (SLA).
+            Organisation responsible for operating or maintaining the service.
+        resource_type (Optional[str]):
+            Type of resource represented by the service.
+        scientific_domains (Optional[List[str]]):
+            Scientific disciplines or research domains supported by the service.
+        service_opinion_count (Optional[int]):
+            Number of user opinions or reviews.
         slug (str):
-            The slug of the service.
-        standards (List[str]):
-            A list of standards followed by the service.
+            Human-readable unique identifier used in URLs.
         status (str):
-            The status of the service.
-        status_monitoring_url (AnyHttpUrl):
-            The URL for status monitoring.
-        synchronized_at (datetime):
-            The date and time when the service was last synchronized (ISO 8601 format).
-        tag_list (List[str]):
-            A list of tags categorizing the service.
-        tagline (str):
-            A tagline for the service.
-        terms_of_use_url (AnyHttpUrl):
-            The URL for the terms of use.
-        training_information_url (AnyHttpUrl):
-            The URL for training information.
-        trl (str):
-            The Technology Readiness Level (TRL) of the service.
-        unified_categories (List[str]):
-            A list of unified categories for the service.
-        updated_at (datetime):
-            The date and time when the service was last updated (ISO 8601 format).
-        upstream_id (Union[int, str]):
-            The upstream ID of the service, can be an integer or a string.
-        usage_counts_downloads (int):
-            The number of times the service has been downloaded.
-        usage_counts_views (int):
-            The number of times the service has been viewed.
-        use_cases_urls (Union[List[BasicURL], List[str]]):
-            A list of use case URLs for the service, either as a list of BasicURL objects or as a list of strings.
-        version (str):
-            The version of the service.
-        webpage_url (AnyHttpUrl):
-            The URL of the service's webpage.
+            Current operational or publication status of the service.
+        synchronized_at (Optional[datetime]):
+            Timestamp of the last synchronization with the source system.
+        tag_list (Optional[List[str]]):
+            Keywords describing the service and its capabilities.
+        terms_of_use_url (Optional[str]):
+            URL to the service terms and conditions.
+        trls (Optional[str]):
+            Technology Readiness Level (TRL) information.
+        updated_at (Optional[datetime]):
+            Timestamp of the most recent update of the service record.
+        upstream_id (Optional[int]):
+            Identifier of the source record in an external system.
+        urls (Optional[List[str]]):
+            Additional URLs related to the service.
+        usage_counts_downloads (Optional[int]):
+            Total number of service downloads.
+        usage_counts_views (Optional[int]):
+            Total number of service page views.
+        webpage_url (str):
+            URL of the main service webpage.
     """
 
-    abbreviation: str
-    access_modes: List[str]
-    access_policies_url: AnyHttpUrl
-    access_types: List[str]
-    activate_message: str
-    catalogues: List[str]
-    categories: List[str]
-    certifications: List[str]
-    changelog: List[str]
-    dedicated_for: List[str]
+    access_policies_url: Optional[str] = None
+    access_types: Optional[List[str]] = None
+    catalogues: Optional[List[str]] = None
+    categories: Optional[List[str]] = None
+    created_at: Optional[datetime] = None
     description: str
-    eosc_if: List[str]
-    funding_bodies: List[str]
-    funding_programs: List[str]
-    guidelines: List[str]
-    geographical_availabilities: List[str]
-    grant_project_names: List[str]
-    helpdesk_email: EmailStr
-    helpdesk_url: AnyHttpUrl
-    horizontal: bool
+    guidelines: Optional[List[str]] = None
     id: int
-    language_availability: List[str]
-    last_update: datetime
-    life_cycle_status: str
-    maintenance_url: AnyHttpUrl
-    manual_url: AnyHttpUrl
-    multimedia_urls: Union[List[BasicURL], List[str]]
+    jurisdiction: Optional[str] = None
+    logo: Optional[str] = None
     name: str
-    node: Optional[str]
-    offers_count: int
-    open_source_technologies: List[str]
+    nodes: List[str]
+    offers_count: Optional[int] = None
     order_type: str
-    order_url: AnyHttpUrl
-    payment_model_url: AnyHttpUrl
-    phase: str
+    order_url: Optional[str] = None
     pid: str
-    platforms: List[str]
-    pricing_url: AnyHttpUrl
-    privacy_policy_url: AnyHttpUrl
-    providers: List[str]
-    public_contacts: List[PublicContact]
+    ppid: Optional[str] = None
+    privacy_policy_url: Optional[str] = None
+    providers: Optional[List[str]] = None
+    public_contact_emails: List[str]
     publication_date: datetime
+    publishing_date: Optional[str] = None
     rating: str
-    related_platforms: List[str]
-    resource_geographic_locations: List[str]
     resource_organisation: str
-    restrictions: str
-    scientific_domains: List[str]
-    security_contact_email: EmailStr
-    service_opinion_count: int
-    sla_url: AnyHttpUrl
+    resource_type: Optional[str] = None
+    scientific_domains: Optional[List[str]] = None
+    service_opinion_count: Optional[int] = None
     slug: str
-    standards: List[str]
     status: str
-    status_monitoring_url: AnyHttpUrl
-    synchronized_at: datetime
-    tag_list: List[str]
-    tagline: str
-    terms_of_use_url: AnyHttpUrl
-    training_information_url: AnyHttpUrl
-    trl: str
-    unified_categories: List[str]
-    updated_at: datetime
-    upstream_id: Union[int, str]
-    usage_counts_downloads: int
-    usage_counts_views: int
-    use_cases_urls: Union[List[BasicURL], List[str]]
-    version: str
-    webpage_url: AnyHttpUrl
+    synchronized_at: Optional[datetime] = None
+    tag_list: Optional[List[str]] = None
+    terms_of_use_url: Optional[str] = None
+    trls: Optional[str] = None
+    updated_at: Optional[datetime] = None
+    upstream_id: Optional[int] = None
+    urls: Optional[List[str]] = None
+    usage_counts_downloads: Optional[int] = None
+    usage_counts_views: Optional[int] = None
+    webpage_url: str

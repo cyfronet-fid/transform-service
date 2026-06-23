@@ -27,6 +27,7 @@ autodoc-pydantic = "*"
 sentry-sdk = {version = "*", extras = ["fastapi"]}
 sickle = "*"
 aiohttp = "*"
+email-validator = "*"
 
 [dev-packages]
 pytest = "*"
