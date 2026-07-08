@@ -58,7 +58,9 @@ class AdapterTransformer(BaseTransformer):
         Simple in a way that there is a possibility to manipulate the main dataframe
         without a need to create another dataframe and merging"""
         df = self.rename_cols(df)
-        df = df.withColumn("catalogues", array(lit("eosc")))
+        if "catalogue" in df.columns:
+            df = df.withColumn("catalogue", df["catalogue"])
+            df = df.withColumn("catalogues", array(df["catalogue"]))
         df = df.withColumn(TYPE, lit(self.type))
 
         return df
@@ -122,6 +124,7 @@ class AdapterTransformer(BaseTransformer):
             "resourceOwner": "resource_owner",
             "tagline": "keywords",
             "urls": "url",
+            "catalogueId": "catalogue",
         }
 
     def standardize_publication_date(self, df: DataFrame) -> DataFrame:

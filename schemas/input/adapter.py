@@ -87,6 +87,7 @@ class AdapterInputSchema(BaseModel):
     name: str
     urls: Optional[List[AnyHttpUrl]] = None
     alternativePIDs: Optional[List[Any]] = None
+    catalogue: str = None
     nodePID: Optional[str] = None
     description: str
     publishingDate: date

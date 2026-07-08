@@ -45,7 +45,10 @@ access_rights_mapping = {
     PAID_ACCESS: ("tr_access_right-paid_access",),
     CLOSED: ("CLOSED",),
     EMBARGO: ("EMBARGO",),
-    METADATA_ONLY_ACCESS: ("metadata_only_access",),
+    METADATA_ONLY_ACCESS: (
+        "metadata_only_access",
+        "tr_access_right-metadata_only_access",
+    ),
     OTHER: ("other",),
 }
 

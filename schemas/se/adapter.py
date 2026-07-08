@@ -55,7 +55,8 @@ class AdapterSESchema(BaseModel):
             Software quality assurance report URL.
     """
 
-    catalogues: List[str]
+    catalogue: Optional[str] = None
+    catalogues: Optional[List[Optional[str]]] = None
     changelog: List[str]
     repository: str
     description: str
@@ -69,7 +70,7 @@ class AdapterSESchema(BaseModel):
     programming_language: str
     related_guidelines: Optional[List[str]] = None
     related_services: Optional[List[str]] = None
-    package: str
+    package: Optional[str] = None
     keywords: Optional[str] = None
     sqa_badge: Optional[List[str]] = None
     sqa_url: Optional[str] = None

@@ -102,6 +102,7 @@ class GuidelineInputSchema(BaseModel):
     """
 
     alternativePIDs: Optional[List[AlternativePID]] = None
+    catalogueId: Optional[str] = None
     creators: Optional[List[Creator]] = None
     description: Optional[str] = None
     id: str
