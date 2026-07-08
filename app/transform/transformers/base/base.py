@@ -71,9 +71,6 @@ class BaseTransformer(ABC):
         if self._cols_to_add:
             df = add_columns(df, self._cols_to_add)
 
-        if self.type == "training":
-            df = df.withColumn("eosc_provider", col("providers"))  # TODO delete
-
         df = add_tg_fields(df)
         df = replace_empty_str(df)
         df = df.select(sorted(df.columns))

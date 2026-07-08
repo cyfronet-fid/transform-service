@@ -74,6 +74,24 @@ def map_resource_owners(data: dict[str, Any]) -> dict[str, Any]:
     return data
 
 
+def map_resource_organisations(data: dict[str, Any]) -> dict[str, Any]:
+    """Add label based on facet mapping."""
+    resource_owner_mapping = get_facet_mapping(data, "resource_owner")
+
+    map_resource_organisation_values(data, resource_owner_mapping)
+
+    return data
+
+
+def map_catalogues(data: dict[str, Any]) -> dict[str, Any]:
+    """Add catalogue label based on catalogue facet mapping."""
+    catalogue_mapping = get_facet_mapping(data, "catalogue_id")
+
+    map_catalogue_values(data, catalogue_mapping)
+
+    return data
+
+
 def get_facet_mapping(data: dict[str, Any], field: str) -> dict[str, str]:
     """Build a value-to-label mapping from Provider Component facets."""
     for facet in data.get("facets", []):
@@ -137,3 +155,33 @@ def map_resource_owner_values(
 
         if isinstance(resource_owner, str) and resource_owner in resource_owner_mapping:
             item["provider"] = resource_owner_mapping[resource_owner]
+
+
+def map_resource_organisation_values(
+    data: dict[str, Any],
+    resource_owner_mapping: dict[str, str],
+) -> None:
+    """Map resource organisation/owner PID to label."""
+    if not resource_owner_mapping:
+        return
+
+    for item in data.get("results", []):
+        resource_owner = item.get("resourceOwner")
+
+        if isinstance(resource_owner, str) and resource_owner in resource_owner_mapping:
+            item["resourceOwner"] = resource_owner_mapping[resource_owner]
+
+
+def map_catalogue_values(
+    data: dict[str, Any],
+    resource_owner_mapping: dict[str, str],
+) -> None:
+    """Map catalogue to label."""
+    if not resource_owner_mapping:
+        return
+
+    for item in data.get("results", []):
+        resource_owner = item.get("catalogue_id")
+
+        if isinstance(resource_owner, str) and resource_owner in resource_owner_mapping:
+            item["catalogue"] = resource_owner_mapping[resource_owner]

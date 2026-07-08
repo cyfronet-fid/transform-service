@@ -8,8 +8,19 @@ from logging import getLogger
 
 import pycountry
 from dateutil import parser
+from pyspark.errors import AnalysisException
 from pyspark.sql import DataFrame, SparkSession
-from pyspark.sql.functions import col, lit, split
+from pyspark.sql.functions import (
+    array,
+    col,
+    lit,
+    lower,
+    regexp_extract,
+    regexp_replace,
+    trim,
+    udf,
+    when,
+)
 from pyspark.sql.types import (
     ArrayType,
     BooleanType,
@@ -20,19 +31,16 @@ from pyspark.sql.types import (
 )
 
 from app.mappings.scientific_domain import sd_training_temp_mapping
-from app.services.mp_pc.data import get_providers_mapping
 from app.settings import settings
 from app.transform.transformers.base.base import BaseTransformer
 from app.transform.utils.common import (
     create_open_access,
     create_unified_categories,
     map_best_access_right,
-    remove_commas,
-    transform_date,
 )
 from app.transform.utils.utils import sort_schema
-from schemas.old.output.training import training_output_schema
 from schemas.properties.data import *
+from schemas.se.training import TrainingSESchema
 
 logger = getLogger(__name__)
 
@@ -42,7 +50,7 @@ class TrainingTransformer(BaseTransformer):
 
     def __init__(self, spark: SparkSession):
         self.type = settings.TRAINING
-        self.exp_output_schema = training_output_schema
+        self.exp_output_schema = TrainingSESchema
 
         super().__init__(
             self.type,
@@ -59,12 +67,9 @@ class TrainingTransformer(BaseTransformer):
         without a need to create another dataframe and merging"""
         df = df.withColumn(TYPE, lit(self.type))
         df = self.rename_cols(df)
-        df = df.withColumn(
-            "catalogues", split(col("catalogues"), ",")
-        )  # TODO move to cast_columns
-        df = df.withColumn(
-            "catalogue", self.get_first_element(df["catalogues"])
-        )  # TODO delete
+        df = df.withColumn("catalogue", df["catalogue"])
+        df = df.withColumn("catalogues", array(df["catalogue"]))
+        df = df.withColumn("url", self.get_first_element(df["urls"]))
 
         return df
 
@@ -76,26 +81,60 @@ class TrainingTransformer(BaseTransformer):
         create_open_access(self.harvested_properties)
         df = self.map_arr_that_ends_with(df, (CONTENT_TYPE, TARGET_GROUP))
         df = self.map_lvl_of_expertise(df)
-        df = self.map_geo_av(df)
+        df = self.clean_description(df)
+        df = self.simplify_licenses(df)
+        df = self.transform_duration(df)
+        df = self.extract_creators(df)
         df = self.map_lang(df)
         df = self.map_resource_type(df)
         df = self.map_sci_domains(df)
         df = self.standardize_publication_date(df)
         df = self.serialize_alternative_ids(df, ALTERNATIVE_IDS)
-        df = self.map_providers_and_orgs(df)
 
         create_unified_categories(df, self.harvested_properties)
-        df = remove_commas(df, "author_names", self.harvested_properties)
 
         return df
 
     def cast_columns(self, df: DataFrame) -> DataFrame:
         """Cast trainings columns"""
-        df = df.withColumn("url", split(col("url"), ","))
-        df = df.withColumn("duration", col("duration").cast("bigint"))
-        df = transform_date(df, "publication_date", "yyyy-MM-dd")
 
         return df
+
+    @staticmethod
+    def simplify_licenses(df: DataFrame) -> DataFrame:
+        """Simplify url columns, get only urls"""
+        column_name = "license"
+
+        try:
+            df = df.withColumn("license", col("license")["licenseName"])
+        except AnalysisException as e:
+            logger.warning(f"Exception while simplifying {column_name}, Error: {e}")
+
+        return df
+
+    @staticmethod
+    def transform_duration(df: DataFrame) -> DataFrame:
+        """Transform duration string into seconds."""
+
+        value = lower(col("duration"))
+
+        number = regexp_extract(value, r"^\s*(\d+)\s*", 1).cast("int")
+        unit = regexp_extract(value, r"^\s*\d+\s*([a-z]+)\s*$", 1)
+
+        multiplier = (
+            when(unit.isin("week", "weeks", "w"), lit(7 * 24 * 60 * 60))
+            .when(unit.isin("day", "days", "d"), lit(24 * 60 * 60))
+            .when(unit.isin("hour", "hours", "h", "hr", "hrs"), lit(60 * 60))
+            .when(unit.isin("minute", "minutes", "min", "mins"), lit(60))
+            .otherwise(lit(None).cast("int"))
+        )
+
+        return df.withColumn(
+            "duration",
+            when(
+                number.isNotNull() & multiplier.isNotNull(), number * multiplier
+            ).otherwise(lit(None).cast("int")),
+        )
 
     @property
     def harvested_schema(self):
@@ -104,10 +143,8 @@ class TrainingTransformer(BaseTransformer):
             StructType(
                 [
                     StructField(ALTERNATIVE_IDS, ArrayType(StringType()), True),
-                    StructField(AUTHOR_NAMES, ArrayType(StringType()), True),
                     StructField(BEST_ACCESS_RIGHT, StringType(), True),
                     StructField(CONTENT_TYPE, ArrayType(StringType()), True),
-                    StructField(GEO_AV, ArrayType(StringType()), True),
                     StructField(LANGUAGE, ArrayType(StringType()), True),
                     StructField(LVL_OF_EXPERTISE, StringType(), True),
                     StructField(RESOURCE_TYPE, ArrayType(StringType()), True),
@@ -116,9 +153,7 @@ class TrainingTransformer(BaseTransformer):
                     ),
                     StructField(TARGET_GROUP, ArrayType(StringType()), True),
                     StructField(OPEN_ACCESS, BooleanType(), True),
-                    StructField(PROVIDERS, ArrayType(StringType()), True),
                     StructField(PUBLICATION_DATE, DateType(), True),
-                    StructField(RESOURCE_ORGANISATION, StringType(), True),
                     StructField(UNIFIED_CATEGORIES, ArrayType(StringType()), True),
                 ]
             )
@@ -141,7 +176,7 @@ class TrainingTransformer(BaseTransformer):
             "accessRights": "best_access_right",
             "alternativeIdentifiers": "alternative_ids",
             "authors": "author_names",
-            "catalogueId": "catalogues",
+            "catalogueId": "catalogue",
             "contentResourceTypes": "content_type",
             "eoscRelatedServices": "related_services",
             "expertiseLevel": "level_of_expertise",
@@ -151,11 +186,13 @@ class TrainingTransformer(BaseTransformer):
             "learningResourceTypes": "resource_type",
             "qualifications": "qualification",
             "resourceOrganisation": "resource_organisation",
+            "resourceOwner": "resource_organisation",
             "resourceProviders": "providers",
             "scientificDomains": "scientific_domains",
             "targetGroups": "target_group",
             "urlType": "url_type",
             "versionDate": "publication_date",
+            "name": "title",
         }
 
     def map_arr_that_ends_with(self, df, cols_list) -> DataFrame:
@@ -170,7 +207,15 @@ class TrainingTransformer(BaseTransformer):
             df_column = []
 
             for column in chain.from_iterable(df_raw):
-                df_column.append([row.split("-")[-1].capitalize() for row in column])
+                try:
+                    if column:
+                        df_column.append(
+                            [row.split("-")[-1].capitalize() for row in column]
+                        )
+                    else:
+                        df_column.append([])
+                except AttributeError:
+                    df_column.append([])
 
             self.harvested_properties[_col] = df_column
             df = df.drop(_col)
@@ -269,6 +314,10 @@ class TrainingTransformer(BaseTransformer):
         resource_type_column = []
 
         for resource_type in chain.from_iterable(resource_type_raw):
+            if resource_type is None:
+                resource_type_column.append([])
+                continue
+
             resource_type_column.append(
                 [mapping_dict.get(rt, rt) for rt in resource_type]
             )
@@ -312,6 +361,10 @@ class TrainingTransformer(BaseTransformer):
         sci_domains_column = []
 
         for sci_domain in chain.from_iterable(sci_domains_raw):
+            if sci_domain is None:
+                sci_domains_column.append([])
+                continue
+
             sci_domain_row = []
             for sd in chain.from_iterable(sci_domain):
                 result_raw = sd.split("-", 1)[1]
@@ -385,41 +438,99 @@ class TrainingTransformer(BaseTransformer):
             self.harvested_properties[_col] = empty_lists
             return df
 
-    def map_providers_and_orgs(self, df: DataFrame) -> DataFrame:
-        """Map pids into names - providers and organisation columns.
-        Note: organisations are providers - and they are mandatory, providers are not"""
+    @staticmethod
+    def extract_creators(df: DataFrame) -> DataFrame:
+        """Flatten creator metadata into Solr-friendly string arrays."""
+        if "creators" not in df.columns:
+            return (
+                df.withColumn("creator_names", array())
+                .withColumn("creator_identifiers", array())
+                .withColumn("creator_affiliations", array())
+            )
 
-        def _map(pids_list: str | list[str]) -> list[str]:
-            """Map list of pids into a list of names."""
-            if isinstance(pids_list, str):
-                pids_list = [pids_list]
-            output = []
-            for pid in pids_list:
-                if pid in providers_mapping:
-                    output.append(providers_mapping[pid])
-                else:
-                    logger.warning(
-                        f"Unknown provider or organisation {pid=}, for a training"
-                    )
-                    output.append(pid)
-            return output
+        df = (
+            df.withColumn(
+                "author_names",
+                TrainingTransformer.extract_creator_names(col("creators")),
+            )
+            .withColumn(
+                "author_identifiers",
+                TrainingTransformer.extract_creator_identifiers(col("creators")),
+            )
+            .withColumn(
+                "author_affiliations",
+                TrainingTransformer.extract_creator_affiliations(col("creators")),
+            )
+        )
+        return df.drop("creators")
 
-        providers_mapping = get_providers_mapping()
+    @staticmethod
+    def _row_to_dict(value):
+        if hasattr(value, "asDict"):
+            return value.asDict(recursive=True)
+        if isinstance(value, dict):
+            return value
+        return {}
 
-        if not providers_mapping:
-            logger.warning("Providers mapping is empty, applying fallback values.")
-            row_count = df.count()
-            self.harvested_properties[PROVIDERS] = [[] for _ in range(row_count)]
-            self.harvested_properties[RESOURCE_ORGANISATION] = [
-                "" for _ in range(row_count)
-            ]
-            return df.drop(PROVIDERS).drop(RESOURCE_ORGANISATION)
+    @staticmethod
+    @udf(ArrayType(StringType()))
+    def extract_creator_names(creators):
+        names = []
+        for creator in creators or []:
+            creator = TrainingTransformer._row_to_dict(creator)
+            name = " ".join(
+                part
+                for part in (
+                    creator.get("firstName"),
+                    creator.get("lastName"),
+                )
+                if part
+            )
+            if name:
+                names.append(name)
+        return names
 
-        for _col in (PROVIDERS, RESOURCE_ORGANISATION):
-            pids_col = df.select(_col).collect()
-            names_col = [_map(pids) for pids in chain.from_iterable(pids_col)]
+    @staticmethod
+    @udf(ArrayType(StringType()))
+    def extract_creator_identifiers(creators):
+        identifiers = []
+        for creator in creators or []:
+            creator = TrainingTransformer._row_to_dict(creator)
+            for pid in creator.get("PIDs") or []:
+                pid = TrainingTransformer._row_to_dict(pid)
+                for key in ("creatorPID", "pid", "id", "value"):
+                    value = pid.get(key)
+                    if value:
+                        identifiers.append(value)
+                        break
+        return identifiers
 
-            self.harvested_properties[_col] = names_col
-            df = df.drop(_col)
+    @staticmethod
+    @udf(ArrayType(StringType()))
+    def extract_creator_affiliations(creators):
+        affiliations = []
+        for creator in creators or []:
+            creator = TrainingTransformer._row_to_dict(creator)
+            for affiliation in creator.get("affiliations") or []:
+                affiliation = TrainingTransformer._row_to_dict(affiliation)
+                value = affiliation.get("affiliationName") or affiliation.get("name")
+                if value:
+                    affiliations.append(value)
+        return affiliations
 
-        return df
+    @staticmethod
+    def clean_description(df: DataFrame) -> DataFrame:
+        """Remove HTML tags and nbsp from description."""
+        if "description" not in df.columns:
+            return df
+
+        return df.withColumn(
+            "description",
+            trim(
+                regexp_replace(
+                    regexp_replace(col("description"), r"<\/?[a-zA-Z][^>]*>", ""),
+                    r"&nbsp;|\u00A0",
+                    " ",
+                )
+            ),
+        )
