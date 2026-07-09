@@ -69,7 +69,7 @@ class AdapterSESchema(BaseModel):
     programming_language: str
     related_guidelines: Optional[List[str]] = None
     related_services: Optional[List[str]] = None
-    package: List[str]
+    package: str
     keywords: Optional[str] = None
     sqa_badge: Optional[List[str]] = None
     sqa_url: Optional[str] = None
