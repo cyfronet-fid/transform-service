@@ -97,7 +97,7 @@ class AdapterInputSchema(BaseModel):
     logo: Optional[AnyHttpUrl] = None
     documentation: AnyHttpUrl
     repository: AnyHttpUrl
-    package: List[AnyHttpUrl]
+    package: AnyHttpUrl
     programmingLanguage: str
     license: Optional[License] = None
     version: str
