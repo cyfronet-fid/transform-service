@@ -28,6 +28,7 @@ sentry-sdk = {version = "*", extras = ["fastapi"]}
 sickle = "*"
 aiohttp = "*"
 email-validator = "*"
+typing-extensions = "*"
 
 [dev-packages]
 pytest = "*"

@@ -15,8 +15,6 @@ class DeployableServiceDBSchema(BaseModel):
             The abbreviation of the deployable service.
         catalogues (List[str]):
             A list of catalogues associated with the deployable service.
-        creator_affiliations (List[str]):
-            A list of creator affiliations extracted from the creators field.
         creator_identifiers (List[str]):
             A list of creator identifiers (URLs) extracted from the creators field.
         creator_names (List[str]):
@@ -71,7 +69,6 @@ class DeployableServiceDBSchema(BaseModel):
 
     abbreviation: str
     catalogues: List[str]
-    creator_affiliations: List[str]
     creator_identifiers: List[str]
     creator_names: List[str]
     creators_searchable: List[str]
