@@ -1,57 +1,65 @@
-"""Creator model schema"""
+"""Creator model schema."""
 
-from pydantic import AnyHttpUrl, BaseModel
+from pydantic import AnyHttpUrl, BaseModel, EmailStr
 
 
 class CreatorNameTypeInfo(BaseModel):
     """
-    Information about the creator's name type.
+    Additional information describing the creator's preferred display name.
 
     Attributes:
-        nameType (str):
-            The type of the creator's name (e.g., "ir_name_type-organizational").
-        creatorName (str):
-            The full name of the creator.
+        nameType (str | None):
+            Type of the creator's name (e.g. "Organizational" or "Personal").
+            Optional because some data sources do not provide it.
+        creatorName (str | None):
+            Preferred full display name of the creator.
+            Optional because some data sources only provide first and last names.
     """
 
-    nameType: str
-    creatorName: str
+    nameType: str | None = None
+    creatorName: str | None = None
 
 
 class CreatorAffiliationInfo(BaseModel):
     """
-    Information about the creator's affiliation.
+    Additional information describing the creator's affiliation.
 
     Attributes:
-        affiliation (str):
-            The name of the organization the creator is affiliated with.
-        affiliationIdentifier (AnyHttpUrl):
-            The identifier URL for the affiliation (e.g., ROR ID).
+        affiliation (str | None):
+            Name of the creator's affiliated organisation.
+        affiliationIdentifier (AnyHttpUrl | None):
+            Persistent identifier of the affiliation (e.g. a ROR identifier).
     """
 
-    affiliation: str
-    affiliationIdentifier: AnyHttpUrl
+    affiliation: str | None = None
+    affiliationIdentifier: AnyHttpUrl | None = None
 
 
 class Creator(BaseModel):
     """
-    Model representing a creator/author of a deployable service.
+    Model representing a creator of a deployable service.
 
     Attributes:
-        givenName (str):
-            The given (first) name of the creator.
-        familyName (str):
-            The family (last) name of the creator.
-        nameIdentifier (AnyHttpUrl):
-            The identifier URL for the creator (e.g., GitHub profile, ORCID).
-        creatorNameTypeInfo (CreatorNameTypeInfo):
-            Information about the creator's name type.
-        creatorAffiliationInfo (CreatorAffiliationInfo):
-            Information about the creator's organizational affiliation.
+        firstName (str):
+            Creator's given (first) name.
+        lastName (str):
+            Creator's family (last) name.
+        email (EmailStr | None):
+            Public email address of the creator, when available.
+        role (str | None):
+            Creator's contribution role (e.g. CRediT taxonomy).
+        nameIdentifier (AnyHttpUrl | None):
+            Persistent identifier of the creator (e.g. ORCID or GitHub profile).
+        creatorNameTypeInfo (CreatorNameTypeInfo | None):
+            Optional metadata describing the creator's name. Currently empty.
+        creatorAffiliationInfo (CreatorAffiliationInfo | None):
+            Optional metadata describing the creator's organisational affiliation. Currently empty.
     """
 
-    givenName: str
-    familyName: str
-    nameIdentifier: AnyHttpUrl
-    creatorNameTypeInfo: CreatorNameTypeInfo
-    creatorAffiliationInfo: CreatorAffiliationInfo
+    firstName: str
+    lastName: str
+    email: EmailStr | None = None
+    role: str | None = None
+    nameIdentifier: AnyHttpUrl | None = None
+    creatorNameTypeInfo: CreatorNameTypeInfo | None = None
+    creatorAffiliationInfo: CreatorAffiliationInfo | None = None

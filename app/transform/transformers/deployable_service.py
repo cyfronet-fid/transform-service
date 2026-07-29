@@ -93,34 +93,55 @@ class DeployableServiceTransformer(BaseTransformer):
 
     @staticmethod
     def transform_creators(df: DataFrame) -> DataFrame:
-        """Transform creators field for Solr indexing"""
+        """
+        Transform creator metadata into fields used for Solr indexing.
 
-        # Option 1: Extract creator names using creatorName field
+        The current deployable service schema provides only the creator's
+        first name, last name and email address. These values are used to
+        create searchable creator-related fields for Solr.
+
+        The following fields are created:
+
+        - creator_names:
+            Creator full names built from first and last names.
+        - creator_identifiers:
+            Creator email addresses.
+        - creators_searchable:
+            Searchable text combining creator names and email addresses.
+        """
+
+        creators = "coalesce(creators, array())"
+
+        # Extract creator names.
         df = df.withColumn(
             "creator_names",
-            expr("transform(creators, x -> x.creatorNameTypeInfo.creatorName)"),
+            expr(f"""
+                transform({creators}, x ->
+                    nullif(trim(concat_ws(' ', x.firstName, x.lastName)), '')
+                )
+            """),
         )
 
-        # Option 2: Extract creator identifiers (GitHub URLs)
+        # Extract creator identifiers (currently email addresses).
         df = df.withColumn(
-            "creator_identifiers", expr("transform(creators, x -> x.nameIdentifier)")
+            "creator_identifiers",
+            expr(f"""
+                transform({creators}, x ->
+                    nullif(x.email, '')
+                )
+            """),
         )
 
-        # Option 3: Extract creator affiliations
-        df = df.withColumn(
-            "creator_affiliations",
-            expr("transform(creators, x -> x.creatorAffiliationInfo.affiliation)"),
-        )
-
-        # Option 4: Create a searchable text field combining all creator info
+        # Build searchable creator text.
         df = df.withColumn(
             "creators_searchable",
-            expr("""
-                transform(creators, x -> 
-                    concat(
-                        x.creatorNameTypeInfo.creatorName, ' ', 
-                        x.creatorAffiliationInfo.affiliation
-                    )
+            expr(f"""
+                transform({creators}, x ->
+                    trim(concat_ws(
+                        ' ',
+                        nullif(trim(concat_ws(' ', x.firstName, x.lastName)), ''),
+                        nullif(x.email, '')
+                    ))
                 )
             """),
         )
