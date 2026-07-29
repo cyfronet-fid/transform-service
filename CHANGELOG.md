@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.8.0](https://github.com/cyfronet-fid/transform-service/compare/v1.7.0...v1.8.0) (2026-07-29)
+
+
+### Features
+
+* [[#109](https://github.com/cyfronet-fid/transform-service/issues/109)] change for trainings profiles v6 ([f65604c](https://github.com/cyfronet-fid/transform-service/commit/f65604ca6583b15e23d089d390278332662dc4b0))
+* change package in adapters to string ([8de832c](https://github.com/cyfronet-fid/transform-service/commit/8de832c09c6c6222a4e15f05d6a33068b0e9d137))
+
+
+### Bug Fixes
+
+* creators in deployable applications ([4af160d](https://github.com/cyfronet-fid/transform-service/commit/4af160daa86f7edf8a4209355ff70d03799b9574))
+
 ## [1.7.0](https://github.com/cyfronet-fid/transform-service/compare/v1.6.0...v1.7.0) (2026-06-23)
 
 
