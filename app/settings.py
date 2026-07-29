@@ -15,6 +15,7 @@ from schemas.input.deployable_service import DeployableServiceInputSchema
 from schemas.input.guideline import GuidelineInputSchema
 from schemas.input.provider import ProviderInputSchema
 from schemas.input.service import ServiceInputSchema
+from schemas.input.training import TrainingInputSchema
 from schemas.old.input import *
 from schemas.old.output import *
 from schemas.se.adapter import AdapterSESchema
@@ -23,6 +24,7 @@ from schemas.se.deployable_service import DeployableServiceSESchema
 from schemas.se.guideline import GuidelineSESchema
 from schemas.se.provider import ProviderSESchema
 from schemas.se.service import ServiceSESchema
+from schemas.se.training import TrainingSESchema
 
 logger = logging.getLogger(__name__)
 EnvironmentType = Literal["dev", "test", "production"]
@@ -322,8 +324,8 @@ class TransformSettings(GlobalSettings):
             },
             self.TRAINING: {
                 ADDRESS: str(self.TRAINING_ADDRESS),
-                OUTPUT_SCHEMA: training_output_schema,
-                INPUT_SCHEMA: training_input_schema,
+                OUTPUT_SCHEMA: TrainingSESchema,
+                INPUT_SCHEMA: TrainingInputSchema,
             },
             self.PROVIDER: {
                 ADDRESS: mp_api + "providers",

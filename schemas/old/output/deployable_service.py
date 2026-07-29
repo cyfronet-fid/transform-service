@@ -28,7 +28,6 @@ deployable_service_output_schema = {
     "upstream_id": "bigint",
     "creator_names": "array<string>",
     "creator_identifiers": "array<string>",
-    "creator_affiliations": "array<string>",
     "creators_searchable": "array<string>",
     "type": "string",
 }

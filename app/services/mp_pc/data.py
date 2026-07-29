@@ -8,8 +8,10 @@ import requests
 
 from app.services.mp_pc.pc import (
     get_access_token_from_refresh_token,
+    map_catalogues,
     map_licenses,
     map_nodes,
+    map_resource_organisations,
     map_resource_owners,
 )
 from app.settings import settings
@@ -73,6 +75,13 @@ async def get_data(data_type: str, data_address: str) -> list[dict] | None:
                     for facet in facets
                 ):
                     full_data = map_resource_owners(full_data)
+                    full_data = map_resource_organisations(full_data)
+
+                if any(
+                    isinstance(facet, dict) and facet.get("field") == "catalogue_id"
+                    for facet in facets
+                ):
+                    full_data = map_catalogues(full_data)
 
             data = full_data.get("results", [])
         else:

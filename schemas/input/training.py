@@ -1,7 +1,7 @@
 """Input training expected schema"""
 
 from datetime import datetime
-from typing import List, Optional, Union
+from typing import Any, List, Optional, Union
 
 from pydantic import AnyHttpUrl, BaseModel, EmailStr
 
@@ -19,6 +19,31 @@ class AlternativeIdentifier(BaseModel):
 
     type: str
     value: str
+
+
+class AlternativePID(BaseModel):
+    """Alternative persistent identifier metadata."""
+
+    pid: Optional[str] = None
+    pidSchema: Optional[str] = None
+
+
+class Creator(BaseModel):
+    """Model representing adapter creator contact data."""
+
+    firstName: str
+    lastName: str
+    email: str
+    role: Optional[str] = None
+    PIDs: Optional[List[Any]] = None
+    affiliations: Optional[List[Any]] = None
+
+
+class License(BaseModel):
+    """Guideline license metadata."""
+
+    licenseName: Optional[str] = None
+    licenseURL: Optional[str] = None
 
 
 class TrainingContact(BaseModel):
@@ -69,85 +94,79 @@ class TrainingInputSchema(BaseModel):
 
     Attributes:
         accessRights (str):
-            The access rights of the training.
-        alternativeIdentifiers (List[AlternativeIdentifier]):
-            A list of alternative identifiers for the training.
-        authors (List[str]):
-            A list of authors of the training.
-        catalogueId (str):
-            The catalogue identifier for the training.
-        contact (Union[TrainingContact, str]):
-            The contact information for the training, either as a Contact object or a string.
-        contentResourceTypes (List[str]):
-            A list of content resource types for the training.
+            Access rights assigned to the training resource.
+        alternativePIDs (Optional[List[AlternativePID]]):
+            List of alternative persistent identifiers for the training.
+        catalogueId (Optional[str]):
+            Identifier of the catalogue the training belongs to.
+        contentResourceTypes (Optional[List[str]]):
+            Types of content associated with the training resource.
+        creators (Optional[List[Creator]]):
+            List of creators or authors of the training.
         description (str):
-            A detailed description of the training.
-        duration (str):
-            The duration of the training.
-        eoscRelatedServices (List[str]):
-            A list of EOSC related services for the training.
+            Detailed description of the training.
+        duration (Optional[str]):
+            Duration of the training.
+        eoscRelatedServices (Optional[List[str]]):
+            Identifiers of EOSC services related to the training.
         expertiseLevel (str):
-            The expertise level required for the training.
-        geographicalAvailabilities (List[str]):
-            A list of geographical locations where the training is available.
+            Required level of expertise for participants.
         id (str):
-            The unique identifier of the training.
-        keywords (List[str]):
-            A list of keywords associated with the training.
+            Unique identifier of the training resource.
+        keywords (Optional[List[str]]):
+            Keywords describing the training.
         languages (List[str]):
-            A list of languages in which the training is available.
+            Languages in which the training is available.
         learningOutcomes (List[str]):
-            A list of learning outcomes for the training.
-        learningResourceTypes (List[str]):
-            A list of learning resource types for the training.
-        license (str):
-            The license under which the training is provided.
+            Expected learning outcomes of the training.
+        learningResourceTypes (Optional[List[str]]):
+            Types of learning resources represented by the training.
+        license (Optional[License]):
+            License under which the training is distributed.
+        name (str):
+            Name (title) of the training resource.
         node (Optional[str]):
-            Name of the node associated with the training.
-        qualifications (List[str]):
-            A list of qualifications associated with the training.
-        resourceOrganisation (str):
-            The organisation responsible for the training.
-        resourceProviders (List[str]):
-            A list of resource providers for the training.
-        scientificDomains (List[ScientificDomain]):
-            A list of scientific domains and subdomains associated with the training.
+            Name of the associated EOSC node.
+        publicContacts (Optional[List[str]]):
+            List of public contact addresses associated with the training.
+        publishingDate (str):
+            Date when the training was published.
+        qualifications (Optional[List[str]]):
+            Qualifications or certifications associated with the training.
+        resourceOwner (str):
+            Organisation responsible for owning or maintaining the training.
+        scientificDomains (Optional[List[ScientificDomain]]):
+            Scientific domains and subdomains associated with the training.
         targetGroups (List[str]):
-            A list of target groups for the training.
-        title (str):
-            The title of the training.
-        url (AnyHttpUrl):
-            The URL of the training.
-        urlType (str):
-            The type of the URL.
-        versionDate (datetime):
-            The version date of the training (ISO 8601 format).
+            Intended audience of the training.
+        urls (Optional[List[str]]):
+            URLs pointing to the training resource.
+        versionDate (str):
+            Version or last update date of the training resource.
     """
 
     accessRights: str
-    alternativeIdentifiers: List[AlternativeIdentifier]
-    authors: List[str]
-    catalogueId: str
-    contact: Union[TrainingContact, str]  # Authorization needed
-    contentResourceTypes: List[str]
+    alternativePIDs: Optional[List[AlternativePID]] = None
+    catalogueId: Optional[str] = None
+    contentResourceTypes: Optional[List[str]] = None
+    creators: Optional[List[Creator]] = None
     description: str
-    duration: str
-    eoscRelatedServices: List[str]
+    duration: Optional[str]
+    eoscRelatedServices: Optional[List[str]] = None
     expertiseLevel: str
-    geographicalAvailabilities: List[str]
     id: str
-    keywords: List[str]
+    keywords: Optional[List[str]] = None
     languages: List[str]
     learningOutcomes: List[str]
-    learningResourceTypes: List[str]
-    license: str
+    learningResourceTypes: Optional[List[str]] = None
+    license: Optional[License] = None
+    name: str
     node: Optional[str]
-    qualifications: List[str]
-    resourceOrganisation: str
-    resourceProviders: List[str]
-    scientificDomains: List[ScientificDomain]
+    publicContacts: Optional[List[str]] = None
+    publishingDate: str
+    qualifications: Optional[List[str]] = None
+    resourceOwner: str
+    scientificDomains: Optional[List[ScientificDomain]] = None
     targetGroups: List[str]
-    title: str
-    url: AnyHttpUrl
-    urlType: str
-    versionDate: datetime
+    urls: Optional[List[str]] = None
+    versionDate: str

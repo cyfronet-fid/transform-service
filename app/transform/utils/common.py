@@ -8,8 +8,10 @@ from itertools import chain
 from logging import getLogger
 from typing import Dict, List, Optional
 
+import requests
 from pyspark.sql import DataFrame
-from pyspark.sql.functions import col, lit, to_date, when
+from pyspark.sql.functions import col, lit, to_date, udf, when
+from pyspark.sql.types import StringType
 from pyspark.sql.utils import AnalysisException
 
 from app.mappings.datasources_pids import datasource_pids_mapping, services_pids
@@ -24,6 +26,7 @@ from app.mappings.mappings import (
 )
 from app.mappings.scientific_domain import mp_sd_structure, scientific_domains_mapping
 from app.services.mp_pc.data import get_data_source_pids
+from app.settings import settings
 from app.transform.utils.utils import extract_digits_and_trim, handle_missing_column
 from schemas.properties.data import (
     AFFILIATION,
