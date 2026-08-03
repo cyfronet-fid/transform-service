@@ -122,7 +122,6 @@ class AdapterTransformer(BaseTransformer):
             "programmingLanguage": "programming_language",
             "publicContacts": "public_contacts",
             "resourceOwner": "resource_owner",
-            "tagline": "keywords",
             "urls": "url",
             "catalogueId": "catalogue",
         }
@@ -247,7 +246,9 @@ class AdapterTransformer(BaseTransformer):
 
         license_field = df.schema["license"]
         if isinstance(license_field.dataType, StructType):
-            return df.withColumn("license", col("license.licenseName"))
+            df = df.withColumn("license_url", col("license.licenseURL"))
+            df = df.withColumn("license", col("license.licenseName"))
+            return df
 
         return df
 
