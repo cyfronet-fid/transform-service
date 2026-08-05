@@ -2,7 +2,7 @@
 
 import json
 
-from client import AggregatorClient
+from sage.client import AggregatorClient
 
 from sage.sender import send_to_solr
 from sage.transfomer import transform_raw_dataset
