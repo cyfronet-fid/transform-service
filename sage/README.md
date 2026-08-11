@@ -22,6 +22,22 @@ or, if using Pipenv:
 pipenv run python -m sage.pipeline
 ```
 
+## Running on a schedule
+
+To run the pipeline continuously every 10 minutes (e.g. in a long-running container), use the scheduler entrypoint instead of invoking the pipeline directly:
+
+```bash
+python -m sage.scheduler
+```
+
+or, if using Pipenv:
+
+```bash
+pipenv run python -m sage.scheduler
+```
+
+This runs the pipeline once immediately, then every 10 minutes via a cron-style trigger (`*/10 * * * *`, UTC). A single failed run is logged and does not stop the scheduler.
+
 ## Configuration
 
 The pipeline reads its configuration from:
