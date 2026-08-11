@@ -1,7 +1,7 @@
 from typing import Any, Dict
 
 import requests
-from settings import settings
+from sage.settings import settings
 
 
 class AggregatorClient:
