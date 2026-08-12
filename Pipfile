@@ -29,6 +29,7 @@ sickle = "*"
 aiohttp = "*"
 email-validator = "*"
 typing-extensions = "*"
+apscheduler = "*"
 
 [dev-packages]
 pytest = "*"

@@ -1,8 +1,10 @@
-from pydantic import AnyHttpUrl, Field
-from pydantic_settings import BaseSettings, SettingsConfigDict
 from pathlib import Path
 
+from pydantic import AnyHttpUrl, Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
 BASE_DIR = Path(__file__).resolve().parent
+
 
 class Settings(BaseSettings):
     # Pydantic v2 config
@@ -22,6 +24,12 @@ class Settings(BaseSettings):
 
     # Network
     request_timeout: int = Field(30, alias="REQUEST_TIMEOUT")
+
+    # Scheduler
+    scheduler_interval_minutes: int = Field(
+        10,
+        alias="SCHEDULER_INTERVAL_MINUTES",
+    )
 
 
 settings = Settings()
