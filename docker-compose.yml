@@ -40,6 +40,12 @@ services:
       - redis
       - worker
 
+  sage-cron:
+    build: ./
+    command: python -m sage.scheduler
+    volumes:
+      - ./sage/.env:/app/sage/.env:ro
+
   redis:
     image: redis:7
 
