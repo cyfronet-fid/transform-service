@@ -54,6 +54,7 @@ AGGREGATOR_API_KEY=...
 SOLR_URL=...
 SOLR_COLS_NAME=...
 REQUEST_TIMEOUT=300
+SCHEDULER_INTERVAL_MINUTES=10
 ```
 
 ## Pipeline workflow
@@ -228,6 +229,14 @@ The pipeline is designed to avoid modifying Solr until the new data has been suc
 \* The pipeline stops when the delete operation reports a failure.
 
 If indexing fails after the delete operation has succeeded, the Solr collection may temporarily contain an incomplete snapshot. The checksum is not updated in this case, so the next pipeline execution will retry the synchronization.
+
+## Running on a schedule
+
+The pipeline can also be run continuously (every SCHEDULER_INTERVAL_MINUTES) using the scheduler entrypoint:
+
+```bash
+python -m sage.scheduler
+```
 
 ## Running tests
 

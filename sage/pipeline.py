@@ -1,18 +1,14 @@
 import hashlib
 import json
-import logging
+from logging import getLogger
 
 from sage.client import AggregatorClient
+from sage.logging_config import configure_logging
 from sage.sender import delete_all_from_solr, send_to_solr
 from sage.state import get_checksum, save_checksum
 from sage.transfomer import transform_raw_dataset
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
-)
-
-logger = logging.getLogger(__name__)
+logger = getLogger(__name__)
 
 
 def calculate_checksum(datasets):
@@ -197,4 +193,5 @@ def main():
 
 
 if __name__ == "__main__":
+    configure_logging()
     main()
