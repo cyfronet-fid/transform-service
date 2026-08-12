@@ -51,9 +51,7 @@ def test_delete_all_from_solr(mock_post):
 @patch("sage.sender.requests.post")
 def test_delete_all_from_solr_returns_false_on_http_error(mock_post):
     response = MagicMock()
-    response.raise_for_status.side_effect = requests.HTTPError(
-        "HTTP error"
-    )
+    response.raise_for_status.side_effect = requests.HTTPError("HTTP error")
 
     mock_post.return_value = response
 

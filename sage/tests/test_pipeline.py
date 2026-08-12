@@ -391,7 +391,7 @@ def test_main_saves_checksum_only_after_successful_indexing(
             "dspace:participantId": "participant-1",
             "dcat:dataset": {
                 "@id": "dataset-1",
-            }
+            },
         }
     ]
 
@@ -445,19 +445,12 @@ def test_main_performs_operations_in_correct_order(
     call_order = []
 
     mock_transform.side_effect = lambda dataset: (
-        call_order.append("transform")
-        or {"id": "dataset-1"}
+        call_order.append("transform") or {"id": "dataset-1"}
     )
 
-    mock_delete.side_effect = lambda: (
-        call_order.append("delete")
-        or True
-    )
+    mock_delete.side_effect = lambda: (call_order.append("delete") or True)
 
-    mock_send.side_effect = lambda docs: (
-        call_order.append("send")
-        or True
-    )
+    mock_send.side_effect = lambda docs: (call_order.append("send") or True)
 
     mock_save_checksum.side_effect = lambda checksum: (
         call_order.append("save_checksum")

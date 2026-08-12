@@ -5,7 +5,6 @@ from logging import getLogger
 import requests
 from dotenv import load_dotenv
 
-
 logger = getLogger(__name__)
 
 load_dotenv()
@@ -67,9 +66,7 @@ def delete_all_from_solr():
         return False
 
     except Exception:
-        logger.exception(
-            "Unexpected error while deleting documents from Solr"
-        )
+        logger.exception("Unexpected error while deleting documents from Solr")
         return False
 
 

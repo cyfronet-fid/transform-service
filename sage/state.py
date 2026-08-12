@@ -1,8 +1,8 @@
 """Calculate checksum of the Aggregator response and persist it to disk.
 Why? To avoid reprocessing the same data if it hasn't changed since the last run."""
+
 from logging import getLogger
 from pathlib import Path
-
 
 logger = getLogger(__name__)
 

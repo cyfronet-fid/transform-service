@@ -7,7 +7,6 @@ from sage.sender import delete_all_from_solr, send_to_solr
 from sage.state import get_checksum, save_checksum
 from sage.transfomer import transform_raw_dataset
 
-
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
@@ -34,9 +33,7 @@ def calculate_checksum(datasets):
         ensure_ascii=False,
     )
 
-    checksum = hashlib.sha256(
-        serialized.encode("utf-8")
-    ).hexdigest()
+    checksum = hashlib.sha256(serialized.encode("utf-8")).hexdigest()
 
     logger.debug("Calculated dataset checksum: %s", checksum)
 
@@ -84,9 +81,7 @@ def flatten_datasets(catalogs):
                 )
                 continue
 
-            dataset["catalogue"] = (
-                catalog.get("dspace:participantId") or ""
-            )
+            dataset["catalogue"] = catalog.get("dspace:participantId") or ""
             dataset["participant_id"] = catalog.get("dspace:participantId")
             dataset["originator"] = catalog.get("originator")
 
@@ -133,10 +128,7 @@ def main():
 
     # 4. Skip Solr update if nothing changed
     if current_checksum == previous_checksum:
-        logger.info(
-            "No changes detected in Aggregator data. "
-            "Skipping Solr update."
-        )
+        logger.info("No changes detected in Aggregator data. " "Skipping Solr update.")
         return
 
     logger.info(
@@ -168,8 +160,7 @@ def main():
 
     if not transformed:
         logger.error(
-            "No datasets were successfully transformed. "
-            "Keeping existing Solr data."
+            "No datasets were successfully transformed. " "Keeping existing Solr data."
         )
         return
 
@@ -182,10 +173,7 @@ def main():
     deleted = delete_all_from_solr()
 
     if not deleted:
-        logger.error(
-            "Failed to clear Solr collection. "
-            "Aborting pipeline."
-        )
+        logger.error("Failed to clear Solr collection. " "Aborting pipeline.")
         return
 
     # 7. Index the new snapshot
@@ -193,8 +181,7 @@ def main():
 
     if not indexed:
         logger.error(
-            "Failed to index the new Solr snapshot. "
-            "Checksum will NOT be updated."
+            "Failed to index the new Solr snapshot. " "Checksum will NOT be updated."
         )
         return
 
