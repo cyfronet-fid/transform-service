@@ -6,7 +6,7 @@ from pathlib import Path
 
 logger = getLogger(__name__)
 
-CHECKSUM_FILE = Path("state/aggregator_checksum")
+CHECKSUM_FILE = Path("sage/state/aggregator_checksum")
 
 
 def get_checksum() -> str | None:

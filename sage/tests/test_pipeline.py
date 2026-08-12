@@ -1,5 +1,3 @@
-import json
-
 from unittest.mock import MagicMock, patch
 
 from sage.pipeline import calculate_checksum, flatten_datasets, main
@@ -194,7 +192,6 @@ def test_main_skips_solr_when_checksum_is_unchanged(
     main()
 
     mock_client.fetch_catalog.assert_called_once()
-
     mock_transform.assert_not_called()
     mock_delete.assert_not_called()
     mock_send.assert_not_called()
@@ -235,7 +232,6 @@ def test_main_rebuilds_solr_when_checksum_changes(
     mock_client_class.return_value = mock_client
 
     mock_get_checksum.return_value = "old-checksum"
-
     mock_transform.return_value = transformed_dataset
     mock_delete.return_value = True
     mock_send.return_value = True
@@ -244,10 +240,8 @@ def test_main_rebuilds_solr_when_checksum_changes(
 
     mock_client.fetch_catalog.assert_called_once()
     mock_transform.assert_called_once()
-
     mock_delete.assert_called_once()
     mock_send.assert_called_once_with([transformed_dataset])
-
     mock_save_checksum.assert_called_once()
 
 
@@ -322,17 +316,14 @@ def test_main_does_not_index_when_solr_delete_fails(
     mock_client_class.return_value = mock_client
 
     mock_get_checksum.return_value = "old-checksum"
-
     mock_transform.return_value = {
         "id": "dataset-1",
     }
-
     mock_delete.return_value = False
 
     main()
 
     mock_delete.assert_called_once()
-
     mock_send.assert_not_called()
     mock_save_checksum.assert_not_called()
 
@@ -365,11 +356,9 @@ def test_main_does_not_save_checksum_when_indexing_fails(
     mock_client_class.return_value = mock_client
 
     mock_get_checksum.return_value = "old-checksum"
-
     mock_transform.return_value = {
         "id": "dataset-1",
     }
-
     mock_delete.return_value = True
     mock_send.return_value = False
 
@@ -402,6 +391,47 @@ def test_main_saves_checksum_only_after_successful_indexing(
             "dspace:participantId": "participant-1",
             "dcat:dataset": {
                 "@id": "dataset-1",
+            }
+        }
+    ]
+
+    mock_client = MagicMock()
+    mock_client.fetch_catalog.return_value = data
+    mock_client_class.return_value = mock_client
+
+    mock_get_checksum.return_value = "old-checksum"
+    mock_transform.return_value = {
+        "id": "dataset-1",
+    }
+    mock_delete.return_value = True
+    mock_send.return_value = True
+
+    main()
+
+    mock_delete.assert_called_once()
+    mock_send.assert_called_once()
+    mock_save_checksum.assert_called_once()
+
+
+@patch("sage.pipeline.save_checksum")
+@patch("sage.pipeline.send_to_solr")
+@patch("sage.pipeline.delete_all_from_solr")
+@patch("sage.pipeline.get_checksum")
+@patch("sage.pipeline.transform_raw_dataset")
+@patch("sage.pipeline.AggregatorClient")
+def test_main_performs_operations_in_correct_order(
+    mock_client_class,
+    mock_transform,
+    mock_get_checksum,
+    mock_delete,
+    mock_send,
+    mock_save_checksum,
+):
+    data = [
+        {
+            "dspace:participantId": "participant-1",
+            "dcat:dataset": {
+                "@id": "dataset-1",
             },
         }
     ]
@@ -412,15 +442,32 @@ def test_main_saves_checksum_only_after_successful_indexing(
 
     mock_get_checksum.return_value = "old-checksum"
 
-    mock_transform.return_value = {
-        "id": "dataset-1",
-    }
+    call_order = []
 
-    mock_delete.return_value = True
-    mock_send.return_value = True
+    mock_transform.side_effect = lambda dataset: (
+        call_order.append("transform")
+        or {"id": "dataset-1"}
+    )
+
+    mock_delete.side_effect = lambda: (
+        call_order.append("delete")
+        or True
+    )
+
+    mock_send.side_effect = lambda docs: (
+        call_order.append("send")
+        or True
+    )
+
+    mock_save_checksum.side_effect = lambda checksum: (
+        call_order.append("save_checksum")
+    )
 
     main()
 
-    mock_delete.assert_called_once()
-    mock_send.assert_called_once()
-    mock_save_checksum.assert_called_once()
+    assert call_order == [
+        "transform",
+        "delete",
+        "send",
+        "save_checksum",
+    ]

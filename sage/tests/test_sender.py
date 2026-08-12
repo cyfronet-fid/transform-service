@@ -1,5 +1,7 @@
 from unittest.mock import MagicMock, patch
 
+import requests
+
 from sage.sender import (
     chunk_iterable,
     delete_all_from_solr,
@@ -49,7 +51,9 @@ def test_delete_all_from_solr(mock_post):
 @patch("sage.sender.requests.post")
 def test_delete_all_from_solr_returns_false_on_http_error(mock_post):
     response = MagicMock()
-    response.raise_for_status.side_effect = Exception("HTTP error")
+    response.raise_for_status.side_effect = requests.HTTPError(
+        "HTTP error"
+    )
 
     mock_post.return_value = response
 
@@ -94,7 +98,6 @@ def test_send_to_solr_sends_batches(mock_send_batch):
     result = send_to_solr(docs)
 
     assert result is True
-
     assert mock_send_batch.call_count == 3
 
     calls = mock_send_batch.call_args_list

@@ -1,6 +1,6 @@
 import hashlib
 import json
-from logging import getLogger
+import logging
 
 from sage.client import AggregatorClient
 from sage.sender import delete_all_from_solr, send_to_solr
@@ -8,12 +8,19 @@ from sage.state import get_checksum, save_checksum
 from sage.transfomer import transform_raw_dataset
 
 
-logger = getLogger(__name__)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
+)
+
+logger = logging.getLogger(__name__)
 
 
 def calculate_checksum(datasets):
     """
     Calculate a deterministic checksum for the dataset snapshot.
+
+    Dataset order does not affect the checksum.
     """
     normalized = sorted(
         datasets,
@@ -124,7 +131,7 @@ def main():
     logger.debug("Previous checksum: %s", previous_checksum)
     logger.debug("Current checksum: %s", current_checksum)
 
-    # 4. Skip the rest of the pipeline if nothing changed
+    # 4. Skip Solr update if nothing changed
     if current_checksum == previous_checksum:
         logger.info(
             "No changes detected in Aggregator data. "
@@ -177,7 +184,7 @@ def main():
     if not deleted:
         logger.error(
             "Failed to clear Solr collection. "
-            "Keeping existing data and aborting pipeline."
+            "Aborting pipeline."
         )
         return
 
@@ -204,4 +211,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    
