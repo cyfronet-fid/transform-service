@@ -464,3 +464,47 @@ def test_main_performs_operations_in_correct_order(
         "send",
         "save_checksum",
     ]
+
+
+def test_calculate_checksum_ignores_dynamic_policy_id():
+    dataset = {
+        "@id": "dataset-1",
+        "name": "Test dataset",
+        "odrl:hasPolicy": {
+            "@id": "policy-id-1",
+            "@type": "odrl:Offer",
+            "odrl:permission": [],
+            "odrl:prohibition": [],
+            "odrl:obligation": [],
+        },
+    }
+
+    dataset_with_different_policy_id = {
+        "@id": "dataset-1",
+        "name": "Test dataset",
+        "odrl:hasPolicy": {
+            "@id": "policy-id-2",
+            "@type": "odrl:Offer",
+            "odrl:permission": [],
+            "odrl:prohibition": [],
+            "odrl:obligation": [],
+        },
+    }
+
+    assert calculate_checksum([dataset]) == calculate_checksum(
+        [dataset_with_different_policy_id]
+    )
+
+
+def test_calculate_checksum_does_not_modify_dataset():
+    dataset = {
+        "@id": "dataset-1",
+        "odrl:hasPolicy": {
+            "@id": "policy-id-1",
+            "@type": "odrl:Offer",
+        },
+    }
+
+    calculate_checksum([dataset])
+
+    assert dataset["odrl:hasPolicy"]["@id"] == "policy-id-1"

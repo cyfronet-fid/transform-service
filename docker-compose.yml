@@ -40,6 +40,16 @@ services:
       - redis
       - worker
 
+# Uncomment the following section to enable the cron service for periodic data synchronization.
+# Make sure to configure the cron jobs in the `sage/scheduler.py` file.
+#  sage-cron:
+#    build: ./
+#    command: python -m sage.scheduler
+#    profiles:
+#      - sage-cron
+#    volumes:
+#      - ./sage/.env:/app/sage/.env:ro
+
   redis:
     image: redis:7
 

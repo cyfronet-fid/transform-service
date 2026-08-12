@@ -1,18 +1,14 @@
 import hashlib
 import json
-import logging
+from logging import getLogger
 
 from sage.client import AggregatorClient
+from sage.logging_config import configure_logging
 from sage.sender import delete_all_from_solr, send_to_solr
 from sage.state import get_checksum, save_checksum
 from sage.transfomer import transform_raw_dataset
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
-)
-
-logger = logging.getLogger(__name__)
+logger = getLogger(__name__)
 
 
 def calculate_checksum(datasets):
@@ -20,9 +16,24 @@ def calculate_checksum(datasets):
     Calculate a deterministic checksum for the dataset snapshot.
 
     Dataset order does not affect the checksum.
+
+    The dynamically generated ODRL policy ID is excluded because
+    the Aggregator may generate a different value for the same
+    dataset between requests.
     """
-    normalized = sorted(
-        datasets,
+    normalized = []
+
+    for dataset in datasets:
+        dataset_copy = json.loads(json.dumps(dataset))
+
+        policy = dataset_copy.get("odrl:hasPolicy")
+
+        if isinstance(policy, dict):
+            policy.pop("@id", None)
+
+        normalized.append(dataset_copy)
+
+    normalized.sort(
         key=lambda dataset: dataset.get("@id", ""),
     )
 
@@ -35,7 +46,10 @@ def calculate_checksum(datasets):
 
     checksum = hashlib.sha256(serialized.encode("utf-8")).hexdigest()
 
-    logger.debug("Calculated dataset checksum: %s", checksum)
+    logger.debug(
+        "Calculated dataset checksum: %s",
+        checksum,
+    )
 
     return checksum
 
@@ -57,10 +71,16 @@ def flatten_datasets(catalogs):
         )
         return datasets
 
-    logger.debug("Processing %d catalog objects", len(catalogs))
+    logger.debug(
+        "Processing %d catalog objects",
+        len(catalogs),
+    )
 
     for catalog in catalogs:
-        raw_datasets = catalog.get("dcat:dataset", [])
+        raw_datasets = catalog.get(
+            "dcat:dataset",
+            [],
+        )
 
         if isinstance(raw_datasets, dict):
             logger.debug("Found a single dataset object in catalog")
@@ -113,7 +133,10 @@ def main():
     # 2. Flatten catalogs into datasets
     raw_datasets = flatten_datasets(data)
 
-    logger.info("Total raw datasets: %d", len(raw_datasets))
+    logger.info(
+        "Total raw datasets: %d",
+        len(raw_datasets),
+    )
 
     if not raw_datasets:
         logger.warning("No datasets found in Aggregator response")
@@ -123,8 +146,14 @@ def main():
     current_checksum = calculate_checksum(raw_datasets)
     previous_checksum = get_checksum()
 
-    logger.debug("Previous checksum: %s", previous_checksum)
-    logger.debug("Current checksum: %s", current_checksum)
+    logger.debug(
+        "Previous checksum: %s",
+        previous_checksum,
+    )
+    logger.debug(
+        "Current checksum: %s",
+        current_checksum,
+    )
 
     # 4. Skip Solr update if nothing changed
     if current_checksum == previous_checksum:
@@ -197,4 +226,5 @@ def main():
 
 
 if __name__ == "__main__":
+    configure_logging()
     main()
