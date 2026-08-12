@@ -1,6 +1,7 @@
 from typing import Any, Dict
 
 import requests
+
 from sage.settings import settings
 
 
