@@ -1,18 +1,39 @@
-"""Metadata pipeline for SAGE project."""
-
+import hashlib
 import json
-import logging
+from logging import getLogger
 
 from sage.client import AggregatorClient
-from sage.sender import send_to_solr
+from sage.sender import delete_all_from_solr, send_to_solr
+from sage.state import get_checksum, save_checksum
 from sage.transfomer import transform_raw_dataset
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
-)
 
-logger = logging.getLogger(__name__)
+logger = getLogger(__name__)
+
+
+def calculate_checksum(datasets):
+    """
+    Calculate a deterministic checksum for the dataset snapshot.
+    """
+    normalized = sorted(
+        datasets,
+        key=lambda dataset: dataset.get("@id", ""),
+    )
+
+    serialized = json.dumps(
+        normalized,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+    )
+
+    checksum = hashlib.sha256(
+        serialized.encode("utf-8")
+    ).hexdigest()
+
+    logger.debug("Calculated dataset checksum: %s", checksum)
+
+    return checksum
 
 
 def flatten_datasets(catalogs):
@@ -26,7 +47,10 @@ def flatten_datasets(catalogs):
     datasets = []
 
     if not isinstance(catalogs, list):
-        logger.error("Expected list of catalog objects, got %s", type(catalogs).__name__)
+        logger.error(
+            "Expected list of catalog objects, got %s",
+            type(catalogs).__name__,
+        )
         return datasets
 
     logger.debug("Processing %d catalog objects", len(catalogs))
@@ -34,20 +58,16 @@ def flatten_datasets(catalogs):
     for catalog in catalogs:
         raw_datasets = catalog.get("dcat:dataset", [])
 
-        # Aggregator may return a single dataset as a dict
         if isinstance(raw_datasets, dict):
             logger.debug("Found a single dataset object in catalog")
             raw_datasets = [raw_datasets]
 
-        # Ignore unexpected values
         if not isinstance(raw_datasets, list):
             logger.warning(
                 "Unexpected dcat:dataset type: %s",
                 type(raw_datasets).__name__,
             )
             continue
-
-        logger.debug("Found %d datasets in catalog", len(raw_datasets))
 
         for dataset in raw_datasets:
             if not isinstance(dataset, dict):
@@ -65,7 +85,11 @@ def flatten_datasets(catalogs):
 
             datasets.append(dataset)
 
-    logger.info("Flattened %d datasets from %d catalogs", len(datasets), len(catalogs))
+    logger.info(
+        "Flattened %d datasets from %d catalogs",
+        len(datasets),
+        len(catalogs),
+    )
 
     return datasets
 
@@ -73,7 +97,7 @@ def flatten_datasets(catalogs):
 def main():
     logger.info("Starting metadata pipeline")
 
-    # 1) Load all catalogs from EDC
+    # 1. Fetch current snapshot from Aggregator
     logger.info("Fetching catalog data from Aggregator")
 
     client = AggregatorClient()
@@ -84,7 +108,7 @@ def main():
         type(data).__name__,
     )
 
-    # 2) Flatten catalogs into dataset list
+    # 2. Flatten catalogs into datasets
     raw_datasets = flatten_datasets(data)
 
     logger.info("Total raw datasets: %d", len(raw_datasets))
@@ -93,43 +117,91 @@ def main():
         logger.warning("No datasets found in Aggregator response")
         return
 
-    # 3) Transform datasets
-    logger.info("Transforming %d datasets", len(raw_datasets))
+    # 3. Calculate checksum of current snapshot
+    current_checksum = calculate_checksum(raw_datasets)
+    previous_checksum = get_checksum()
 
-    transformed = [
-        transformed_dataset
-        for transformed_dataset in (
-            transform_raw_dataset(dataset)
-            for dataset in raw_datasets
+    logger.debug("Previous checksum: %s", previous_checksum)
+    logger.debug("Current checksum: %s", current_checksum)
+
+    # 4. Skip the rest of the pipeline if nothing changed
+    if current_checksum == previous_checksum:
+        logger.info(
+            "No changes detected in Aggregator data. "
+            "Skipping Solr update."
         )
-        if transformed_dataset is not None
-    ]
+        return
 
-    logger.info("Transformed datasets: %d", len(transformed))
+    logger.info(
+        "Changes detected in Aggregator data. "
+        "Current checksum: %s, previous checksum: %s",
+        current_checksum,
+        previous_checksum,
+    )
 
-    # 4) Show one example
-    if raw_datasets:
-        logger.debug(
-            "Sample raw record:\n%s",
-            json.dumps(raw_datasets[0], indent=2),
+    # 5. Transform the complete snapshot BEFORE touching Solr
+    logger.info(
+        "Transforming %d datasets",
+        len(raw_datasets),
+    )
+
+    transformed = []
+
+    for dataset in raw_datasets:
+        transformed_dataset = transform_raw_dataset(dataset)
+
+        if transformed_dataset is not None:
+            transformed.append(transformed_dataset)
+
+    logger.info(
+        "Successfully transformed %d/%d datasets",
+        len(transformed),
+        len(raw_datasets),
+    )
+
+    if not transformed:
+        logger.error(
+            "No datasets were successfully transformed. "
+            "Keeping existing Solr data."
         )
+        return
 
-    if transformed:
-        logger.debug(
-            "Sample transformed record:\n%s",
-            json.dumps(transformed[0], indent=2),
+    # 6. Only now modify Solr
+    logger.info(
+        "Replacing existing Solr snapshot with %d datasets",
+        len(transformed),
+    )
+
+    deleted = delete_all_from_solr()
+
+    if not deleted:
+        logger.error(
+            "Failed to clear Solr collection. "
+            "Keeping existing data and aborting pipeline."
         )
+        return
 
-    # 5) Send to Solr
-    if transformed:
-        logger.info("Sending %d datasets to Solr", len(transformed))
-        send_to_solr(transformed)
-        logger.info("Datasets successfully sent to Solr")
-    else:
-        logger.warning("No datasets available to send to Solr")
+    # 7. Index the new snapshot
+    indexed = send_to_solr(transformed)
 
-    logger.info("Metadata pipeline finished")
+    if not indexed:
+        logger.error(
+            "Failed to index the new Solr snapshot. "
+            "Checksum will NOT be updated."
+        )
+        return
+
+    # 8. Only save checksum after successful indexing
+    save_checksum(current_checksum)
+
+    logger.info(
+        "Metadata pipeline finished successfully. "
+        "Indexed %d datasets and saved checksum %s",
+        len(transformed),
+        current_checksum,
+    )
 
 
 if __name__ == "__main__":
     main()
+    

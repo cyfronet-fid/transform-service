@@ -28,6 +28,51 @@ def chunk_iterable(iterable, size):
         yield chunk
 
 
+def delete_all_from_solr():
+    """Delete all documents from the Solr collection."""
+    url = f"{SOLR_URL}/solr/{SOLR_COLLECTION}/update?commit=true"
+    headers = {"Content-Type": "application/json"}
+
+    logger.info(
+        "Deleting all documents from Solr collection '%s'",
+        SOLR_COLLECTION,
+    )
+
+    try:
+        response = requests.post(
+            url,
+            json={"delete": {"query": "*:*"}},
+            headers=headers,
+            timeout=30,
+        )
+        response.raise_for_status()
+
+        logger.info(
+            "Successfully deleted all documents from Solr collection '%s'",
+            SOLR_COLLECTION,
+        )
+
+        return True
+
+    except requests.RequestException as exc:
+        logger.error(
+            "Failed to delete documents from Solr collection '%s': %s",
+            SOLR_COLLECTION,
+            exc,
+        )
+
+        if "response" in locals():
+            logger.error("Solr response: %s", response.text)
+
+        return False
+
+    except Exception:
+        logger.exception(
+            "Unexpected error while deleting documents from Solr"
+        )
+        return False
+
+
 def send_batch_to_solr(docs):
     """Send a batch of documents to Solr."""
     if not docs:
@@ -67,10 +112,7 @@ def send_batch_to_solr(docs):
         )
 
         if "response" in locals():
-            logger.error(
-                "Solr response: %s",
-                response.text,
-            )
+            logger.error("Solr response: %s", response.text)
 
         return False
 
@@ -88,7 +130,7 @@ def send_to_solr(all_docs):
 
     if not total:
         logger.warning("No documents to send to Solr")
-        return
+        return False
 
     logger.info(
         "Sending %d records to Solr collection '%s' in batches of %d",
@@ -125,11 +167,13 @@ def send_to_solr(all_docs):
         else:
             failed_batches += 1
 
-            logger.warning(
+            logger.error(
                 "Solr batch %d failed: %d documents",
                 batch_number,
                 len(batch),
             )
+
+    success = failed_batches == 0
 
     logger.info(
         "Solr indexing finished: %d/%d documents sent successfully, "
@@ -139,3 +183,5 @@ def send_to_solr(all_docs):
         successful_batches,
         failed_batches,
     )
+
+    return success
