@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.10.0](https://github.com/cyfronet-fid/transform-service/compare/v1.9.0...v1.10.0) (2026-08-12)
+
+
+### Features
+
+* [[#98](https://github.com/cyfronet-fid/transform-service/issues/98)] add cron scheduler for sage pipeline ([#130](https://github.com/cyfronet-fid/transform-service/issues/130)) ([c6d0b50](https://github.com/cyfronet-fid/transform-service/commit/c6d0b506bebd86b005cc0c1fd144021d6c1032ee))
+
+
+### Bug Fixes
+
+* sage a single dataset import, add logging, add checksum  ([#131](https://github.com/cyfronet-fid/transform-service/issues/131)) ([2f176ee](https://github.com/cyfronet-fid/transform-service/commit/2f176ee593917e982812acc925737a61da2fc5cb))
+
 ## [1.9.0](https://github.com/cyfronet-fid/transform-service/compare/v1.8.0...v1.9.0) (2026-08-11)
 
 
