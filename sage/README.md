@@ -22,9 +22,11 @@ or, if using Pipenv:
 pipenv run python -m sage.pipeline
 ```
 
+This executes a single pipeline run.
+
 ## Running on a schedule
 
-To run the pipeline continuously every 10 minutes (e.g. in a long-running container), use the scheduler entrypoint instead of invoking the pipeline directly:
+To run the pipeline continuously using the scheduler entrypoint:
 
 ```bash
 python -m sage.scheduler
@@ -36,7 +38,7 @@ or, if using Pipenv:
 pipenv run python -m sage.scheduler
 ```
 
-This runs the pipeline once immediately, then every 10 minutes via a cron-style trigger (`*/10 * * * *`, UTC). A single failed run is logged and does not stop the scheduler.
+The scheduler runs the pipeline periodically according to `SCHEDULER_INTERVAL_MINUTES` (10 minutes by default). It uses UTC and continues running if an individual pipeline execution fails. The first pipeline run occurs after the configured interval.
 
 ## Configuration
 
@@ -57,6 +59,18 @@ REQUEST_TIMEOUT=300
 SCHEDULER_INTERVAL_MINUTES=10
 ```
 
+### Configuration variables
+
+| Variable | Required | Default | Description |
+|---|---|---:|---|
+| `AGGREGATOR_URL` | Yes | - | SAGE Aggregator catalog query endpoint |
+| `AGGREGATOR_API_KEY` | Yes | - | API key used to access the Aggregator |
+| `AGGREGATOR_API_LIMIT` | No | `20` | Maximum number of catalog results requested from the Aggregator |
+| `SOLR_URL` | Yes | - | Solr server URL |
+| `SOLR_COLS_NAME` | Yes | - | Solr collection name |
+| `REQUEST_TIMEOUT` | No | `30` | HTTP request timeout in seconds |
+| `SCHEDULER_INTERVAL_MINUTES` | No | `10` | Interval between scheduled pipeline runs, in minutes |
+
 ## Pipeline workflow
 
 The pipeline synchronizes the SAGE Aggregator dataset snapshot with the Solr collection.
@@ -65,29 +79,31 @@ The pipeline synchronizes the SAGE Aggregator dataset snapshot with the Solr col
 flowchart TD
     A[Aggregator API] --> B[Fetch catalog snapshot]
     B --> C[Flatten datasets]
-    C --> D[Calculate SHA-256 checksum]
-    D --> E[Load previous checksum]
-    E --> F{Checksum changed?}
+    C --> D[Normalize snapshot for checksum]
+    D --> E[Remove dynamic odrl:hasPolicy.@id]
+    E --> F[Calculate SHA-256 checksum]
+    F --> G[Load previous checksum]
+    G --> H{Checksum changed?}
 
-    F -->|No| G[Stop - no changes]
-    F -->|Yes| H[Transform all datasets]
+    H -->|No| I[Stop - no changes]
+    H -->|Yes| J[Transform all datasets]
 
-    H --> I{Transformation successful?}
+    J --> K{Transformation successful?}
 
-    I -->|No| J[Stop - keep existing Solr data]
-    I -->|Yes| K[Delete all documents from Solr]
+    K -->|No| L[Stop - keep existing Solr data]
+    K -->|Yes| M[Delete all documents from Solr]
 
-    K --> L{Delete successful?}
+    M --> N{Delete successful?}
 
-    L -->|No| M[Stop - keep checksum unchanged]
-    L -->|Yes| N[Index transformed snapshot in batches]
+    N -->|No| O[Stop - keep checksum unchanged]
+    N -->|Yes| P[Index transformed snapshot in batches]
 
-    N --> O{Indexing successful?}
+    P --> Q{Indexing successful?}
 
-    O -->|No| P[Stop - keep checksum unchanged]
-    O -->|Yes| Q[Save new checksum]
+    Q -->|No| R[Stop - keep checksum unchanged]
+    Q -->|Yes| S[Save new checksum]
 
-    Q --> R[Pipeline finished successfully]
+    S --> T[Pipeline finished successfully]
 ```
 
 ### 1. Fetching data
@@ -104,20 +120,33 @@ Catalog-level metadata is also attached to each dataset:
 
 ### 2. Calculating the checksum
 
-After flattening the data, the pipeline calculates a SHA-256 checksum representing the complete dataset snapshot.
+After flattening the data, the pipeline calculates a SHA-256 checksum representing the dataset snapshot.
 
 Datasets are sorted by `@id` before calculating the checksum, so the order of datasets in the Aggregator response does not affect the result.
+
+Before calculating the checksum, the dynamically generated:
+
+```text
+odrl:hasPolicy.@id
+```
+
+value is removed from the checksum input.
+
+The Aggregator may generate a different policy ID for the same dataset between requests. Including this value in the checksum would therefore incorrectly indicate that the dataset had changed.
+
+The rest of the `odrl:hasPolicy` object remains part of the checksum, so actual changes to the policy content can still trigger a synchronization.
 
 The checksum changes when datasets are:
 
 - added
 - removed
 - modified
+- meaningfully changed in their policy content
 
 The previous checksum is stored in:
 
 ```text
-state/aggregator_checksum
+sage/state/aggregator_checksum
 ```
 
 ### 3. Skipping unchanged snapshots
@@ -142,7 +171,7 @@ transform_raw_dataset()
 
 Transformation happens **before modifying Solr**.
 
-This ensures that failures during fetching or transformation do not cause the existing Solr data to be deleted.
+This ensures that failures during transformation do not cause the existing Solr data to be deleted.
 
 If no datasets can be successfully transformed, the pipeline stops without modifying Solr.
 
@@ -229,14 +258,6 @@ The pipeline is designed to avoid modifying Solr until the new data has been suc
 \* The pipeline stops when the delete operation reports a failure.
 
 If indexing fails after the delete operation has succeeded, the Solr collection may temporarily contain an incomplete snapshot. The checksum is not updated in this case, so the next pipeline execution will retry the synchronization.
-
-## Running on a schedule
-
-The pipeline can also be run continuously (every SCHEDULER_INTERVAL_MINUTES) using the scheduler entrypoint:
-
-```bash
-python -m sage.scheduler
-```
 
 ## Running tests
 

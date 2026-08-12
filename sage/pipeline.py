@@ -16,9 +16,24 @@ def calculate_checksum(datasets):
     Calculate a deterministic checksum for the dataset snapshot.
 
     Dataset order does not affect the checksum.
+
+    The dynamically generated ODRL policy ID is excluded because
+    the Aggregator may generate a different value for the same
+    dataset between requests.
     """
-    normalized = sorted(
-        datasets,
+    normalized = []
+
+    for dataset in datasets:
+        dataset_copy = json.loads(json.dumps(dataset))
+
+        policy = dataset_copy.get("odrl:hasPolicy")
+
+        if isinstance(policy, dict):
+            policy.pop("@id", None)
+
+        normalized.append(dataset_copy)
+
+    normalized.sort(
         key=lambda dataset: dataset.get("@id", ""),
     )
 
@@ -31,7 +46,10 @@ def calculate_checksum(datasets):
 
     checksum = hashlib.sha256(serialized.encode("utf-8")).hexdigest()
 
-    logger.debug("Calculated dataset checksum: %s", checksum)
+    logger.debug(
+        "Calculated dataset checksum: %s",
+        checksum,
+    )
 
     return checksum
 
@@ -53,10 +71,16 @@ def flatten_datasets(catalogs):
         )
         return datasets
 
-    logger.debug("Processing %d catalog objects", len(catalogs))
+    logger.debug(
+        "Processing %d catalog objects",
+        len(catalogs),
+    )
 
     for catalog in catalogs:
-        raw_datasets = catalog.get("dcat:dataset", [])
+        raw_datasets = catalog.get(
+            "dcat:dataset",
+            [],
+        )
 
         if isinstance(raw_datasets, dict):
             logger.debug("Found a single dataset object in catalog")
@@ -109,7 +133,10 @@ def main():
     # 2. Flatten catalogs into datasets
     raw_datasets = flatten_datasets(data)
 
-    logger.info("Total raw datasets: %d", len(raw_datasets))
+    logger.info(
+        "Total raw datasets: %d",
+        len(raw_datasets),
+    )
 
     if not raw_datasets:
         logger.warning("No datasets found in Aggregator response")
@@ -119,8 +146,14 @@ def main():
     current_checksum = calculate_checksum(raw_datasets)
     previous_checksum = get_checksum()
 
-    logger.debug("Previous checksum: %s", previous_checksum)
-    logger.debug("Current checksum: %s", current_checksum)
+    logger.debug(
+        "Previous checksum: %s",
+        previous_checksum,
+    )
+    logger.debug(
+        "Current checksum: %s",
+        current_checksum,
+    )
 
     # 4. Skip Solr update if nothing changed
     if current_checksum == previous_checksum:

@@ -1,4 +1,5 @@
 """Aggregator client for fetching the catalog from PCSS"""
+
 from typing import Any, Dict
 
 import requests
