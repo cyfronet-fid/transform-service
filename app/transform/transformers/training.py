@@ -67,7 +67,7 @@ class TrainingTransformer(BaseTransformer):
         without a need to create another dataframe and merging"""
         df = df.withColumn(TYPE, lit(self.type))
         df = self.rename_cols(df)
-        df = df.withColumn("catalogue", df["catalogue"])
+        df = df.withColumn("catalogue", df["catalogue"]) if "catalogue" in df else df
         df = df.withColumn("catalogues", array(df["catalogue"]))
         df = df.withColumn("url", self.get_first_element(df["urls"]))
 

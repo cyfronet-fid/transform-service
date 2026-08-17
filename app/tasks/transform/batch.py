@@ -65,5 +65,7 @@ def transform_batch(
         return CeleryTaskStatus(status=SUCCESS).dict()
 
     except Exception as e:
-        logger.error(f"{type_} data update has failed, error message: {e}")
+        logger.error(
+            f"{type_} data update has failed, error message: {e}", exc_info=True
+        )
         return CeleryTaskStatus(status=FAILURE, reason=str(e)).dict()
