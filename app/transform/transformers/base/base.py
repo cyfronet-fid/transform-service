@@ -42,18 +42,21 @@ class BaseTransformer(ABC):
         self.spark = spark
         self.harvested_properties = {}
 
-    def __call__(self, df: DataFrame) -> DataFrame:
+    def __call__(self, df: DataFrame) -> DataFrame | None:
         """Transform resources"""
-        df = self.apply_simple_trans(df)
-        if self.harvested_schema:
-            df = self.apply_complex_trans(df)
+        try:
+            df = self.apply_simple_trans(df)
+            if self.harvested_schema:
+                df = self.apply_complex_trans(df)
 
-        df = self.apply_common_trans(df)
-        df = self.cast_columns(df)
-        df = self.filter_columns(df)
-        self.validate(df)
+            df = self.apply_common_trans(df)
+            df = self.cast_columns(df)
+            df = self.filter_columns(df)
+            self.validate(df)
 
-        return df
+            return df
+        except Exception as e:
+            logger.error(f"[ERROR] {e}")
 
     def apply_common_trans(self, df: DataFrame) -> DataFrame:
         """Apply common transformations"""

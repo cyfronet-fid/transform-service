@@ -15,6 +15,7 @@ APPROVED_STATUSES = (
     APPROVED_TRAINING_STATUS,
     APPROVED_GUIDELINE_STATUS,
     APPROVED_ADAPTER_STATUS,
+    "approved",
 )
 logger = logging.getLogger(__name__)
 
