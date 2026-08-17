@@ -18,6 +18,8 @@ AMS_SUBSCRIPTION_MAP = {
     "adapter-delete": "transformer-adapter-delete",
 }
 
+background_tasks = set()
+
 
 async def start_ams_subscription():
     if not settings.AMS_SUBSCRIPTION:
@@ -35,6 +37,8 @@ async def start_ams_subscription():
         logger.info(f"[AMS] Using subscription {subscription_name} for topic {topic}")
 
         await ensure_subscription(topic, subscription_name)
-        asyncio.create_task(ams_consume_loop(subscription_name))
+        task = asyncio.create_task(ams_consume_loop(subscription_name))
+        background_tasks.add(task)
+        task.add_done_callback(background_tasks.discard)
 
     logger.info("[AMS] All subscriptions active.")
