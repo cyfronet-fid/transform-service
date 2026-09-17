@@ -1,6 +1,4 @@
-# pylint: disable=line-too-long
-"""Endpoint for full collection update"""
-
+import logging
 from typing import Literal
 
 from fastapi import APIRouter
@@ -9,6 +7,7 @@ from app.services.mp_pc.data import get_data
 from app.settings import settings
 from app.tasks.transform.batch import transform_batch
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
@@ -29,6 +28,10 @@ async def full_update(
     ],
 ) -> dict[str, str | None]:
     """Perform a full update of data collection/collections"""
+    logger.info(
+        f"[ManualUpdate] Received request for full update: data_type='{data_type}'"
+    )
+
     tasks_ids = {
         settings.SERVICE: None,
         settings.DATASOURCE: None,
@@ -61,19 +64,41 @@ async def full_update(
         # Update single collection
         await update_single_col(data_type, tasks_ids)
 
+    logger.info(
+        f"[ManualUpdate] Full update task scheduling complete. Task IDs: {tasks_ids}"
+    )
     return tasks_ids
 
 
 async def update_single_col(data_type: str, tasks_id: dict) -> None:
     """Update whole, single collection"""
     data_address = settings.COLLECTIONS[data_type]["ADDRESS"]
-    data = await get_data(data_type, data_address)
+    logger.info(
+        f"[ManualUpdate] Fetching full data for collection='{data_type}' from address='{data_address}'"
+    )
+
+    try:
+        data = await get_data(data_type, data_address)
+    except Exception as e:
+        logger.error(
+            f"[ManualUpdate] Exception occurred while retrieving data for collection='{data_type}' from '{data_address}': {e}",
+            exc_info=True,
+        )
+        data = None
 
     if data:
-        # Get data, transform data, delete current data of the same type, upload data
+        record_count = len(data) if isinstance(data, list) else 1
+        logger.info(
+            f"[ManualUpdate] Successfully retrieved {record_count} items for collection='{data_type}'. Dispatching transform_batch task..."
+        )
         update_task = transform_batch.delay(data_type, data, full_update=True)
         tasks_id[data_type] = update_task.id
-    else:
-        tasks_id[data_type] = (
-            f"Retrieving data from {data_address} has failed. Please try again. Checks logs for details."
+        logger.info(
+            f"[ManualUpdate] Dispatched transform_batch task for collection='{data_type}', task_id={update_task.id}"
         )
+    else:
+        error_msg = f"Retrieving data from {data_address} has failed. Please try again. Check logs for details."
+        logger.error(
+            f"[ManualUpdate] Failed to retrieve data for collection='{data_type}' from address='{data_address}'"
+        )
+        tasks_id[data_type] = error_msg
