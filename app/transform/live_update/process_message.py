@@ -74,25 +74,34 @@ def _process_ams_message(message_data, ack_id=None) -> None:
     if isinstance(message_data, str):
         try:
             frame_body = json.loads(message_data)
-        except json.JSONDecodeError:
-            logger.error(f"[AMS] Failed to parse message as JSON: {message_data[:100]}")
+        except json.JSONDecodeError as e:
+            logger.error(
+                f"[AMS] Failed to parse message as JSON: {e}. Message content: {message_data[:300]}"
+            )
             return
     else:
         frame_body = message_data
 
-    # Extract subscription name from ack_id
-    # Format: projects/{project}/subscriptions/{subscription_name}:{message_id}
-    # Example: projects/eosc-beyond-providers/subscriptions/transformer-adapter-update:22
+    # Extract subscription name if ack_id or subscription is provided
+    # Formats:
+    # 1. Full ack_id: projects/{project}/subscriptions/{subscription_name}:{message_id}
+    # 2. Subscription name: sf-training_resource-create, transformer-adapter-update, etc.
     subscription_name = None
     if ack_id:
-        try:
-            subscription_name = ack_id.split("/subscriptions/")[1].split(":")[0]
+        if "/subscriptions/" in str(ack_id):
+            try:
+                subscription_name = ack_id.split("/subscriptions/")[1].split(":")[0]
+                logger.info(
+                    f"[AMS] Extracted subscription name '{subscription_name}' from ack_id: {ack_id}"
+                )
+            except (IndexError, AttributeError):
+                logger.warning(
+                    f"[AMS] Failed to extract subscription name from ack_id: {ack_id}"
+                )
+        else:
+            subscription_name = str(ack_id)
             logger.info(
-                f"[AMS] Extracted subscription name from ack_id: {subscription_name}"
-            )
-        except (IndexError, AttributeError):
-            logger.warning(
-                f"[AMS] Failed to extract subscription name from ack_id: {ack_id}"
+                f"[AMS] Received subscription name directly: {subscription_name}"
             )
 
     # Extract action and resource type from subscription name
@@ -102,6 +111,24 @@ def _process_ams_message(message_data, ack_id=None) -> None:
     action = None
 
     if subscription_name:
+        # clean_sub = subscription_name
+        # for prefix in ("sf-", "transformer-"): # add yours if testing
+        #     if clean_sub.startswith(prefix):
+        #         clean_sub = clean_sub[len(prefix) :]
+        #         break
+        #
+        # parts = clean_sub.split("-")
+        # if len(parts) >= 2 and parts[-1] in ("create", "update", "delete"):
+        #     action = parts[-1]
+        #     raw_collection = "-".join(parts[:-1])
+        # elif len(parts) >= 3:
+        #     action = parts[-1]
+        #     raw_collection = "-".join(parts[1:-1])
+        #
+        # if action and raw_collection:
+        #     logger.info(
+        #         f"[AMS] Extracted from subscription '{subscription_name}': action={action}, resource={raw_collection}"
+        #     )
         # Parse subscription name: "transformer-adapter-update" -> action="update", resource="adapter"
         parts = subscription_name.split("-")
         if len(parts) >= 3:
@@ -124,7 +151,7 @@ def _process_ams_message(message_data, ack_id=None) -> None:
             raw_collection = "training_resource"
         else:
             logger.warning(
-                f"[AMS] Could not determine resource type from message: {list(frame_body.keys())}"
+                f"[AMS] Could not determine resource type from subscription or message keys: {list(frame_body.keys())}"
             )
             return
 
@@ -141,7 +168,7 @@ def _process_ams_message(message_data, ack_id=None) -> None:
 
     collection, data, data_id = extract_data_from_frame(raw_collection, frame_body)
     logger.info(
-        f"Started to process AMS message, type: {raw_collection}, id: {data_id}, action: {action}"
+        f"[AMS] Started processing message: type={raw_collection}, collection={collection}, id={data_id}, action={action}, active={active}, suspended={suspended}, status='{status}'"
     )
 
     if action == "create":
@@ -199,11 +226,14 @@ def handle_create_action(active, suspended, status, collection, data, data_id):
         data_id (str): The ID of the data.
     """
     if active and not suspended and status in APPROVED_STATUSES:
-        logger.info(f"Creating action - {collection=}, ID: {data_id}")
+        logger.info(
+            f"[LiveUpdate] Scheduling create/transform batch task for collection='{collection}', id='{data_id}'"
+        )
         transform_batch.delay(collection, data, full_update=False)
     else:
         logger.info(
-            f"Aborting create action {collection=}, {data_id=}. Not active or suspended or status not approved."
+            f"[LiveUpdate] Aborting create action for collection='{collection}', id='{data_id}'. "
+            f"Reason: active={active}, suspended={suspended}, status='{status}' (approved statuses: {APPROVED_STATUSES})"
         )
 
 
@@ -219,13 +249,27 @@ def handle_update_action(active, suspended, status, collection, data, data_id):
         data (dict): The data to be processed.
         data_id (str): The ID of the data.
     """
+    logger.info(
+        f"[LiveUpdate] handle_update_action: collection='{collection}', id='{data_id}', "
+        f"active={active}, suspended={suspended}, status='{status}'"
+    )
     if active and not suspended and status in APPROVED_STATUSES:
-        logger.info(f"Update action - {collection=}, ID: {data_id}")
+        logger.info(
+            f"[LiveUpdate] Scheduling update/transform batch task for collection='{collection}', id='{data_id}'"
+        )
         transform_batch.delay(collection, data, full_update=False)
     else:
-        if check_document_exists(collection, data_id):
-            logger.info(f"Delete action - {collection=}, ID: {data_id}")
+        doc_exists = check_document_exists(collection, data_id)
+        if doc_exists:
+            logger.info(
+                f"[LiveUpdate] Item is inactive/unapproved but exists in collection='{collection}', id='{data_id}'. "
+                "Scheduling delete task."
+            )
             delete_data_by_id.delay(collection, data, delete=True)
+        else:
+            logger.info(
+                f"[LiveUpdate] Item is inactive/unapproved and does NOT exist in collection='{collection}', id='{data_id}'. Skipping delete."
+            )
 
 
 def handle_delete_action(collection, data_id, data):
@@ -237,6 +281,13 @@ def handle_delete_action(collection, data_id, data):
         data_id (str): The ID of the data to be deleted.
         data (dict): The data to be deleted.
     """
-    if check_document_exists(collection, data_id):
-        logger.info(f"Delete action - {collection=}, ID: {data_id}")
+    doc_exists = check_document_exists(collection, data_id)
+    if doc_exists:
+        logger.info(
+            f"[LiveUpdate] Scheduling delete task for collection='{collection}', id='{data_id}'"
+        )
         delete_data_by_id.delay(collection, data, delete=True)
+    else:
+        logger.info(
+            f"[LiveUpdate] Delete action skipped. Document does not exist in collection='{collection}', id='{data_id}'"
+        )

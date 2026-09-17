@@ -55,8 +55,9 @@ class BaseTransformer(ABC):
             self.validate(df)
 
             return df
-        except Exception as e:
-            logger.error(f"[ERROR] {e}")
+        except Exception:
+            logger.exception("Transformation failed for type=%s", self.type)
+            raise
 
     def apply_common_trans(self, df: DataFrame) -> DataFrame:
         """Apply common transformations"""
