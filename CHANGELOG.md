@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.1](https://github.com/cyfronet-fid/transform-service/compare/v1.10.0...v1.10.1) (2026-09-24)
+
+
+### Bug Fixes
+
+* handle new federated api response format ([a78a3b9](https://github.com/cyfronet-fid/transform-service/commit/a78a3b9b279c86b489585fa9c9ea5ad6af26713c))
+
 ## [1.10.0](https://github.com/cyfronet-fid/transform-service/compare/v1.9.0...v1.10.0) (2026-08-12)
 
 
