@@ -1,6 +1,11 @@
 from unittest.mock import MagicMock, patch
 
-from sage.pipeline import calculate_checksum, flatten_datasets, main
+from sage.pipeline import (
+    calculate_checksum,
+    flatten_datasets,
+    main,
+    normalize_for_checksum,
+)
 
 
 def test_calculate_checksum_is_deterministic():
@@ -508,3 +513,152 @@ def test_calculate_checksum_does_not_modify_dataset():
     calculate_checksum([dataset])
 
     assert dataset["odrl:hasPolicy"]["@id"] == "policy-id-1"
+
+
+def test_flatten_datasets_supports_v017_jsonld_format():
+    catalogs = [
+        {
+            "http://www.w3.org/ns/dcat#dataset": {
+                "@id": "dataset-1",
+                "@type": "http://www.w3.org/ns/dcat#Dataset",
+                "edc:id": "dataset-1",
+                "edc:name": "Dataset 1",
+            },
+            "https://w3id.org/dspace/2025/1/participantId": {
+                "@id": "did:web:test.example",
+            },
+            "edc:originator": "https://connector.example",
+        }
+    ]
+
+    result = flatten_datasets(catalogs)
+
+    assert len(result) == 1
+    assert result[0]["@id"] == "dataset-1"
+    assert result[0]["participant_id"] == "did:web:test.example"
+    assert result[0]["catalogue"] == "did:web:test.example"
+    assert result[0]["originator"] == "https://connector.example"
+
+
+def test_flatten_datasets_supports_v017_single_dataset_and_missing_dataset():
+    catalogs = [
+        {
+            "https://w3id.org/dspace/2025/1/participantId": {
+                "@id": "did:web:participant-1",
+            },
+            "http://www.w3.org/ns/dcat#dataset": {
+                "@id": "dataset-1",
+            },
+        },
+        {
+            "https://w3id.org/dspace/2025/1/participantId": {
+                "@id": "did:web:participant-2",
+            },
+        },
+    ]
+
+    result = flatten_datasets(catalogs)
+
+    assert len(result) == 1
+    assert result[0]["@id"] == "dataset-1"
+    assert result[0]["participant_id"] == "did:web:participant-1"
+
+
+def test_calculate_checksum_ignores_v017_odrl_policy_id():
+    dataset_1 = {
+        "@id": "dataset-1",
+        "http://www.w3.org/ns/odrl/2/hasPolicy": {
+            "@id": "policy-1",
+            "permission": "read",
+        },
+    }
+
+    dataset_2 = {
+        "@id": "dataset-1",
+        "http://www.w3.org/ns/odrl/2/hasPolicy": {
+            "@id": "policy-2",
+            "permission": "read",
+        },
+    }
+
+    assert calculate_checksum([dataset_1]) == calculate_checksum([dataset_2])
+
+
+def test_calculate_checksum_ignores_dynamic_v017_policy_id():
+    dataset = {
+        "@id": "dataset-1",
+        "edc:name": "Test dataset",
+        "http://www.w3.org/ns/odrl/2/hasPolicy": {
+            "@id": "policy-id-1",
+            "@type": "odrl:Offer",
+            "odrl:permission": [],
+            "odrl:prohibition": [],
+            "odrl:obligation": [],
+        },
+    }
+
+    dataset_with_different_policy_id = {
+        "@id": "dataset-1",
+        "edc:name": "Test dataset",
+        "http://www.w3.org/ns/odrl/2/hasPolicy": {
+            "@id": "policy-id-2",
+            "@type": "odrl:Offer",
+            "odrl:permission": [],
+            "odrl:prohibition": [],
+            "odrl:obligation": [],
+        },
+    }
+
+    assert calculate_checksum([dataset]) == calculate_checksum(
+        [dataset_with_different_policy_id]
+    )
+
+def test_normalize_for_checksum_removes_dynamic_ids():
+    dataset = {
+        "@id": "dataset-1",
+        "http://www.w3.org/ns/dcat#service": {
+            "@id": "service-id-1",
+            "http://www.w3.org/ns/dcat#endpointURL": "https://example.com",
+        },
+        "http://www.w3.org/ns/dcat#distribution": {
+            "http://www.w3.org/ns/dcat#accessService": {
+                "@id": "access-service-id-1",
+                "http://www.w3.org/ns/dcat#endpointURL": "https://example.com",
+            }
+        },
+        "http://www.w3.org/ns/odrl/2/hasPolicy": {
+            "@id": "policy-id-1",
+            "http://www.w3.org/ns/odrl/2/permission": [],
+        },
+    }
+
+    normalized = normalize_for_checksum(dataset)
+
+    assert normalized["@id"] == "dataset-1"
+
+    assert "@id" not in normalized[
+        "http://www.w3.org/ns/dcat#service"
+    ]
+
+    assert "@id" not in normalized[
+        "http://www.w3.org/ns/dcat#distribution"
+    ]["http://www.w3.org/ns/dcat#accessService"]
+
+    assert "@id" not in normalized[
+        "http://www.w3.org/ns/odrl/2/hasPolicy"
+    ]
+
+def test_calculate_checksum_includes_dataset_id():
+    dataset_1 = {
+        "@id": "dataset-1",
+        "name": "Test dataset",
+    }
+
+    dataset_2 = {
+        "@id": "dataset-2",
+        "name": "Test dataset",
+    }
+
+    assert calculate_checksum([dataset_1]) != calculate_checksum(
+        [dataset_2]
+    )
