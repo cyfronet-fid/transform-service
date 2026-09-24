@@ -8,7 +8,7 @@ from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from sentry_sdk.integrations.celery import CeleryIntegration
 from sentry_sdk.integrations.redis import RedisIntegration
 
-from app.api.endpoints import solr_api_router, transform_api_router
+from app.api.endpoints import ams_router, solr_api_router, transform_api_router
 from app.logger import LOGGING_CONFIG
 from app.services.ams.startup import start_ams_subscription
 from app.services.jms.connector import close_jms_subscription, start_jms_subscription
@@ -26,6 +26,7 @@ def get_app():
 
     app.include_router(router=transform_api_router)
     app.include_router(router=solr_api_router)
+    app.include_router(router=ams_router)
 
     if settings.SENTRY_DSN:
         sentry_sdk.init(dsn=settings.SENTRY_DSN)

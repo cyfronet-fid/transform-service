@@ -6,6 +6,7 @@ from typing import List
 
 import aiohttp
 
+from app.services.ams.health import ams_health_tracker
 from app.settings import settings
 from app.transform.live_update.process_message import process_message
 
@@ -51,7 +52,9 @@ async def ensure_subscription(topic: str, subscription: str):
                 logger.info(f"[AMS] Subscription already exists: {subscription}")
                 return
 
-            logger.error(f"[AMS] Subscription error: {resp.status} -> {text}")
+            logger.error(
+                f"[AMS] Subscription setup error for '{subscription}': status={resp.status} response={text}"
+            )
             raise RuntimeError(f"[AMS] Subscription error: {resp.status} -> {text}")
 
 
@@ -75,22 +78,40 @@ async def pull_messages(subscription: str):
     # Shorter timeout since we're not long-polling
     timeout = aiohttp.ClientTimeout(total=30, connect=10, sock_connect=10, sock_read=30)
 
-    async with aiohttp.ClientSession(timeout=timeout) as session:
-        async with session.post(url, json=payload, headers=_headers()) as resp:
-            if resp.status != 200:
-                text = await resp.text()
-                logger.error(
-                    f"[AMS] Pull failed for {subscription}: {resp.status} -> {text}"
-                )
-                return []
+    try:
+        async with aiohttp.ClientSession(timeout=timeout) as session:
+            async with session.post(url, json=payload, headers=_headers()) as resp:
+                if resp.status != 200:
+                    text = await resp.text()
+                    logger.error(
+                        f"[AMS] Pull failed for subscription={subscription}: HTTP {resp.status} -> {text}"
+                    )
+                    ams_health_tracker.record_error(subscription)
+                    return []
 
-            data = await resp.json()
-            messages = data.get("receivedMessages", [])
-            if messages:
-                logger.info(
-                    f"[AMS] Received {len(messages)} messages from {subscription}"
+                data = await resp.json()
+                messages = data.get("receivedMessages", [])
+                ams_health_tracker.record_poll_success(
+                    subscription, count=len(messages)
                 )
-            return messages
+
+                if messages:
+                    logger.info(
+                        f"[AMS] Received {len(messages)} messages from subscription={subscription}"
+                    )
+                else:
+                    logger.debug(
+                        f"[AMS] Poll succeeded for {subscription}, 0 messages received."
+                    )
+
+                return messages
+    except Exception as e:
+        logger.error(
+            f"[AMS] Exception during pull for subscription={subscription}: {e}",
+            exc_info=True,
+        )
+        ams_health_tracker.record_error(subscription)
+        return []
 
 
 async def ack_messages(subscription: str, ack_ids: List[str]):
@@ -106,20 +127,31 @@ async def ack_messages(subscription: str, ack_ids: List[str]):
         f"{project}/subscriptions/{subscription}:acknowledge"
     )
 
-    logger.debug(f"[AMS] Acknowledging {len(ack_ids)} messages for {subscription}")
+    logger.debug(
+        f"[AMS] Acknowledging {len(ack_ids)} messages for subscription={subscription}"
+    )
     payload = {"ackIds": ack_ids}
 
-    async with aiohttp.ClientSession() as session:
-        async with session.post(url, json=payload, headers=_headers()) as resp:
-            if resp.status != 200:
-                text = await resp.text()
-                logger.error(
-                    f"[AMS] ACK failed for {subscription}: {resp.status} -> {text}"
-                )
-                return False
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.post(url, json=payload, headers=_headers()) as resp:
+                if resp.status != 200:
+                    text = await resp.text()
+                    logger.error(
+                        f"[AMS] ACK failed for subscription={subscription}: HTTP {resp.status} -> {text}"
+                    )
+                    return False
 
-            logger.info(f"[AMS] Successfully acknowledged {len(ack_ids)} messages")
-            return True
+                logger.info(
+                    f"[AMS] Successfully acknowledged {len(ack_ids)} messages for subscription={subscription}"
+                )
+                return True
+    except Exception as e:
+        logger.error(
+            f"[AMS] Exception during ACK for subscription={subscription}: {e}",
+            exc_info=True,
+        )
+        return False
 
 
 # ------------------------------------------------------------
@@ -137,7 +169,7 @@ async def ams_consume_loop(subscription: str):
 
             if not messages:
                 logger.debug(
-                    f"[AMS] No messages received, waiting {settings.AMS_POLL_INTERVAL}s"
+                    f"[AMS] No messages received for subscription={subscription}, waiting {settings.AMS_POLL_INTERVAL}s"
                 )
                 await asyncio.sleep(settings.AMS_POLL_INTERVAL)
                 continue
@@ -148,54 +180,79 @@ async def ams_consume_loop(subscription: str):
             for m in messages:
                 ack_id = m.get("ackId")
                 if not ack_id:
-                    logger.warning("[AMS] Message missing ackId")
+                    logger.warning(
+                        f"[AMS] Message missing ackId in subscription={subscription}"
+                    )
                     continue
 
                 ack_ids.append(ack_id)
                 raw_data = m.get("message", {}).get("data")
 
                 if not raw_data:
-                    logger.warning("[AMS] Message missing data field")
+                    logger.warning(
+                        f"[AMS] Message missing data field in subscription={subscription}, ack_id={ack_id}"
+                    )
                     continue
 
                 try:
                     decoded = base64.b64decode(raw_data).decode("utf-8")
                     logger.info(
-                        f"[AMS] Decoded message: {decoded[:100]}..."
-                    )  # Log first 100 chars
-
-                    # Run sync function in thread pool to avoid blocking
-                    await asyncio.get_event_loop().run_in_executor(
-                        executor, process_message, decoded, ack_id
+                        f"[AMS] Decoded message for subscription={subscription}: {decoded[:150]}..."
                     )
-                    logger.info(f"[AMS] Successfully processed message")
+
+                    # Run sync function in thread pool to avoid blocking async loop.
+                    # Pass both decoded message and subscription name (or ack_id)
+                    await asyncio.get_event_loop().run_in_executor(
+                        executor, process_message, decoded, subscription
+                    )
+                    ams_health_tracker.record_message_processed(subscription)
+                    logger.info(
+                        f"[AMS] Successfully processed message for subscription={subscription}, ack_id={ack_id}"
+                    )
 
                 except base64.binascii.Error as e:
-                    logger.error(f"[AMS] Base64 decode error: {e}")
+                    logger.error(
+                        f"[AMS] Base64 decode error in subscription={subscription}: {e}"
+                    )
+                    ams_health_tracker.record_error(subscription)
                     failed_count += 1
                 except UnicodeDecodeError as e:
-                    logger.error(f"[AMS] UTF-8 decode error: {e}")
+                    logger.error(
+                        f"[AMS] UTF-8 decode error in subscription={subscription}: {e}"
+                    )
+                    ams_health_tracker.record_error(subscription)
                     failed_count += 1
                 except Exception as e:
-                    logger.error(f"[AMS] Processing error: {e}", exc_info=True)
+                    logger.error(
+                        f"[AMS] Processing error in subscription={subscription}: {e}",
+                        exc_info=True,
+                    )
+                    ams_health_tracker.record_error(subscription)
                     failed_count += 1
 
             # Acknowledge all processed messages (even failed ones, to not block the subscription)
             if ack_ids:
                 success = await ack_messages(subscription, ack_ids)
                 if not success:
-                    logger.warning(f"[AMS] Failed to acknowledge messages")
+                    logger.warning(
+                        f"[AMS] Failed to acknowledge messages for subscription={subscription}"
+                    )
 
                 if failed_count > 0:
                     logger.warning(
-                        f"[AMS] {failed_count}/{len(ack_ids)} messages failed processing"
+                        f"[AMS] {failed_count}/{len(ack_ids)} messages failed processing in subscription={subscription}"
                     )
 
         except asyncio.TimeoutError:
-            logger.debug(f"[AMS] Long-poll timeout (no messages) for {subscription}")
+            logger.debug(
+                f"[AMS] Timeout during poll cycle for subscription={subscription}"
+            )
             await asyncio.sleep(settings.AMS_POLL_INTERVAL)
             continue
 
         except Exception as e:
-            logger.exception(f"[AMS] Unexpected loop error for {subscription}: {e}")
+            logger.exception(
+                f"[AMS] Unexpected loop error for subscription={subscription}: {e}"
+            )
+            ams_health_tracker.record_error(subscription)
             await asyncio.sleep(5)
