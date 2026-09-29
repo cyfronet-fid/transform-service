@@ -181,23 +181,26 @@ async def ams_consume_loop(subscription: str):
                 ack_id = m.get("ackId")
                 if not ack_id:
                     logger.warning(
-                        f"[AMS] Message missing ackId in subscription={subscription}"
+                        "[AMS] Message missing ackId in subscription=%s", subscription
                     )
                     continue
 
-                ack_ids.append(ack_id)
                 raw_data = m.get("message", {}).get("data")
 
                 if not raw_data:
                     logger.warning(
-                        f"[AMS] Message missing data field in subscription={subscription}, ack_id={ack_id}"
+                        "[AMS] Message missing data field in subscription=%s, ack_id=%s",
+                        subscription,
+                        ack_id,
                     )
                     continue
 
                 try:
                     decoded = base64.b64decode(raw_data).decode("utf-8")
                     logger.info(
-                        f"[AMS] Decoded message for subscription={subscription}: {decoded[:150]}..."
+                        "[AMS] Decoded message for subscription=%s: %s...",
+                        subscription,
+                        decoded[:150],
                     )
 
                     # Run sync function in thread pool to avoid blocking async loop.
@@ -207,41 +210,54 @@ async def ams_consume_loop(subscription: str):
                     )
                     ams_health_tracker.record_message_processed(subscription)
                     logger.info(
-                        f"[AMS] Successfully processed message for subscription={subscription}, ack_id={ack_id}"
+                        "[AMS] Successfully processed message for subscription=%s, ack_id=%s",
+                        subscription,
+                        ack_id,
                     )
+                    ack_ids.append(ack_id)
 
                 except base64.binascii.Error as e:
                     logger.error(
-                        f"[AMS] Base64 decode error in subscription={subscription}: {e}"
+                        "[AMS] Base64 decode error in subscription=%s: %s",
+                        subscription,
+                        e,
                     )
                     ams_health_tracker.record_error(subscription)
                     failed_count += 1
                 except UnicodeDecodeError as e:
                     logger.error(
-                        f"[AMS] UTF-8 decode error in subscription={subscription}: {e}"
+                        "[AMS] UTF-8 decode error in subscription=%s: %s",
+                        subscription,
+                        e,
                     )
                     ams_health_tracker.record_error(subscription)
                     failed_count += 1
                 except Exception as e:
                     logger.error(
-                        f"[AMS] Processing error in subscription={subscription}: {e}",
+                        "[AMS] Processing error in subscription=%s: %s",
+                        subscription,
+                        e,
                         exc_info=True,
                     )
                     ams_health_tracker.record_error(subscription)
                     failed_count += 1
 
-            # Acknowledge all processed messages (even failed ones, to not block the subscription)
+            # Acknowledge only successfully processed messages
             if ack_ids:
                 success = await ack_messages(subscription, ack_ids)
                 if not success:
                     logger.warning(
-                        f"[AMS] Failed to acknowledge messages for subscription={subscription}"
+                        "[AMS] Failed to acknowledge messages for subscription=%s",
+                        subscription,
                     )
 
-                if failed_count > 0:
-                    logger.warning(
-                        f"[AMS] {failed_count}/{len(ack_ids)} messages failed processing in subscription={subscription}"
-                    )
+            if failed_count > 0:
+                logger.warning(
+                    "[AMS] %s messages failed processing in subscription=%s and were not acknowledged",
+                    failed_count,
+                    subscription,
+                )
+
 
         except asyncio.TimeoutError:
             logger.debug(

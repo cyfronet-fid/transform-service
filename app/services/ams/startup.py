@@ -30,7 +30,8 @@ async def start_ams_subscription():
         return
 
     logger.info(
-        f"[AMS] Preparing pull subscriptions for topics: {settings.AMS_TOPICS}..."
+        "[AMS] Preparing pull subscriptions for topics: %s...",
+        settings.AMS_TOPICS,
     )
 
     for full_topic in settings.AMS_TOPICS:
@@ -39,28 +40,35 @@ async def start_ams_subscription():
 
         if topic not in AMS_SUBSCRIPTION_MAP:
             logger.warning(
-                f"[AMS] No subscription mapping found for topic '{topic}'. Skipping."
+                "[AMS] No subscription mapping found for topic '%s'. Skipping.",
+                topic,
             )
             continue
 
         subscription_name = AMS_SUBSCRIPTION_MAP[topic]
+        ams_health_tracker.register_consumer(subscription_name)
 
-        logger.info(f"[AMS] Using subscription {subscription_name} for topic {topic}")
+        logger.info("[AMS] Using subscription %s for topic %s", subscription_name, topic)
 
         try:
             await ensure_subscription(topic, subscription_name)
             task = asyncio.create_task(ams_consume_loop(subscription_name))
             background_tasks.add(task)
             task.add_done_callback(background_tasks.discard)
-            ams_health_tracker.register_consumer(subscription_name, task)
+            ams_health_tracker.set_task(subscription_name, task)
             logger.info(
-                f"[AMS] Started consumer task for subscription '{subscription_name}'"
+                "[AMS] Started consumer task for subscription '%s'",
+                subscription_name,
             )
         except Exception as e:
             logger.error(
-                f"[AMS] Failed to initialize subscription '{subscription_name}' for topic '{topic}': {e}",
+                "[AMS] Failed to initialize subscription '%s' for topic '%s': %s",
+                subscription_name,
+                topic,
+                e,
                 exc_info=True,
             )
             ams_health_tracker.record_error(subscription_name)
 
     logger.info("[AMS] All requested subscriptions initialized.")
+
