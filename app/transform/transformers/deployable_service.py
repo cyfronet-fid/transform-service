@@ -115,21 +115,25 @@ class DeployableServiceTransformer(BaseTransformer):
         # Extract creator names.
         df = df.withColumn(
             "creator_names",
-            expr(f"""
+            expr(
+                f"""
                 transform({creators}, x ->
                     nullif(trim(concat_ws(' ', x.firstName, x.lastName)), '')
                 )
-            """),
+            """
+            ),
         )
 
         # Extract creator identifiers (currently email addresses).
         df = df.withColumn(
             "creator_identifiers",
-            expr(f"""
+            expr(
+                f"""
                 transform({creators}, x ->
                     nullif(x.email, '')
                 )
-            """),
+            """
+            ),
         )
 
         # Build searchable creator text.
