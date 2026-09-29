@@ -97,7 +97,7 @@ class AMSHealthTracker:
                 and not is_cancelling
             )
 
-            if not alive and task is not None:
+            if not alive:
                 all_alive = False
 
             if stats.consecutive_errors > 3:
@@ -106,13 +106,14 @@ class AMSHealthTracker:
             consumer_reports[sub] = stats.to_dict(alive=alive)
 
         if not consumer_reports:
-            overall_status = "healthy"
+            overall_status = "unhealthy"
         elif not all_alive:
             overall_status = "unhealthy"
         elif has_errors:
             overall_status = "degraded"
         else:
             overall_status = "healthy"
+
 
         return {
             "status": overall_status,
