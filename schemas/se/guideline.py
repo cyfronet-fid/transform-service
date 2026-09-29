@@ -85,7 +85,7 @@ class GuidelineSESchema(BaseModel):
     author_names_tg: List[str]
     author_types: List[str]
     catalogue: Optional[str] = None
-    catalogues: List[str]
+    catalogues: Optional[List[Optional[str]]] = None
     creators: str
     description: List[str]
     id: str
@@ -93,6 +93,7 @@ class GuidelineSESchema(BaseModel):
     license_url: Optional[str] = None
     node: Optional[str] = None
     provider: Optional[str] = None
+    providerId: Optional[str] = None
     providers: Optional[List[str]] = None
     publication_date: Optional[date] = None
     publication_year: Optional[int] = None

@@ -65,15 +65,16 @@ class AdapterSESchema(BaseModel):
     publication_date: Optional[date] = None
     last_update: Optional[date] = None
     license: Optional[str] = None
+    license_url: Optional[str] = None
     logo: Optional[str] = None
     node: Optional[str] = None
     programming_language: str
     related_guidelines: Optional[List[str]] = None
     related_services: Optional[List[str]] = None
     package: Optional[str] = None
-    keywords: Optional[str] = None
     sqa_badge: Optional[List[str]] = None
     sqa_url: Optional[str] = None
+    tagline: Optional[str] = None
     title: str
     type: str
     version: str

@@ -155,6 +155,7 @@ def map_resource_owner_values(
 
         if isinstance(resource_owner, str) and resource_owner in resource_owner_mapping:
             item["provider"] = resource_owner_mapping[resource_owner]
+            item["providerId"] = resource_owner
 
 
 def map_resource_organisation_values(

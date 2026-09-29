@@ -1,4 +1,4 @@
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["tests", "sage/tests"]
 [tool.isort]
 profile = "black"

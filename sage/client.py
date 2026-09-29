@@ -1,7 +1,10 @@
+"""Aggregator client for fetching the catalog from PCSS"""
+
 from typing import Any, Dict
 
 import requests
-from settings import settings
+
+from sage.settings import settings
 
 
 class AggregatorClient:

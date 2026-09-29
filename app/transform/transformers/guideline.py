@@ -138,6 +138,7 @@ def _transform_record(record: dict) -> dict:
     publication_date_value = publication_date.isoformat() if publication_date else None
     resource_owner = item.get("resourceOwner")
     provider = record.get("provider")
+    provider_id = record.get("providerId")
     node = record.get("node") or item.get("nodePID")
 
     return {
@@ -160,6 +161,7 @@ def _transform_record(record: dict) -> dict:
         "license_url": license_info.get("licenseURL"),
         "node": node,
         "provider": provider,
+        "providerId": provider_id,
         "providers": [provider],
         "publication_date": publication_date_value,
         "publication_year": publication_year,

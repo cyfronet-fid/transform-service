@@ -13,8 +13,6 @@ class DeployableServiceSESchema(BaseModel):
     Attributes:
         catalogues (List[str]):
             A list of catalogues associated with the deployable service. Used in filters.
-        creator_affiliations (List[str]):
-            A list of creator affiliations. Used in filters and faceting.
         creator_names (List[str]):
             A list of creator names. Used in searching and filtering.
         creators_searchable (List[str]):
@@ -54,7 +52,6 @@ class DeployableServiceSESchema(BaseModel):
     """
 
     catalogues: List[str]
-    creator_affiliations: List[str]
     creator_names: List[str]
     creators_searchable: List[str]
     description: str
