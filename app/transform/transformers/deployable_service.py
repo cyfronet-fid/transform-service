@@ -115,14 +115,16 @@ class DeployableServiceTransformer(BaseTransformer):
         # Option 4: Create a searchable text field combining all creator info
         df = df.withColumn(
             "creators_searchable",
-            expr("""
+            expr(
+                """
                 transform(creators, x -> 
                     concat(
                         x.creatorNameTypeInfo.creatorName, ' ', 
                         x.creatorAffiliationInfo.affiliation
                     )
                 )
-            """),
+            """
+            ),
         )
 
         return df

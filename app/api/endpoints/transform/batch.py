@@ -69,4 +69,3 @@ async def batch_update(
         )
 
     return tasks_ids
-

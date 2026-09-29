@@ -258,7 +258,6 @@ async def ams_consume_loop(subscription: str):
                     subscription,
                 )
 
-
         except asyncio.TimeoutError:
             logger.debug(
                 f"[AMS] Timeout during poll cycle for subscription={subscription}"
