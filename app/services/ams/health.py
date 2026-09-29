@@ -114,7 +114,6 @@ class AMSHealthTracker:
         else:
             overall_status = "healthy"
 
-
         return {
             "status": overall_status,
             "consumers": consumer_reports,

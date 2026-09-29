@@ -28,7 +28,9 @@ async def full_update(
     ],
 ) -> dict[str, str | None]:
     """Perform a full update of data collection/collections"""
-    logger.info("[FullUpdate] Received request for full update: data_type=%s", data_type)
+    logger.info(
+        "[FullUpdate] Received request for full update: data_type=%s", data_type
+    )
 
     tasks_ids = {
         settings.SERVICE: None,
@@ -62,7 +64,9 @@ async def full_update(
         # Update single collection
         await update_single_col(data_type, tasks_ids)
 
-    logger.info("[FullUpdate] Full update task scheduling complete. Task IDs: %s", tasks_ids)
+    logger.info(
+        "[FullUpdate] Full update task scheduling complete. Task IDs: %s", tasks_ids
+    )
     return tasks_ids
 
 
@@ -99,4 +103,3 @@ async def update_single_col(data_type: str, tasks_id: dict) -> None:
             data_address,
         )
         tasks_id[data_type] = error_msg
-

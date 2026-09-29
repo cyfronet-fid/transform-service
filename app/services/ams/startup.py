@@ -48,7 +48,9 @@ async def start_ams_subscription():
         subscription_name = AMS_SUBSCRIPTION_MAP[topic]
         ams_health_tracker.register_consumer(subscription_name)
 
-        logger.info("[AMS] Using subscription %s for topic %s", subscription_name, topic)
+        logger.info(
+            "[AMS] Using subscription %s for topic %s", subscription_name, topic
+        )
 
         try:
             await ensure_subscription(topic, subscription_name)
@@ -71,4 +73,3 @@ async def start_ams_subscription():
             ams_health_tracker.record_error(subscription_name)
 
     logger.info("[AMS] All requested subscriptions initialized.")
-
