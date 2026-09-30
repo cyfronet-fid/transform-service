@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.2](https://github.com/cyfronet-fid/transform-service/compare/v1.10.1...v1.10.2) (2026-09-30)
+
+
+### Bug Fixes
+
+* url in guidelines ([3e0b8af](https://github.com/cyfronet-fid/transform-service/commit/3e0b8af2a4aad6a015426145876f5ab36c22b0aa))
+
 ## [1.10.1](https://github.com/cyfronet-fid/transform-service/compare/v1.10.0...v1.10.1) (2026-09-24)
 
 
