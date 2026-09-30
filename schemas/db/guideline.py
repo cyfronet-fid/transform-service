@@ -51,6 +51,8 @@ class GuidelineDBSchema(BaseModel):
             Data type = "interoperability guideline".
         updated_at (datetime):
             The date when the guideline was last updated (ISO 8601 format).
+        url (Optional[str]):
+            URL of the guideline.
     """
 
     # TODO make it more detailed
@@ -74,17 +76,4 @@ class GuidelineDBSchema(BaseModel):
     title: str
     type: str
     updated_at: datetime
-
-    """
-    Transformations necessary to convert GuidelineInputSchema to GuidelineDBSchema
-        - add type = "interoperability guideline"
-        - rename:
-            "alternativeIdentifiers": "alternative_ids",
-            "publicationYear": "publication_year",
-            "catalogueId": "catalogues",
-            "created": "publication_date",
-            "updated": "updated_at",
-            "eoscGuidelineType": "eosc_guideline_type",
-            "eoscIntegrationOptions": "eosc_integration_options",
-            "providerId": "providers",
-    """
+    url: Optional[str] = None

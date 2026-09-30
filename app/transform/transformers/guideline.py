@@ -140,6 +140,7 @@ def _transform_record(record: dict) -> dict:
     provider = record.get("provider")
     provider_id = record.get("providerId")
     node = record.get("node") or item.get("nodePID")
+    url = record.get("urls")
 
     return {
         "alternative_id_schemes": alternative_id_schemes,
@@ -173,6 +174,7 @@ def _transform_record(record: dict) -> dict:
         "type": settings.GUIDELINE,
         "type_general": _compact([resource_type_info.get("resourceTypeGeneral")]),
         "type_info": _compact([resource_type_info.get("resourceType")]),
+        "url": url,
     }
 
 
