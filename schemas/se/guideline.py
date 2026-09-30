@@ -72,6 +72,8 @@ class GuidelineSESchema(BaseModel):
             General resource type classifications.
         type_info (List[str]):
             Specific resource type information.
+        url (Optional[str]):
+            URL of the guideline.
     """
 
     alternative_id_schemes: List[str]
@@ -105,3 +107,4 @@ class GuidelineSESchema(BaseModel):
     type: str
     type_general: List[str]
     type_info: List[str]
+    url: Optional[str] = None
