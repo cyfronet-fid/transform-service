@@ -2,6 +2,7 @@ import asyncio
 import logging
 
 from app.services.ams.client import ams_consume_loop, ensure_subscription
+from app.services.ams.health import ams_health_tracker
 from app.settings import settings
 
 logger = logging.getLogger(__name__)
@@ -18,23 +19,57 @@ AMS_SUBSCRIPTION_MAP = {
     "adapter-delete": "transformer-adapter-delete",
 }
 
+background_tasks = set()
+
 
 async def start_ams_subscription():
     if not settings.AMS_SUBSCRIPTION:
-        logger.info("[AMS] Subscription disabled.")
+        logger.info(
+            "[AMS] Subscription disabled in settings (settings.AMS_SUBSCRIPTION=False)."
+        )
         return
 
-    logger.info("[AMS] Preparing pull subscriptions...")
+    logger.info(
+        "[AMS] Preparing pull subscriptions for topics: %s...",
+        settings.AMS_TOPICS,
+    )
 
     for full_topic in settings.AMS_TOPICS:
         # "/projects/eosc-beyond-providers/topics/adapter-update"
         topic = full_topic.split("/")[-1]
 
+        if topic not in AMS_SUBSCRIPTION_MAP:
+            logger.warning(
+                "[AMS] No subscription mapping found for topic '%s'. Skipping.",
+                topic,
+            )
+            continue
+
         subscription_name = AMS_SUBSCRIPTION_MAP[topic]
+        ams_health_tracker.register_consumer(subscription_name)
 
-        logger.info(f"[AMS] Using subscription {subscription_name} for topic {topic}")
+        logger.info(
+            "[AMS] Using subscription %s for topic %s", subscription_name, topic
+        )
 
-        await ensure_subscription(topic, subscription_name)
-        asyncio.create_task(ams_consume_loop(subscription_name))
+        try:
+            await ensure_subscription(topic, subscription_name)
+            task = asyncio.create_task(ams_consume_loop(subscription_name))
+            background_tasks.add(task)
+            task.add_done_callback(background_tasks.discard)
+            ams_health_tracker.set_task(subscription_name, task)
+            logger.info(
+                "[AMS] Started consumer task for subscription '%s'",
+                subscription_name,
+            )
+        except Exception as e:
+            logger.error(
+                "[AMS] Failed to initialize subscription '%s' for topic '%s': %s",
+                subscription_name,
+                topic,
+                e,
+                exc_info=True,
+            )
+            ams_health_tracker.record_error(subscription_name)
 
-    logger.info("[AMS] All subscriptions active.")
+    logger.info("[AMS] All requested subscriptions initialized.")

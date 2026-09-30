@@ -30,11 +30,17 @@ def transform_batch(
         data (dict): Data
         full_update (bool): Is it a full collection update?
     """
-    logger.info(f"{type_} data update has started, {full_update=}")
+    item_count = len(data) if isinstance(data, list) else 1
+    logger.info(
+        f"[TransformBatch] Transformation started for type='{type_}', full_update={full_update}, items_count={item_count}"
+    )
+
     transformer = trans.transformers.get(type_)
 
     if not transformer:
-        logger.error(f"No data transformer is provided for {type_}")
+        logger.error(
+            f"[TransformBatch] No data transformer is provided for type='{type_}'"
+        )
         return CeleryTaskStatus(
             status=FAILURE, reason=f"No data transformer is provided for {type_}"
         ).dict()
@@ -42,11 +48,23 @@ def transform_batch(
     # Transform
     try:
         if type_ == settings.GUIDELINE:  # Pandas
+            logger.info(
+                f"[TransformBatch] Executing Pandas transformation for type='{type_}'"
+            )
             df_trans = transformer(data)
         else:  # Pyspark
+            logger.info(
+                f"[TransformBatch] Applying Spark configuration for type='{type_}'"
+            )
             spark, _ = apply_spark_conf()
-            input_schema = settings.COLLECTIONS[type_]["INPUT_SCHEMA"]
+            input_schema = settings.COLLECTIONS.get(type_, {}).get("INPUT_SCHEMA")
+            logger.info(
+                f"[TransformBatch] Loading and validating request data against schema for type='{type_}'"
+            )
             df = load_request_data(spark, data, input_schema, type_)
+            logger.info(
+                f"[TransformBatch] Data loaded into PySpark DataFrame. Applying transformer for type='{type_}'"
+            )
             df_trans = transformer(spark)(df)
 
         if full_update:
@@ -65,5 +83,8 @@ def transform_batch(
         return CeleryTaskStatus(status=SUCCESS).dict()
 
     except Exception as e:
-        logger.error(f"{type_} data update has failed, error message: {e}")
+        logger.error(
+            f"[TransformBatch] Transformation failed for type='{type_}', full_update={full_update}. Error: {e}",
+            exc_info=True,
+        )
         return CeleryTaskStatus(status=FAILURE, reason=str(e)).dict()
