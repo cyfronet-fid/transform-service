@@ -10,7 +10,7 @@ from sentry_sdk.integrations.redis import RedisIntegration
 
 from app.api.endpoints import ams_router, solr_api_router, transform_api_router
 from app.logger import LOGGING_CONFIG
-from app.services.ams.startup import start_ams_subscription
+from app.services.ams.startup import start_ams_subscription, stop_ams_subscription
 from app.services.jms.connector import close_jms_subscription, start_jms_subscription
 from app.settings import settings
 
@@ -51,5 +51,8 @@ def get_app():
     async def shutdown_event():
         if settings.STOMP_SUBSCRIPTION:
             await close_jms_subscription()
+
+        if settings.AMS_SUBSCRIPTION:
+            await stop_ams_subscription()
 
     return app

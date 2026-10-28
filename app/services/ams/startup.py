@@ -7,16 +7,28 @@ from app.settings import settings
 
 logger = logging.getLogger(__name__)
 
+# AMS_SUBSCRIPTION_MAP = {
+#     "training_resource-create": "transformer-training_resource-create",
+#     "training_resource-update": "transformer-training_resource-update",
+#     "training_resource-delete": "transformer-training_resource-delete",
+#     "interoperability_record-create": "transformer-interoperability_record-create",
+#     "interoperability_record-update": "transformer-interoperability_record-update",
+#     "interoperability_record-delete": "transformer-interoperability_record-delete",
+#     "adapter-create": "transformer-adapter-create",
+#     "adapter-update": "transformer-adapter-update",
+#     "adapter-delete": "transformer-adapter-delete",
+# }
+
 AMS_SUBSCRIPTION_MAP = {
-    "training_resource-create": "transformer-training_resource-create",
-    "training_resource-update": "transformer-training_resource-update",
-    "training_resource-delete": "transformer-training_resource-delete",
-    "interoperability_record-create": "transformer-interoperability_record-create",
-    "interoperability_record-update": "transformer-interoperability_record-update",
-    "interoperability_record-delete": "transformer-interoperability_record-delete",
-    "adapter-create": "transformer-adapter-create",
-    "adapter-update": "transformer-adapter-update",
-    "adapter-delete": "transformer-adapter-delete",
+    "training_resource-create": "sf-training_resource-create",
+    "training_resource-update": "sf-training_resource-update",
+    "training_resource-delete": "sf-training_resource-delete",
+    "interoperability_record-create": "sf-interoperability_record-create",
+    "interoperability_record-update": "sf-interoperability_record-update",
+    "interoperability_record-delete": "sf-interoperability_record-delete",
+    "adapter-create": "sf-adapter-create",
+    "adapter-update": "sf-adapter-update",
+    "adapter-delete": "sf-adapter-delete",
 }
 
 background_tasks = set()
@@ -73,3 +85,18 @@ async def start_ams_subscription():
             ams_health_tracker.record_error(subscription_name)
 
     logger.info("[AMS] All requested subscriptions initialized.")
+
+
+async def stop_ams_subscription():
+    """
+    Cancel and wait for all running AMS consumer tasks to shut down.
+    """
+    logger.info("[AMS] Stopping %s AMS consumer tasks...", len(background_tasks))
+    tasks = list(background_tasks)
+    for task in tasks:
+        task.cancel()
+
+    if tasks:
+        await asyncio.gather(*tasks, return_exceptions=True)
+    background_tasks.clear()
+    logger.info("[AMS] All AMS consumer tasks stopped.")
