@@ -20,7 +20,38 @@ APPROVED_STATUSES = (
 logger = logging.getLogger(__name__)
 
 
-def process_message(frame_or_data, ack_id_or_subscription=None) -> None:
+def _check_task_success(task) -> bool:
+    """
+    Checks if a Celery task completed successfully.
+    Returns True if task succeeded or was not needed, False if it failed or timed out.
+    """
+    if task is None:
+        return True
+    try:
+        if hasattr(task, "get") and callable(task.get):
+            res = task.get(timeout=120)
+        else:
+            res = task
+
+        if isinstance(res, dict):
+            status = res.get("status")
+            if status is not None:
+                return status == "SUCCESS"
+            return True
+        elif isinstance(res, list):
+            if not res:
+                return True
+            return all(
+                isinstance(item, dict) and item.get("status") in ("SUCCESS", "ABORTED")
+                for item in res
+            )
+        return True
+    except Exception as e:
+        logger.error(f"[LiveUpdate] Task execution failed: {e}", exc_info=True)
+        return False
+
+
+def process_message(frame_or_data, ack_id_or_subscription=None) -> bool:
     """
     Processes incoming messages from both JMS (STOMP) and AMS.
 
@@ -31,17 +62,20 @@ def process_message(frame_or_data, ack_id_or_subscription=None) -> None:
         frame_or_data: Either a STOMP frame object or a JSON string/dict from AMS
         ack_id_or_subscription: Optional ack_id from AMS (contains subscription name)
                                Format: projects/{project}/subscriptions/{subscription_name}:{message_id}
+
+    Returns:
+        bool: True if processing and Solr update succeeded, False otherwise.
     """
     # Determine if this is a STOMP frame or AMS data
     if hasattr(frame_or_data, "headers") and hasattr(frame_or_data, "body"):
         # STOMP/JMS message
-        _process_stomp_message(frame_or_data)
+        return _process_stomp_message(frame_or_data)
     else:
         # AMS message (string or dict)
-        _process_ams_message(frame_or_data, ack_id_or_subscription)
+        return _process_ams_message(frame_or_data, ack_id_or_subscription)
 
 
-def _process_stomp_message(frame) -> None:
+def _process_stomp_message(frame) -> bool:
     """Process STOMP/JMS format messages"""
     action = frame.headers["destination"].split(".")[-1]
     if settings.STOMP_TOPIC_PREFIX:
@@ -61,14 +95,21 @@ def _process_stomp_message(frame) -> None:
     )
 
     if action == "create":
-        handle_create_action(active, suspended, status, collection, data, data_id)
+        return handle_create_action(
+            active, suspended, status, collection, data, data_id
+        )
     elif action == "update":
-        handle_update_action(active, suspended, status, collection, data, data_id)
+        return handle_update_action(
+            active, suspended, status, collection, data, data_id
+        )
     elif action == "delete":
-        handle_delete_action(collection, data_id, data)
+        return handle_delete_action(collection, data_id, data)
+    else:
+        logger.warning(f"Unknown STOMP action: {action}")
+        return False
 
 
-def _process_ams_message(message_data, ack_id=None) -> None:
+def _process_ams_message(message_data, ack_id=None) -> bool:
     """Process AMS format messages"""
     # Parse if it's a string
     if isinstance(message_data, str):
@@ -78,9 +119,12 @@ def _process_ams_message(message_data, ack_id=None) -> None:
             logger.error(
                 f"[AMS] Failed to parse message as JSON: {e}. Message content: {message_data[:300]}"
             )
-            return
-    else:
+            return False
+    elif isinstance(message_data, dict):
         frame_body = message_data
+    else:
+        logger.error(f"[AMS] Invalid message_data type: {type(message_data)}")
+        return False
 
     # Extract subscription name if ack_id or subscription is provided
     # Formats:
@@ -153,7 +197,7 @@ def _process_ams_message(message_data, ack_id=None) -> None:
             logger.warning(
                 f"[AMS] Could not determine resource type from subscription or message keys: {list(frame_body.keys())}"
             )
-            return
+            return False
 
     # Fallback: if action still not determined, assume update
     if not action:
@@ -167,18 +211,29 @@ def _process_ams_message(message_data, ack_id=None) -> None:
     status = frame_body.get("status", "")
 
     collection, data, data_id = extract_data_from_frame(raw_collection, frame_body)
+    if data is None:
+        logger.error(
+            f"[AMS] Could not extract data for collection='{raw_collection}' from frame"
+        )
+        return False
+
     logger.info(
         f"[AMS] Started processing message: type={raw_collection}, collection={collection}, id={data_id}, action={action}, active={active}, suspended={suspended}, status='{status}'"
     )
 
     if action == "create":
-        handle_create_action(active, suspended, status, collection, data, data_id)
+        return handle_create_action(
+            active, suspended, status, collection, data, data_id
+        )
     elif action == "update":
-        handle_update_action(active, suspended, status, collection, data, data_id)
+        return handle_update_action(
+            active, suspended, status, collection, data, data_id
+        )
     elif action == "delete":
-        handle_delete_action(collection, data_id, data)
+        return handle_delete_action(collection, data_id, data)
     else:
         logger.warning(f"[AMS] Unknown action: {action}")
+        return False
 
 
 def extract_data_from_frame(raw_collection, frame_body):
@@ -213,7 +268,7 @@ def extract_data_from_frame(raw_collection, frame_body):
     return collection, data, data_id
 
 
-def handle_create_action(active, suspended, status, collection, data, data_id):
+def handle_create_action(active, suspended, status, collection, data, data_id) -> bool:
     """
     Handles the 'create' action for the message.
 
@@ -224,20 +279,25 @@ def handle_create_action(active, suspended, status, collection, data, data_id):
         collection (str): The name of the collection.
         data (dict): The data to be processed.
         data_id (str): The ID of the data.
+
+    Returns:
+        bool: True if task succeeded or action was skipped, False otherwise.
     """
     if active and not suspended and status in APPROVED_STATUSES:
         logger.info(
             f"[LiveUpdate] Scheduling create/transform batch task for collection='{collection}', id='{data_id}'"
         )
-        transform_batch.delay(collection, data, full_update=False)
+        task = transform_batch.delay(collection, data, full_update=False)
+        return _check_task_success(task)
     else:
         logger.info(
             f"[LiveUpdate] Aborting create action for collection='{collection}', id='{data_id}'. "
             f"Reason: active={active}, suspended={suspended}, status='{status}' (approved statuses: {APPROVED_STATUSES})"
         )
+        return True
 
 
-def handle_update_action(active, suspended, status, collection, data, data_id):
+def handle_update_action(active, suspended, status, collection, data, data_id) -> bool:
     """
     Handles the 'update' action for the message.
 
@@ -248,6 +308,9 @@ def handle_update_action(active, suspended, status, collection, data, data_id):
         collection (str): The name of the collection.
         data (dict): The data to be processed.
         data_id (str): The ID of the data.
+
+    Returns:
+        bool: True if task succeeded or action was skipped, False otherwise.
     """
     logger.info(
         f"[LiveUpdate] handle_update_action: collection='{collection}', id='{data_id}', "
@@ -257,7 +320,8 @@ def handle_update_action(active, suspended, status, collection, data, data_id):
         logger.info(
             f"[LiveUpdate] Scheduling update/transform batch task for collection='{collection}', id='{data_id}'"
         )
-        transform_batch.delay(collection, data, full_update=False)
+        task = transform_batch.delay(collection, data, full_update=False)
+        return _check_task_success(task)
     else:
         doc_exists = check_document_exists(collection, data_id)
         if doc_exists:
@@ -265,14 +329,16 @@ def handle_update_action(active, suspended, status, collection, data, data_id):
                 f"[LiveUpdate] Item is inactive/unapproved but exists in collection='{collection}', id='{data_id}'. "
                 "Scheduling delete task."
             )
-            delete_data_by_id.delay(collection, data, delete=True)
+            task = delete_data_by_id.delay(collection, data, delete=True)
+            return _check_task_success(task)
         else:
             logger.info(
                 f"[LiveUpdate] Item is inactive/unapproved and does NOT exist in collection='{collection}', id='{data_id}'. Skipping delete."
             )
+            return True
 
 
-def handle_delete_action(collection, data_id, data):
+def handle_delete_action(collection, data_id, data) -> bool:
     """
     Handles the 'delete' action for the message.
 
@@ -280,14 +346,19 @@ def handle_delete_action(collection, data_id, data):
         collection (str): The name of the collection.
         data_id (str): The ID of the data to be deleted.
         data (dict): The data to be deleted.
+
+    Returns:
+        bool: True if task succeeded or action was skipped, False otherwise.
     """
     doc_exists = check_document_exists(collection, data_id)
     if doc_exists:
         logger.info(
             f"[LiveUpdate] Scheduling delete task for collection='{collection}', id='{data_id}'"
         )
-        delete_data_by_id.delay(collection, data, delete=True)
+        task = delete_data_by_id.delay(collection, data, delete=True)
+        return _check_task_success(task)
     else:
         logger.info(
             f"[LiveUpdate] Delete action skipped. Document does not exist in collection='{collection}', id='{data_id}'"
         )
+        return True

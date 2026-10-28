@@ -86,7 +86,7 @@ async def pull_messages(subscription: str):
                     logger.error(
                         f"[AMS] Pull failed for subscription={subscription}: HTTP {resp.status} -> {text}"
                     )
-                    ams_health_tracker.record_error(subscription)
+                    ams_health_tracker.record_poll_error(subscription)
                     return []
 
                 data = await resp.json()
@@ -110,7 +110,7 @@ async def pull_messages(subscription: str):
             f"[AMS] Exception during pull for subscription={subscription}: {e}",
             exc_info=True,
         )
-        ams_health_tracker.record_error(subscription)
+        ams_health_tracker.record_poll_error(subscription)
         return []
 
 
@@ -205,16 +205,26 @@ async def ams_consume_loop(subscription: str):
 
                     # Run sync function in thread pool to avoid blocking async loop.
                     # Pass both decoded message and subscription name (or ack_id)
-                    await asyncio.get_event_loop().run_in_executor(
+                    loop = asyncio.get_running_loop()
+                    success = await loop.run_in_executor(
                         executor, process_message, decoded, subscription
                     )
-                    ams_health_tracker.record_message_processed(subscription)
-                    logger.info(
-                        "[AMS] Successfully processed message for subscription=%s, ack_id=%s",
-                        subscription,
-                        ack_id,
-                    )
-                    ack_ids.append(ack_id)
+                    if success:
+                        ams_health_tracker.record_message_processed(subscription)
+                        logger.info(
+                            "[AMS] Successfully processed message for subscription=%s, ack_id=%s",
+                            subscription,
+                            ack_id,
+                        )
+                        ack_ids.append(ack_id)
+                    else:
+                        ams_health_tracker.record_processing_error(subscription)
+                        logger.warning(
+                            "[AMS] Processing failed for message in subscription=%s, ack_id=%s. Will not ACK.",
+                            subscription,
+                            ack_id,
+                        )
+                        failed_count += 1
 
                 except base64.binascii.Error as e:
                     logger.error(
@@ -222,7 +232,7 @@ async def ams_consume_loop(subscription: str):
                         subscription,
                         e,
                     )
-                    ams_health_tracker.record_error(subscription)
+                    ams_health_tracker.record_processing_error(subscription)
                     failed_count += 1
                 except UnicodeDecodeError as e:
                     logger.error(
@@ -230,7 +240,7 @@ async def ams_consume_loop(subscription: str):
                         subscription,
                         e,
                     )
-                    ams_health_tracker.record_error(subscription)
+                    ams_health_tracker.record_processing_error(subscription)
                     failed_count += 1
                 except Exception as e:
                     logger.error(
@@ -239,7 +249,7 @@ async def ams_consume_loop(subscription: str):
                         e,
                         exc_info=True,
                     )
-                    ams_health_tracker.record_error(subscription)
+                    ams_health_tracker.record_processing_error(subscription)
                     failed_count += 1
 
             # Acknowledge only successfully processed messages
@@ -269,5 +279,5 @@ async def ams_consume_loop(subscription: str):
             logger.exception(
                 f"[AMS] Unexpected loop error for subscription={subscription}: {e}"
             )
-            ams_health_tracker.record_error(subscription)
+            ams_health_tracker.record_poll_error(subscription)
             await asyncio.sleep(5)
