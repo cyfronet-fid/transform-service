@@ -23,6 +23,8 @@ class TrainingSESchema(BaseModel):
             List of catalogues the training belongs to.
         content_type (Optional[List[str]]):
             List of content types associated with the training. Used for tagging.
+        creators (Optional[str]):
+            Serialized creator metadata preserving PIDs and affiliations per creator.
         description (Optional[str]):
             Training description indexed for full-text search.
         duration (Optional[int]):
@@ -77,6 +79,7 @@ class TrainingSESchema(BaseModel):
     catalogue: Optional[str]  # TODO delete
     catalogues: Optional[List[Optional[str]]]
     content_type: Optional[List[str]]
+    creators: Optional[str] = None
     description: Optional[str]
     duration: Optional[int]
     id: str

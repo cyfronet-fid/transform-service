@@ -15,6 +15,8 @@ class AdapterSESchema(BaseModel):
             A list of catalogues associated with the adapter. Used in filters.
         changelog (List[str]):
             The change log information for the adapter. Used in detail page.
+        creators (Optional[str]):
+            Serialized creator metadata preserving PIDs and affiliations per creator.
         repository (str):
             URL to the adapter's source code repository. Used in detail page.
         description (str):
@@ -81,7 +83,5 @@ class AdapterSESchema(BaseModel):
     url: Optional[List[str]] = None
     alternative_ids: Optional[str] = None
     resource_owner: str
-    creator_names: Optional[List[str]] = None
-    creator_identifiers: Optional[List[str]] = None
-    creator_affiliations: Optional[List[str]] = None
+    creators: Optional[str] = None
     public_contacts: List[str]
