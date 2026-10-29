@@ -1,6 +1,7 @@
 # pylint: disable=line-too-long, wildcard-import, invalid-name, unused-wildcard-import, duplicate-code
 """Transform adapters"""
 
+import json
 from datetime import datetime, timezone
 from logging import getLogger
 
@@ -296,29 +297,14 @@ class AdapterTransformer(BaseTransformer):
 
     @staticmethod
     def extract_creators(df: DataFrame) -> DataFrame:
-        """Flatten creator metadata into Solr-friendly string arrays."""
+        """Serialize creators while preserving their identifiers and affiliations."""
         if "creators" not in df.columns:
-            return (
-                df.withColumn("creator_names", array())
-                .withColumn("creator_identifiers", array())
-                .withColumn("creator_affiliations", array())
-            )
+            return df.withColumn("creators", lit("[]"))
 
-        df = (
-            df.withColumn(
-                "creator_names",
-                AdapterTransformer.extract_creator_names(col("creators")),
-            )
-            .withColumn(
-                "creator_identifiers",
-                AdapterTransformer.extract_creator_identifiers(col("creators")),
-            )
-            .withColumn(
-                "creator_affiliations",
-                AdapterTransformer.extract_creator_affiliations(col("creators")),
-            )
+        return df.withColumn(
+            "creators",
+            AdapterTransformer.serialize_creators(col("creators")),
         )
-        return df.drop("creators")
 
     @staticmethod
     def _row_to_dict(value):
@@ -329,9 +315,10 @@ class AdapterTransformer(BaseTransformer):
         return {}
 
     @staticmethod
-    @udf(ArrayType(StringType()))
-    def extract_creator_names(creators):
-        names = []
+    @udf(StringType())
+    def serialize_creators(creators):
+        """Serialize creators without losing their PIDs and affiliations."""
+        creator_items = []
         for creator in creators or []:
             creator = AdapterTransformer._row_to_dict(creator)
             name = " ".join(
@@ -342,16 +329,8 @@ class AdapterTransformer(BaseTransformer):
                 )
                 if part
             )
-            if name:
-                names.append(name)
-        return names
 
-    @staticmethod
-    @udf(ArrayType(StringType()))
-    def extract_creator_identifiers(creators):
-        identifiers = []
-        for creator in creators or []:
-            creator = AdapterTransformer._row_to_dict(creator)
+            identifiers = []
             for pid in creator.get("PIDs") or []:
                 pid = AdapterTransformer._row_to_dict(pid)
                 for key in ("creatorPID", "pid", "id", "value"):
@@ -359,20 +338,23 @@ class AdapterTransformer(BaseTransformer):
                     if value:
                         identifiers.append(value)
                         break
-        return identifiers
 
-    @staticmethod
-    @udf(ArrayType(StringType()))
-    def extract_creator_affiliations(creators):
-        affiliations = []
-        for creator in creators or []:
-            creator = AdapterTransformer._row_to_dict(creator)
+            affiliations = []
             for affiliation in creator.get("affiliations") or []:
                 affiliation = AdapterTransformer._row_to_dict(affiliation)
                 value = affiliation.get("affiliationName") or affiliation.get("name")
                 if value:
                     affiliations.append(value)
-        return affiliations
+
+            creator_items.append(
+                {
+                    "name": name or None,
+                    "identifiers": identifiers,
+                    "affiliations": affiliations,
+                }
+            )
+
+        return json.dumps(creator_items, ensure_ascii=False)
 
     @staticmethod
     def clean_description(df: DataFrame) -> DataFrame:
