@@ -437,29 +437,19 @@ class TrainingTransformer(BaseTransformer):
 
     @staticmethod
     def extract_creators(df: DataFrame) -> DataFrame:
-        """Flatten creator metadata into Solr-friendly string arrays."""
+        """Extract searchable creator fields and preserve creator relationships."""
         if "creators" not in df.columns:
-            return (
-                df.withColumn("creator_names", array())
-                .withColumn("creator_identifiers", array())
-                .withColumn("creator_affiliations", array())
+            return df.withColumn("author_names", array()).withColumn(
+                "creators", lit("[]")
             )
 
-        df = (
-            df.withColumn(
-                "author_names",
-                TrainingTransformer.extract_creator_names(col("creators")),
-            )
-            .withColumn(
-                "author_identifiers",
-                TrainingTransformer.extract_creator_identifiers(col("creators")),
-            )
-            .withColumn(
-                "author_affiliations",
-                TrainingTransformer.extract_creator_affiliations(col("creators")),
-            )
+        return df.withColumn(
+            "author_names",
+            TrainingTransformer.extract_creator_names(col("creators")),
+        ).withColumn(
+            "creators",
+            TrainingTransformer.serialize_creators(col("creators")),
         )
-        return df.drop("creators")
 
     @staticmethod
     def _row_to_dict(value):
@@ -488,11 +478,22 @@ class TrainingTransformer(BaseTransformer):
         return names
 
     @staticmethod
-    @udf(ArrayType(StringType()))
-    def extract_creator_identifiers(creators):
-        identifiers = []
+    @udf(StringType())
+    def serialize_creators(creators):
+        """Serialize creators without losing their PIDs and affiliations."""
+        creator_items = []
         for creator in creators or []:
             creator = TrainingTransformer._row_to_dict(creator)
+            name = " ".join(
+                part
+                for part in (
+                    creator.get("firstName"),
+                    creator.get("lastName"),
+                )
+                if part
+            )
+
+            identifiers = []
             for pid in creator.get("PIDs") or []:
                 pid = TrainingTransformer._row_to_dict(pid)
                 for key in ("creatorPID", "pid", "id", "value"):
@@ -500,17 +501,20 @@ class TrainingTransformer(BaseTransformer):
                     if value:
                         identifiers.append(value)
                         break
-        return identifiers
 
-    @staticmethod
-    @udf(ArrayType(StringType()))
-    def extract_creator_affiliations(creators):
-        affiliations = []
-        for creator in creators or []:
-            creator = TrainingTransformer._row_to_dict(creator)
+            affiliations = []
             for affiliation in creator.get("affiliations") or []:
                 affiliation = TrainingTransformer._row_to_dict(affiliation)
                 value = affiliation.get("affiliationName") or affiliation.get("name")
                 if value:
                     affiliations.append(value)
-        return affiliations
+
+            creator_items.append(
+                {
+                    "name": name or None,
+                    "identifiers": identifiers,
+                    "affiliations": affiliations,
+                }
+            )
+
+        return json.dumps(creator_items, ensure_ascii=False)
