@@ -155,24 +155,6 @@ def _process_ams_message(message_data, ack_id=None) -> bool:
     action = None
 
     if subscription_name:
-        # clean_sub = subscription_name
-        # for prefix in ("sf-", "transformer-"): # add yours if testing
-        #     if clean_sub.startswith(prefix):
-        #         clean_sub = clean_sub[len(prefix) :]
-        #         break
-        #
-        # parts = clean_sub.split("-")
-        # if len(parts) >= 2 and parts[-1] in ("create", "update", "delete"):
-        #     action = parts[-1]
-        #     raw_collection = "-".join(parts[:-1])
-        # elif len(parts) >= 3:
-        #     action = parts[-1]
-        #     raw_collection = "-".join(parts[1:-1])
-        #
-        # if action and raw_collection:
-        #     logger.info(
-        #         f"[AMS] Extracted from subscription '{subscription_name}': action={action}, resource={raw_collection}"
-        #     )
         # Parse subscription name: "transformer-adapter-update" -> action="update", resource="adapter"
         parts = subscription_name.split("-")
         if len(parts) >= 3:

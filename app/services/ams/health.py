@@ -149,15 +149,6 @@ class AMSHealthTracker:
 
             consumer_reports[sub] = stats.to_dict(alive=alive)
 
-        # if not consumer_reports:
-        #     overall_status = "unhealthy"
-        # elif not all_alive:
-        #     overall_status = "unhealthy"
-        # elif not all_polled_recently or has_errors:
-        #     overall_status = "degraded"
-        # else:
-        #     overall_status = "healthy"
-
         if not consumer_reports:
             overall_status = "unhealthy"
         elif not all_alive or not all_polled_recently:
