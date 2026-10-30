@@ -135,13 +135,12 @@ class DeployableServiceTransformer(BaseTransformer):
         # Build searchable creator text.
         df = df.withColumn(
             "creators_searchable",
-            expr(f"""
-                transform({creators}, x ->
-                    trim(concat_ws(
-                        ' ',
-                        nullif(trim(concat_ws(' ', x.firstName, x.lastName)), ''),
-                        nullif(x.email, '')
-                    ))
+            expr("""
+                transform(creators, x -> 
+                    concat(
+                        x.creatorNameTypeInfo.creatorName, ' ', 
+                        x.creatorAffiliationInfo.affiliation
+                    )
                 )
             """),
         )

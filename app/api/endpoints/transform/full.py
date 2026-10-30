@@ -1,6 +1,4 @@
-# pylint: disable=line-too-long
-"""Endpoint for full collection update"""
-
+import logging
 from typing import Literal
 
 from fastapi import APIRouter
@@ -9,6 +7,7 @@ from app.services.mp_pc.data import get_data
 from app.settings import settings
 from app.tasks.transform.batch import transform_batch
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
@@ -29,6 +28,10 @@ async def full_update(
     ],
 ) -> dict[str, str | None]:
     """Perform a full update of data collection/collections"""
+    logger.info(
+        "[FullUpdate] Received request for full update: data_type=%s", data_type
+    )
+
     tasks_ids = {
         settings.SERVICE: None,
         settings.DATASOURCE: None,
@@ -61,19 +64,42 @@ async def full_update(
         # Update single collection
         await update_single_col(data_type, tasks_ids)
 
+    logger.info(
+        "[FullUpdate] Full update task scheduling complete. Task IDs: %s", tasks_ids
+    )
     return tasks_ids
 
 
 async def update_single_col(data_type: str, tasks_id: dict) -> None:
     """Update whole, single collection"""
     data_address = settings.COLLECTIONS[data_type]["ADDRESS"]
+    logger.info(
+        "[FullUpdate] Fetching full data for collection=%s from address=%s",
+        data_type,
+        data_address,
+    )
+
     data = await get_data(data_type, data_address)
 
-    if data:
-        # Get data, transform data, delete current data of the same type, upload data
+    if data is not None:
+        record_count = len(data)
+        logger.info(
+            "[FullUpdate] Retrieved %s items for collection=%s. Dispatching transform_batch task...",
+            record_count,
+            data_type,
+        )
         update_task = transform_batch.delay(data_type, data, full_update=True)
         tasks_id[data_type] = update_task.id
-    else:
-        tasks_id[data_type] = (
-            f"Retrieving data from {data_address} has failed. Please try again. Checks logs for details."
+        logger.info(
+            "[FullUpdate] Dispatched transform_batch task for collection=%s, task_id=%s",
+            data_type,
+            update_task.id,
         )
+    else:
+        error_msg = f"Retrieving data from {data_address} has failed. Please try again. Check logs for details."
+        logger.error(
+            "[FullUpdate] Failed to retrieve data for collection=%s from address=%s",
+            data_type,
+            data_address,
+        )
+        tasks_id[data_type] = error_msg

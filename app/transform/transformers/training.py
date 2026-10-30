@@ -67,9 +67,16 @@ class TrainingTransformer(BaseTransformer):
         without a need to create another dataframe and merging"""
         df = df.withColumn(TYPE, lit(self.type))
         df = self.rename_cols(df)
-        df = df.withColumn("catalogue", df["catalogue"])
+        if "catalogue" not in df.columns:
+            df = df.withColumn("catalogue", lit(None).cast(StringType()))
+        else:
+            df = df.withColumn("catalogue", df["catalogue"])
         df = df.withColumn("catalogues", array(df["catalogue"]))
-        df = df.withColumn("url", self.get_first_element(df["urls"]))
+
+        if "urls" in df.columns:
+            df = df.withColumn("url", self.get_first_element(df["urls"]))
+        else:
+            df = df.withColumn("url", lit(None).cast(StringType()))
 
         return df
 
@@ -115,6 +122,9 @@ class TrainingTransformer(BaseTransformer):
     @staticmethod
     def transform_duration(df: DataFrame) -> DataFrame:
         """Transform duration string into seconds."""
+        if "duration" not in df.columns:
+            logger.debug("`duration` not found in df columns")
+            return df
 
         value = lower(col("duration"))
 
@@ -203,6 +213,10 @@ class TrainingTransformer(BaseTransformer):
         target_user-researchers -> Researchers"""
 
         for _col in cols_list:
+            if _col not in df.columns:
+                self.harvested_properties[_col] = [[] for _ in range(df.count())]
+                continue
+
             df_raw = df.select(_col).collect()
             df_column = []
 
