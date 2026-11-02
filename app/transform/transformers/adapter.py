@@ -13,7 +13,6 @@ from pyspark.sql.functions import (
     lit,
     regexp_replace,
     split,
-    trim,
     udf,
     when,
 )
@@ -69,7 +68,6 @@ class AdapterTransformer(BaseTransformer):
         """Harvest oag properties that requires more complex transformations
         Basically from those harvested properties there will be created another dataframe
         which will be later on merged with the main dataframe"""
-        df = self.clean_description(df)
         df = self.standardize_publication_date(df)
         df = self.extract_linked_resources_native(df)
         df = self.extract_sqa(df)
@@ -373,20 +371,3 @@ class AdapterTransformer(BaseTransformer):
                 if value:
                     affiliations.append(value)
         return affiliations
-
-    @staticmethod
-    def clean_description(df: DataFrame) -> DataFrame:
-        """Remove HTML tags and nbsp from description."""
-        if "description" not in df.columns:
-            return df
-
-        return df.withColumn(
-            "description",
-            trim(
-                regexp_replace(
-                    regexp_replace(col("description"), r"<\/?[a-zA-Z][^>]*>", ""),
-                    r"&nbsp;|\u00A0",
-                    " ",
-                )
-            ),
-        )

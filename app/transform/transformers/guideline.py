@@ -3,8 +3,6 @@
 
 import json
 import logging
-import re
-from html import unescape
 from typing import Any
 
 import pandas as pd
@@ -12,6 +10,7 @@ from pandas import DataFrame
 
 from app.services.solr.validate.schema.validate import validate_pydantic_data
 from app.settings import settings
+from app.transform.utils.html import clean_html
 from schemas.input.guideline import GuidelineInputSchema
 from schemas.se.guideline import GuidelineSESchema
 
@@ -29,12 +28,8 @@ def _compact(values: list[Any]) -> list[str]:
 
 
 def _clean_html(value: str | None) -> str:
-    """Remove basic HTML tags and HTML entities from a Provider Component string."""
-    if not value:
-        return ""
-
-    without_tags = re.sub(r"</?[a-zA-Z][^>]*>", "", value)
-    return unescape(without_tags).replace("\u00a0", " ").strip()
+    """Decode HTML entities and remove tags from a Provider Component string."""
+    return clean_html(value) or ""
 
 
 def _join(values: list[str]) -> str | None:
