@@ -16,8 +16,6 @@ from pyspark.sql.functions import (
     lit,
     lower,
     regexp_extract,
-    regexp_replace,
-    trim,
     udf,
     when,
 )
@@ -81,7 +79,6 @@ class TrainingTransformer(BaseTransformer):
         create_open_access(self.harvested_properties)
         df = self.map_arr_that_ends_with(df, (CONTENT_TYPE, TARGET_GROUP))
         df = self.map_lvl_of_expertise(df)
-        df = self.clean_description(df)
         df = self.simplify_licenses(df)
         df = self.transform_duration(df)
         df = self.extract_creators(df)
@@ -517,20 +514,3 @@ class TrainingTransformer(BaseTransformer):
                 if value:
                     affiliations.append(value)
         return affiliations
-
-    @staticmethod
-    def clean_description(df: DataFrame) -> DataFrame:
-        """Remove HTML tags and nbsp from description."""
-        if "description" not in df.columns:
-            return df
-
-        return df.withColumn(
-            "description",
-            trim(
-                regexp_replace(
-                    regexp_replace(col("description"), r"<\/?[a-zA-Z][^>]*>", ""),
-                    r"&nbsp;|\u00A0",
-                    " ",
-                )
-            ),
-        )

@@ -8,10 +8,11 @@ from typing import Type
 from pydantic import BaseModel
 from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql.functions import col, udf
-from pyspark.sql.types import StringType, StructType
+from pyspark.sql.types import ArrayType, StringType, StructType
 
 from app.services.solr.validate.schema.validate import validate_schema
 from app.transform.utils.common import add_tg_fields
+from app.transform.utils.html import clean_html
 from app.transform.utils.join_dfs import create_df, join_different_dfs
 from app.transform.utils.utils import (
     add_columns,
@@ -71,10 +72,26 @@ class BaseTransformer(ABC):
         if self._cols_to_add:
             df = add_columns(df, self._cols_to_add)
 
+        df = self.clean_description(df)
         df = add_tg_fields(df)
         df = replace_empty_str(df)
         df = df.select(sorted(df.columns))
         return df
+
+    @staticmethod
+    def clean_description(df: DataFrame) -> DataFrame:
+        """Clean descriptions stored as strings or lists of strings."""
+        if "description" not in df.columns:
+            return df
+
+        description_type = df.schema["description"].dataType
+        return_type = (
+            ArrayType(StringType())
+            if isinstance(description_type, ArrayType)
+            else StringType()
+        )
+        clean_description = udf(clean_html, return_type)
+        return df.withColumn("description", clean_description(col("description")))
 
     def rename_cols(self, df: DataFrame) -> DataFrame:
         """Rename columns based on the mappings dict"""
