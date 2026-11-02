@@ -2,6 +2,7 @@
 """Transform adapters"""
 
 from datetime import datetime, timezone
+from html import unescape
 from logging import getLogger
 
 from dateutil import parser
@@ -375,8 +376,21 @@ class AdapterTransformer(BaseTransformer):
         return affiliations
 
     @staticmethod
+    @udf(StringType())
+    def _decode_html(value):
+        """Decode nested HTML entities while preserving null values."""
+        if value is None:
+            return None
+
+        decoded = unescape(value)
+        while decoded != value:
+            value = decoded
+            decoded = unescape(value)
+        return decoded
+
+    @staticmethod
     def clean_description(df: DataFrame) -> DataFrame:
-        """Remove HTML tags and nbsp from description."""
+        """Decode HTML entities and remove HTML tags and nbsp from description."""
         if "description" not in df.columns:
             return df
 
@@ -384,7 +398,11 @@ class AdapterTransformer(BaseTransformer):
             "description",
             trim(
                 regexp_replace(
-                    regexp_replace(col("description"), r"<\/?[a-zA-Z][^>]*>", ""),
+                    regexp_replace(
+                        AdapterTransformer._decode_html(col("description")),
+                        r"<\/?[a-zA-Z][^>]*>",
+                        "",
+                    ),
                     r"&nbsp;|\u00A0",
                     " ",
                 )
