@@ -442,30 +442,16 @@ class TrainingTransformer(BaseTransformer):
     def extract_creators(df: DataFrame) -> DataFrame:
         """Extract searchable creator fields and preserve creator relationships."""
         if "creators" not in df.columns:
-            return (
-                df.withColumn("author_names", array())
-                .withColumn("author_identifiers", array())
-                .withColumn("author_affiliations", array())
-                .withColumn("creators", lit("[]"))
+            return df.withColumn("author_names", array()).withColumn(
+                "creators", lit("[]")
             )
 
-        return (
-            df.withColumn(
-                "author_names",
-                TrainingTransformer.extract_creator_names(col("creators")),
-            )
-            .withColumn(
-                "author_identifiers",
-                TrainingTransformer.extract_creator_identifiers(col("creators")),
-            )
-            .withColumn(
-                "author_affiliations",
-                TrainingTransformer.extract_creator_affiliations(col("creators")),
-            )
-            .withColumn(
-                "creators",
-                TrainingTransformer.serialize_creators(col("creators")),
-            )
+        return df.withColumn(
+            "author_names",
+            TrainingTransformer.extract_creator_names(col("creators")),
+        ).withColumn(
+            "creators",
+            TrainingTransformer.serialize_creators(col("creators")),
         )
 
     @staticmethod
