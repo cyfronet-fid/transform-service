@@ -1,3 +1,48 @@
+[project]
+name = "transform-service"
+version = "0.1.0"
+requires-python = ">=3.14,<3.15"
+dependencies = [
+    "pyspark",
+    "boto3",
+    "tqdm",
+    "python-dotenv",
+    "requests",
+    "pandas",
+    "pycountry",
+    "fastapi",
+    "uvicorn[standard]",
+    "celery[redis]",
+    "flower",
+    "pydantic",
+    "pydantic-settings",
+    "pyarrow",
+    "stomp.py",
+    "coloredlogs",
+    "sphinx",
+    "sphinx-autodoc-typehints",
+    "sphinx-rtd-theme",
+    "autodoc-pydantic",
+    "sentry-sdk[fastapi]",
+    "sickle",
+    "aiohttp",
+    "email-validator",
+    "typing-extensions",
+    "apscheduler",
+]
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "pylint",
+    "jupyter",
+    "black[jupyter]",
+    "isort",
+    "requests-mock",
+    "pytest-mock",
+    "pytest-asyncio==0.26.0",
+]
+
 [tool.pytest.ini_options]
 testpaths = ["tests", "sage/tests"]
 [tool.isort]

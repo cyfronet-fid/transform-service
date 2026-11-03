@@ -1,9 +1,13 @@
-FROM python:3.10-slim
+FROM python:3.14-slim
+
+COPY --from=ghcr.io/astral-sh/uv:0.13.7 /uv /uvx /bin/
 
 # Set environment variables
 ENV JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
+ENV UV_PROJECT_ENVIRONMENT=/opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
 
 # Install Java for PySpark
 RUN apt-get update \
@@ -16,13 +20,11 @@ RUN apt-get update \
 # Set working directory
 WORKDIR /app
 
-# Copy Pipfile first (for better layer caching)
-COPY Pipfile Pipfile.lock ./
+# Copy dependency files first (for better layer caching)
+COPY pyproject.toml uv.lock ./
 
 # Install dependencies
-RUN pip install --no-cache-dir --upgrade pip pipenv \
-    && pipenv install --deploy --system --ignore-pipfile \
-    && pip cache purge
+RUN uv sync --locked --no-dev --no-cache
 
 # Copy application code
 COPY . .
