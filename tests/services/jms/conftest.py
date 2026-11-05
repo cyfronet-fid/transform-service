@@ -25,8 +25,7 @@ def subscription_id() -> str:
 
 
 @pytest.fixture
-def jms_handler(
-    event_loop: asyncio.AbstractEventLoop,
+async def jms_handler(
     mock_stomp_connection: Generator[MagicMock, None, None],
     subscription_id: str,
 ) -> JMSMessageHandler:
@@ -38,7 +37,7 @@ def jms_handler(
         password=settings.STOMP_PASS,
         topics=settings.STOMP_TOPICS,
         subscription_id=subscription_id,
-        event_loop=event_loop,
+        event_loop=asyncio.get_running_loop(),
         _ssl=settings.STOMP_SSL,
     )
 
