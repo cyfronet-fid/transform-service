@@ -1,6 +1,8 @@
 import logging
 import os
 from enum import Enum
+from pathlib import Path
+from typing import Optional
 
 from dotenv import load_dotenv
 from pydantic import AnyUrl
@@ -10,7 +12,7 @@ load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
 logger = logging.getLogger(__name__)
 
 
-class Repository(Enum):
+class Repository(str, Enum):
     REPOD = "repod"
     RODBUK = "rodbuk"
 
@@ -20,9 +22,12 @@ class GlobalSettings(BaseSettings):
     DATASET_DETAIL_ADDRESS: AnyUrl
     SOLR_URL: AnyUrl = "http://149.156.182.2:8983"
     SOLR_EOSCPL_DATASET_COLS_NAME: str = "pl_all_collection pl_dataset"
-    PER_PAGE: int = 1000
+    PER_PAGE: int = 100
     REPOSITORY: Repository
-    TIMEOUT_SECONDS: 200
+    TIMEOUT_SECONDS: int = 200
+    TOTAL_RECORDS: Optional[int] = None
+    DRY_RUN: bool = False
+    OUTPUT_DIR: Path = Path(__file__).resolve().parent / "output"
 
 
 class RepodSettings(GlobalSettings):
@@ -48,6 +53,11 @@ CONFIG_MAP = {
 
 
 def get_config(repository):
+    if isinstance(repository, str):
+        try:
+            repository = Repository(repository.lower())
+        except ValueError:
+            pass
     settings = CONFIG_MAP.get(repository)
     if not settings:
         logger.error(

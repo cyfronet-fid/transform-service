@@ -4,8 +4,9 @@
 from logging import getLogger
 
 from pandas import DataFrame, to_datetime
-from transform.utils import data
-from transform.utils.consts import (
+
+from eosc_pl.transform.utils import data
+from eosc_pl.transform.utils.consts import (
     AUTHOR_NAMES,
     AUTHOR_NAMES_TG,
     DATASET,
@@ -31,6 +32,8 @@ class RodbukDatasetTransformer(BaseDataverseTransformer):
         """Apply df transformations"""
         df["datasource_pids"] = [["eosc.cyfronet.rodbuk"]] * len(df)
         df["country"] = [["PL"]] * len(df)
+        df["type"] = [self.type] * len(df)
+        df["node"] = "EOSC PL"
         df["publication_year"] = to_datetime(df["published_at"]).dt.year
         df["scientific_domains"] = data.harvest_scientific_domains(df)
         df["funder"] = data.harvest_funder(df)

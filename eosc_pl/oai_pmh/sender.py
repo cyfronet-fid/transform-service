@@ -4,9 +4,10 @@ import logging
 from pathlib import Path
 
 import requests
-from oai_pmh import settings
-from oai_pmh.common.utils import chunk_iterable, load_ndjson
 from tqdm import tqdm
+
+from eosc_pl.oai_pmh import settings
+from eosc_pl.oai_pmh.common.utils import chunk_iterable, load_ndjson
 
 logger = logging.getLogger(__name__)
 

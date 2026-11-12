@@ -1,14 +1,19 @@
+import argparse
 import json
 import logging
 from pathlib import Path
 
 import requests
-from ecudo.sender import send_to_solr
-from ega.mappings.best_access_right import access_map
-from ega.schemas.output import EgaOutput
-from ega.settings import URL
 
-with open("datasets.json") as f:
+from eosc_pl.ecudo.sender import send_to_solr
+from eosc_pl.ega.mappings.best_access_right import access_map
+from eosc_pl.ega.schemas.output import EgaOutput
+from eosc_pl.ega.settings import URL
+
+BASE_DIR = Path(__file__).resolve().parent
+PROJECT_ROOT = BASE_DIR.parent.parent
+
+with open(BASE_DIR / "datasets.json") as f:
     DATASETS_IDS = json.load(f)["datasets_ids"]
 
 logging.basicConfig(level=logging.INFO)
@@ -43,11 +48,19 @@ def transform_to_ega_output(raw: dict) -> EgaOutput:
     )
 
 
-def run_pipeline(load_from: Path = None, dataset_ids=None):
+def run_pipeline(
+    dataset_ids: list[str] | None = None,
+    dry_run: bool = False,
+    output_path: Path | str | None = None,
+    limit: int | None = None,
+):
     logger.info("Starting EGA pipeline")
-    outputs: list[dict] = []
+    ids = list(dataset_ids or DATASETS_IDS)
+    if limit is not None and limit > 0:
+        ids = ids[:limit]
 
-    for dataset_id in dataset_ids:
+    outputs: list[dict] = []
+    for dataset_id in ids:
         logger.info("Processing dataset %s", dataset_id)
         try:
             raw = fetch_dataset(dataset_id)
@@ -56,10 +69,71 @@ def run_pipeline(load_from: Path = None, dataset_ids=None):
         except Exception as e:
             logger.error("Failed for %s: %s", dataset_id, e)
 
-    logger.info("Sending %d records to Solr", len(outputs))
-    send_to_solr(outputs)
-    logger.info("Mission complete")
+    # Data sources summary
+    print("\n" + "=" * 50)
+    print("=== DATA SOURCES SUMMARY (EGA) ===")
+    print("Primary DataSource PID: ['eosc.ega.ega']")
+    print(f"Total datasets processed: {len(outputs)}")
+    print("=" * 50 + "\n")
+
+    # Save to file
+    out_file = (
+        Path(output_path)
+        if output_path
+        else PROJECT_ROOT / "eosc_pl" / "output" / "ega.json"
+    )
+    out_file.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_file, "w", encoding="utf-8") as f:
+        json.dump(outputs, f, indent=2, ensure_ascii=False)
+    logger.info("Saved %d transformed records to %s", len(outputs), out_file)
+
+    # Send to Solr / dry-run
+    if dry_run:
+        logger.info("Dry-run active: skipped sending to Solr.")
+    else:
+        logger.info("Sending %d records to Solr", len(outputs))
+        send_to_solr(outputs)
+
+    logger.info("EGA pipeline completed successfully.")
+
+
+def main():
+    parser = argparse.ArgumentParser(description="EGA Solr pipeline")
+    parser.add_argument(
+        "--dry-run",
+        "--skip-solr",
+        action="store_true",
+        help="Skip sending transformed records to Solr and save output to JSON file",
+    )
+    parser.add_argument(
+        "--limit",
+        "-n",
+        type=int,
+        default=None,
+        help="Maximum number of dataset IDs to fetch",
+    )
+    parser.add_argument(
+        "--output",
+        "-o",
+        type=str,
+        default=None,
+        help="Path to save the output JSON file (defaults to eosc_pl/output/ega.json)",
+    )
+    parser.add_argument(
+        "dataset_ids",
+        nargs="*",
+        default=None,
+        help="Optional dataset accession IDs (defaults to datasets.json)",
+    )
+    args = parser.parse_args()
+
+    run_pipeline(
+        dataset_ids=args.dataset_ids or None,
+        dry_run=args.dry_run,
+        output_path=args.output,
+        limit=args.limit,
+    )
 
 
 if __name__ == "__main__":
-    run_pipeline(dataset_ids=DATASETS_IDS)
+    main()

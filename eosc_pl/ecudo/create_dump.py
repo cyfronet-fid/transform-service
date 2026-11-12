@@ -4,7 +4,8 @@ import math
 from typing import Dict, List
 
 import aiohttp
-from ecudo import settings
+
+from eosc_pl.ecudo import settings
 
 
 async def fetch_json(session: aiohttp.ClientSession, url: str) -> dict:

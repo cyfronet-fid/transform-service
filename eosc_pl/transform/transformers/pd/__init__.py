@@ -1,7 +1,7 @@
 # pylint: disable=undefined-variable, cyclic-import
 """Import transformations"""
 
-from settings import Repository
+from eosc_pl.settings import Repository
 
 from .repod.dataset import RepodDatasetTransformer
 from .rodbuk.dataset import RodbukDatasetTransformer
