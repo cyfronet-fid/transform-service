@@ -613,6 +613,7 @@ def test_calculate_checksum_ignores_dynamic_v017_policy_id():
         [dataset_with_different_policy_id]
     )
 
+
 def test_normalize_for_checksum_removes_dynamic_ids():
     dataset = {
         "@id": "dataset-1",
@@ -636,17 +637,17 @@ def test_normalize_for_checksum_removes_dynamic_ids():
 
     assert normalized["@id"] == "dataset-1"
 
-    assert "@id" not in normalized[
-        "http://www.w3.org/ns/dcat#service"
-    ]
+    assert "@id" not in normalized["http://www.w3.org/ns/dcat#service"]
 
-    assert "@id" not in normalized[
-        "http://www.w3.org/ns/dcat#distribution"
-    ]["http://www.w3.org/ns/dcat#accessService"]
+    assert (
+        "@id"
+        not in normalized["http://www.w3.org/ns/dcat#distribution"][
+            "http://www.w3.org/ns/dcat#accessService"
+        ]
+    )
 
-    assert "@id" not in normalized[
-        "http://www.w3.org/ns/odrl/2/hasPolicy"
-    ]
+    assert "@id" not in normalized["http://www.w3.org/ns/odrl/2/hasPolicy"]
+
 
 def test_calculate_checksum_includes_dataset_id():
     dataset_1 = {
@@ -659,6 +660,4 @@ def test_calculate_checksum_includes_dataset_id():
         "name": "Test dataset",
     }
 
-    assert calculate_checksum([dataset_1]) != calculate_checksum(
-        [dataset_2]
-    )
+    assert calculate_checksum([dataset_1]) != calculate_checksum([dataset_2])

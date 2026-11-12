@@ -21,9 +21,10 @@ class TestJMSMessageHandler:
     ) -> None:
         """Test that on_message handles exceptions during message processing."""
         message_frame.body = ""
-        with patch("app.services.jms.connector.process_message") as mock_process, patch(
-            "app.services.jms.connector.logger.error"
-        ) as mock_log:
+        with (
+            patch("app.services.jms.connector.process_message") as mock_process,
+            patch("app.services.jms.connector.logger.error") as mock_log,
+        ):
             jms_handler.on_error(message_frame)
 
             mock_log.assert_called_with(
