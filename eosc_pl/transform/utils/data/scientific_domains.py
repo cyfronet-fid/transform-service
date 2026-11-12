@@ -186,7 +186,7 @@ def harvest_scientific_domains(df: DataFrame) -> list[list[str]] | list[str]:
 
             else:
                 scientific_domain_column.append([])
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             scientific_domain_column.append([])
 
     return scientific_domain_column
