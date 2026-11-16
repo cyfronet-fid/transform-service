@@ -8,7 +8,7 @@ dependencies = [
     "tqdm",
     "python-dotenv",
     "requests",
-    "pandas",
+    "pandas<3",  # PySpark 4.3 does not fully support pandas 3 yet
     "pycountry",
     "fastapi",
     "uvicorn[standard]",
