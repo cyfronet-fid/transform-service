@@ -89,7 +89,7 @@ def _process_ams_message(message_data, ack_id=None) -> None:
             logger.info(
                 f"[AMS] Extracted subscription name from ack_id: {subscription_name}"
             )
-        except (IndexError, AttributeError):
+        except IndexError, AttributeError:
             logger.warning(
                 f"[AMS] Failed to extract subscription name from ack_id: {ack_id}"
             )

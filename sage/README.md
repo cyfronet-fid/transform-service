@@ -4,8 +4,8 @@ This directory contains the SAGE metadata ingestion and transformation pipeline.
 
 ## Prerequisites
 
-- Python 3.10+
-- Project dependencies installed
+- Python 3.14
+- uv with project dependencies installed using `uv sync --locked`
 - A valid `sage/.env` configuration file
 
 ## Running the pipeline
@@ -13,13 +13,7 @@ This directory contains the SAGE metadata ingestion and transformation pipeline.
 The pipeline should be executed from the **project root**, not from the `sage` directory.
 
 ```bash
-python -m sage.pipeline
-```
-
-or, if using Pipenv:
-
-```bash
-pipenv run python -m sage.pipeline
+uv run --locked python -m sage.pipeline
 ```
 
 This executes a single pipeline run.
@@ -29,13 +23,7 @@ This executes a single pipeline run.
 To run the pipeline continuously using the scheduler entrypoint:
 
 ```bash
-python -m sage.scheduler
-```
-
-or, if using Pipenv:
-
-```bash
-pipenv run python -m sage.scheduler
+uv run --locked python -m sage.scheduler
 ```
 
 The scheduler runs the pipeline periodically according to `SCHEDULER_INTERVAL_MINUTES` (10 minutes by default). It uses UTC and continues running if an individual pipeline execution fails. The first pipeline run occurs after the configured interval.
@@ -266,31 +254,25 @@ Tests should be executed from the **project root**.
 Run all tests:
 
 ```bash
-pytest
+uv run --locked pytest
 ```
 
 Run only the SAGE pipeline tests:
 
 ```bash
-pytest sage/tests/
+uv run --locked pytest sage/tests/
 ```
 
 Run only the main transform-service tests:
 
 ```bash
-pytest tests/
+uv run --locked pytest tests/
 ```
 
 For more detailed output:
 
 ```bash
-pytest -v
-```
-
-If using Pipenv:
-
-```bash
-pipenv run pytest
+uv run --locked pytest -v
 ```
 
 The SAGE tests do not require a running Aggregator or Solr instance. External HTTP requests are mocked where necessary.

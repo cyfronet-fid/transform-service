@@ -305,7 +305,7 @@ def harvest_scientific_domains(df: DataFrame, harvested_properties: dict) -> Non
 
             else:
                 scientific_domain_column.append([])
-        except (TypeError, ValueError, KeyError):
+        except TypeError, ValueError, KeyError:
             scientific_domain_column.append([])
 
     harvested_properties[SCIENTIFIC_DOMAINS] = scientific_domain_column
@@ -334,7 +334,7 @@ def harvest_sdg(df: DataFrame, harvested_properties: dict) -> None:
                 sdg_column.append(sdg_row)
             else:
                 sdg_column.append([])
-        except (TypeError, ValueError, KeyError):
+        except TypeError, ValueError, KeyError:
             sdg_column.append([])
 
         harvested_properties[SDG] = sdg_column
@@ -738,7 +738,7 @@ def simplify_indicators(df: DataFrame) -> DataFrame:
                 df.indicator["usageCounts"]["views"]
             ),
         )
-    except (AnalysisException, AttributeError):
+    except AnalysisException, AttributeError:
         df = df.withColumn(DOWNLOADS, lit(None)).withColumn(VIEWS, lit(None))
 
     return df

@@ -84,10 +84,13 @@ class TestJMSSubscription:
 
         fake_connect.call_count = 0
 
-        with patch(
-            "app.services.jms.connector.connect",
-            new=AsyncMock(side_effect=fake_connect),
-        ), patch("app.services.jms.connector.INIT_JMS_RETRY_INTERVAL", new=1):
+        with (
+            patch(
+                "app.services.jms.connector.connect",
+                new=AsyncMock(side_effect=fake_connect),
+            ),
+            patch("app.services.jms.connector.INIT_JMS_RETRY_INTERVAL", new=1),
+        ):
 
             await start_jms_subscription()
 

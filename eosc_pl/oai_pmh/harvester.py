@@ -273,9 +273,10 @@ def harvest_to_ndjson(
     out_path_dc = out_path.replace(".ndjson", "_dc.ndjson")
 
     written = 0
-    with open(out_path, "w", encoding="utf-8") as fh_full, open(
-        out_path_dc, "w", encoding="utf-8"
-    ) as fh_dc:
+    with (
+        open(out_path, "w", encoding="utf-8") as fh_full,
+        open(out_path_dc, "w", encoding="utf-8") as fh_dc,
+    ):
         for rec in records:
             obj = process_record(rec)
             fh_full.write(json.dumps(obj, ensure_ascii=False) + "\n")

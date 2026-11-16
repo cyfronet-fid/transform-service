@@ -170,9 +170,10 @@ class TestSubscriptionNameExtraction:
         """Test subscription name extraction from ack_id"""
         message_json = json.dumps(sample_adapter_message)
 
-        with patch("app.settings.settings.ADAPTER", "adapters"), patch(
-            "app.transform.live_update.process_message.logger"
-        ) as mock_logger:
+        with (
+            patch("app.settings.settings.ADAPTER", "adapters"),
+            patch("app.transform.live_update.process_message.logger") as mock_logger,
+        ):
             _process_ams_message(message_json, adapter_ack_id)
             # Check that subscription name was extracted
             logger_calls = str(mock_logger.info.call_args_list)
@@ -183,10 +184,10 @@ class TestSubscriptionNameExtraction:
         message_json = json.dumps(sample_adapter_message)
         invalid_ack_id = "invalid-format"
 
-        with patch("app.settings.settings.ADAPTER", "adapters"), patch(
-            "app.transform.live_update.process_message.logger"
-        ) as mock_logger, patch(
-            "app.transform.live_update.process_message.handle_update_action"
+        with (
+            patch("app.settings.settings.ADAPTER", "adapters"),
+            patch("app.transform.live_update.process_message.logger") as mock_logger,
+            patch("app.transform.live_update.process_message.handle_update_action"),
         ):
             _process_ams_message(message_json, invalid_ack_id)
             # Should handle gracefully and use fallback
