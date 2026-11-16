@@ -9,6 +9,7 @@ __pycache__/
 
 # Python virtual environments
 venv/
+.venv/
 .env/
 
 # Cache and logs
@@ -54,6 +55,7 @@ build/
 # Docker-related
 docker-compose.override.yml
 *.dockerignore
+!.dockerignore
 
 # Ignore unnecessary backups or temp files
 *.bak
