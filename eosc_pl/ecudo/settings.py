@@ -13,12 +13,14 @@ OUTPUT_DIR.mkdir(exist_ok=True, parents=True)
 
 # Solr configuration
 SOLR_URL = os.getenv("SOLR_URL", "http://localhost:8983")
-SOLR_COLLECTIONS = os.getenv("SOLR_EOSCPL_DATASET_COLS_NAME", "")
+SOLR_COLLECTIONS = os.getenv(
+    "SOLR_EOSCPL_DATASET_COLS_NAME", "pl_all_collection pl_dataset"
+)
 SOLR_COLLECTION_LIST = SOLR_COLLECTIONS.split()
 
 # ECUDO / Metadata fetch configuration
 BASE_URL = os.getenv("ECUDO_BASE_URL", "http://central.ecudo.pl")
-TOTAL_RECORDS = int(os.getenv("ECUDO_TOTAL_RECORDS", 500))
+TOTAL_RECORDS = int(os.getenv("ECUDO_TOTAL_RECORDS", 10000))
 PAGE_SIZE = int(os.getenv("ECUDO_PAGE_SIZE", 50))
 CONCURRENCY = int(os.getenv("ECUDO_CONCURRENCY", 10))
 TIMEOUT = int(os.getenv("ECUDO_TIMEOUT", 15))

@@ -6,7 +6,8 @@ Handles sending transformed records to Solr.
 from itertools import islice
 
 import requests
-from ecudo import settings
+
+from eosc_pl.ecudo import settings
 
 
 def chunk_iterable(iterable, size):

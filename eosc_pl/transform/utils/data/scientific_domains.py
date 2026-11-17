@@ -2,8 +2,9 @@
 
 from collections import defaultdict
 
-from mappings.scientific_domains import mp_sd_structure, oecd_mapping
 from pandas import DataFrame
+
+from eosc_pl.mappings.scientific_domains import mp_sd_structure, oecd_mapping
 
 
 def harvest_scientific_domains(df: DataFrame) -> list[list[str]] | list[str]:
@@ -151,13 +152,30 @@ def harvest_scientific_domains(df: DataFrame) -> list[list[str]] | list[str]:
 
     def create_raw_sd_column() -> list[list[int]]:
         """Create raw scientific column from Rodbuk's 'oecd' nested field"""
+        if "metadataBlocks" not in df.columns:
+            return [[] for _ in range(len(df))]
         raw_sd_list = []
         for row in df["metadataBlocks"]:
+            if (
+                not isinstance(row, dict)
+                or "citation" not in row
+                or "fields" not in row["citation"]
+            ):
+                raw_sd_list.append([])
+                continue
             for field in row["citation"]["fields"]:
                 sd_row = []
-                if field["typeName"] == "oecd":  # scientific domain property
-                    for val in field["value"]:
-                        sd_row.append(int(val["oecdList"]["value"]))
+                if field.get("typeName") == "oecd":  # scientific domain property
+                    for val in field.get("value", []):
+                        if (
+                            isinstance(val, dict)
+                            and "oecdList" in val
+                            and "value" in val["oecdList"]
+                        ):
+                            try:
+                                sd_row.append(int(val["oecdList"]["value"]))
+                            except (ValueError, TypeError):
+                                pass
                     raw_sd_list.append(sd_row)
                     break
             else:
