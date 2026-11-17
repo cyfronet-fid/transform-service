@@ -6,7 +6,9 @@ from pathlib import Path
 LOG_SIMPLE_FORMAT = "%(asctime)s | %(name)-s | %(levelname)-s | %(message)s"
 LOG_DETAILED_FORMAT = "%(asctime)s | %(name)-s | %(levelname)-s | %(message)s | %(filename)s/%(funcName)s [%(lineno)d]"
 CURRENT_DIR = Path(__file__).resolve().parent
-LOG_FILE_NAME = CURRENT_DIR / "logs" / "transformer.log"
+LOG_DIR = CURRENT_DIR / "logs"
+LOG_DIR.mkdir(parents=True, exist_ok=True)
+LOG_FILE_NAME = LOG_DIR / "transformer.log"
 
 
 class InfoFilter(logging.Filter):

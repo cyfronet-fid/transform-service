@@ -17,7 +17,7 @@ All output files are saved in `eosc_pl/output/<repository>.json`.
 ### Setup
 Always run from the root directory of the repository (`transform-service`) with virtual environment activated:
 ```bash
-source .venv/bin/activate
+pipenv shell
 ```
 
 ---

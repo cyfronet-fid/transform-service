@@ -8,75 +8,77 @@ from eosc_pl.transform.transformers.pd.rodbuk.dataset import RodbukDatasetTransf
 
 
 def test_rodbuk_transformer_from_file():
-    df = pd.DataFrame([
-        {
-            "name": "Test name",
-            "type": "dataset",
-            "url": "https://doi.org/10.17632/MPFYK7JCZ9.2",
-            "global_id": "doi:10.17632/MPFYK7JCZ9.2",
-            "description": "Description",
-            "published_at": "2026-02-04T01:00:05Z",
-            "publisher": "Faculty of Geology, Geophysics, and Environmental Protection",
-            "citationHtml": "some citation",
-            "identifier_of_dataverse": "wggios",
-            "name_of_dataverse": "Faculty of Geology, Geophysics, and Environmental Protection",
-            "citation": "some citation",
-            "publicationStatuses": [
-                "Published"
-            ],
-            "storageIdentifier": "file://10.17632/mpfyk7jcz9.2",
-            "keywords": [
-                "nitrogen and phosphorus loads",
-                "chlorophyll ‘a’ concentrations",
-                "catchment",
-                "SWAT model"
-            ],
-            "subjects": [],
-            "fileCount": 0,
-            "versionId": 4258,
-            "versionState": "RELEASED",
-            "majorVersion": 1,
-            "createdAt": "2024-05-11T23:03:24Z",
-            "updatedAt": "2024-05-11T23:03:24Z",
-            "contacts": [],
-            "publications": [
-                {
-                    "citation": "The deposited dataset is the source material for the related publication"
-                },
-                {
-                    "citation": "The deposited dataset is the source material for the related publication"
-                }
-            ],
-            "authors": []
-        },
-    ])
+    df = pd.DataFrame(
+        [
+            {
+                "name": "Test name",
+                "type": "dataset",
+                "url": "https://doi.org/10.17632/MPFYK7JCZ9.2",
+                "global_id": "doi:10.17632/MPFYK7JCZ9.2",
+                "description": "Description",
+                "published_at": "2026-02-04T01:00:05Z",
+                "publisher": "Faculty of Geology, Geophysics, and Environmental Protection",
+                "citationHtml": "some citation",
+                "identifier_of_dataverse": "wggios",
+                "name_of_dataverse": "Faculty of Geology, Geophysics, and Environmental Protection",
+                "citation": "some citation",
+                "publicationStatuses": ["Published"],
+                "storageIdentifier": "file://10.17632/mpfyk7jcz9.2",
+                "keywords": [
+                    "nitrogen and phosphorus loads",
+                    "chlorophyll ‘a’ concentrations",
+                    "catchment",
+                    "SWAT model",
+                ],
+                "subjects": [],
+                "fileCount": 0,
+                "versionId": 4258,
+                "versionState": "RELEASED",
+                "majorVersion": 1,
+                "createdAt": "2024-05-11T23:03:24Z",
+                "updatedAt": "2024-05-11T23:03:24Z",
+                "contacts": [],
+                "publications": [
+                    {
+                        "citation": "The deposited dataset is the source material for the related publication"
+                    },
+                    {
+                        "citation": "The deposited dataset is the source material for the related publication"
+                    },
+                ],
+                "authors": [],
+            },
+        ]
+    )
 
     transformer = RodbukDatasetTransformer()
     result = transformer(df)
 
     assert "node" in result.columns
-    assert (result["node"][0] == "EOSC PL")
+    assert result["node"][0] == "EOSC PL"
     assert result["country"].tolist() == [["PL"]]
-    assert (result["type"][0] == "dataset")
+    assert result["type"][0] == "dataset"
     assert "metadataBlocks" not in result.columns
     assert "author_names_tg" in result.columns
 
 
 def test_repod_transformer_from_file(monkeypatch):
-    df = pd.DataFrame([
-        {
-            "name": "repod test",
-            "type": "dataset",
-            "url": "https://doi.org/10.18150/LII8AM",
-            "citationHtml": "",
-            "citation": "",
-            "authors": [],
-            "global_id": "doi:10.18150/LII8AM",
-            "published_at": "2024-03-15T19:08:41Z",
-            "identifier_of_dataverse": "repod",
-            "name_of_dataverse": "RepOD"
-        }
-    ])
+    df = pd.DataFrame(
+        [
+            {
+                "name": "repod test",
+                "type": "dataset",
+                "url": "https://doi.org/10.18150/LII8AM",
+                "citationHtml": "",
+                "citation": "",
+                "authors": [],
+                "global_id": "doi:10.18150/LII8AM",
+                "published_at": "2024-03-15T19:08:41Z",
+                "identifier_of_dataverse": "repod",
+                "name_of_dataverse": "RepOD",
+            }
+        ]
+    )
 
     mock_detail = {
         "id": 9999,
@@ -86,7 +88,12 @@ def test_repod_transformer_from_file(monkeypatch):
             "metadataBlocks": {
                 "citation": {
                     "fields": [
-                        {"typeName": "dsDescription", "value": [{"dsDescriptionValue": {"value": "Test description"}}]}
+                        {
+                            "typeName": "dsDescription",
+                            "value": [
+                                {"dsDescriptionValue": {"value": "Test description"}}
+                            ],
+                        }
                     ]
                 }
             },
@@ -102,28 +109,30 @@ def test_repod_transformer_from_file(monkeypatch):
     result = transformer(df)
 
     assert "node" in result.columns
-    assert (result["node"][0] == "EOSC PL")
+    assert result["node"][0] == "EOSC PL"
     assert result["country"][0] == ["PL"]
-    assert (result["type"][0] == "dataset")
+    assert result["type"][0] == "dataset"
     assert result["datasource_pids"][0] == ["eosc.icm.repod"]
     assert "author_names_tg" in result.columns
 
 
 def test_repod_skips_record_on_failed_detail(monkeypatch):
-    df = pd.DataFrame([
-        {
-            "name": "repod test",
-            "type": "dataset",
-            "url": "https://doi.org/10.18150/LII8AM",
-            "citationHtml": "",
-            "citation": "",
-            "authors": [],
-            "global_id": "doi:10.18150/LII8AM",
-            "published_at": "2024-03-15T19:08:41Z",
-            "identifier_of_dataverse": "repod",
-            "name_of_dataverse": "RepOD"
-        }
-    ])
+    df = pd.DataFrame(
+        [
+            {
+                "name": "repod test",
+                "type": "dataset",
+                "url": "https://doi.org/10.18150/LII8AM",
+                "citationHtml": "",
+                "citation": "",
+                "authors": [],
+                "global_id": "doi:10.18150/LII8AM",
+                "published_at": "2024-03-15T19:08:41Z",
+                "identifier_of_dataverse": "repod",
+                "name_of_dataverse": "RepOD",
+            }
+        ]
+    )
 
     mock_detail = {
         "id": 12345,
@@ -133,7 +142,10 @@ def test_repod_skips_record_on_failed_detail(monkeypatch):
             "metadataBlocks": {
                 "citation": {
                     "fields": [
-                        {"typeName": "dsDescription", "value": [{"dsDescriptionValue": {"value": "Test desc"}}]}
+                        {
+                            "typeName": "dsDescription",
+                            "value": [{"dsDescriptionValue": {"value": "Test desc"}}],
+                        }
                     ]
                 }
             },
@@ -153,7 +165,6 @@ def test_repod_skips_record_on_failed_detail(monkeypatch):
     assert len(result) == 1
     assert result.iloc[0]["id"] == "repod.12345"
     assert result.iloc[0]["node"] == "EOSC PL"
-
 
 
 def test_ecudo_transform_and_node():
