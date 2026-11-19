@@ -19,8 +19,12 @@ class AMSConsumerStats:
         self.consecutive_processing_errors: int = 0
 
     @property
-    def consecutive_errors(self) -> int:
+    def aggregate_errors(self) -> int:
         return self.consecutive_poll_errors + self.consecutive_processing_errors
+
+    @property
+    def consecutive_errors(self) -> int:
+        return max(self.consecutive_poll_errors, self.consecutive_processing_errors)
 
     @consecutive_errors.setter
     def consecutive_errors(self, value: int) -> None:
@@ -58,6 +62,7 @@ class AMSConsumerStats:
             "consecutive_poll_errors": self.consecutive_poll_errors,
             "consecutive_processing_errors": self.consecutive_processing_errors,
             "consecutive_errors": self.consecutive_errors,
+            "aggregate_errors": self.aggregate_errors,
         }
 
 
@@ -144,7 +149,11 @@ class AMSHealthTracker:
                 if elapsed > threshold:
                     all_polled_recently = False
 
-            if stats.consecutive_errors > 3:
+            # Evaluate poll and processing errors independently to prevent unrelated errors from accumulating
+            if (
+                stats.consecutive_poll_errors > 3
+                or stats.consecutive_processing_errors > 3
+            ):
                 has_errors = True
 
             consumer_reports[sub] = stats.to_dict(alive=alive)

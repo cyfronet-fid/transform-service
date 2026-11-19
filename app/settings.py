@@ -82,6 +82,8 @@ class GlobalSettings(BaseSettings):
     AMS_POLL_INTERVAL: int = 30  # Poll interval (seconds)
     AMS_PULL_MAX_MESSAGES: int = 50  # Batch size (default 50 messages per request)
     AMS_PULL_TIMEOUT_SECONDS: int = 90
+    AMS_MAX_DELIVERY_ATTEMPTS: int = 5
+    AMS_DLQ_TOPIC: Optional[str] = "transformer-dlq"
     AMS_TOPICS: list[str] = []  # Will be populated dynamically
 
     # - STOMP

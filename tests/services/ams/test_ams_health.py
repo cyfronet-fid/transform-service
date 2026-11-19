@@ -54,14 +54,16 @@ def test_ams_consumer_stats_recording():
 
     stats.record_processing_error()
     assert stats.consecutive_processing_errors == 1
-    assert stats.consecutive_errors == 2
+    assert stats.consecutive_errors == 1
+    assert stats.aggregate_errors == 2
 
     report = stats.to_dict(alive=True)
     assert report["messages_received"] == 5
     assert report["messages_processed"] == 1
     assert report["consecutive_poll_errors"] == 1
     assert report["consecutive_processing_errors"] == 1
-    assert report["consecutive_errors"] == 2
+    assert report["consecutive_errors"] == 1
+    assert report["aggregate_errors"] == 2
     assert report["last_successful_poll"].endswith("Z")
 
 
@@ -256,3 +258,147 @@ async def test_stop_ams_subscription():
     assert t1.cancelled() or t1.done()
     assert t2.cancelled() or t2.done()
     assert len(background_tasks) == 0
+
+
+@pytest.mark.asyncio
+async def test_independent_error_counters_in_health_status():
+    tracker = AMSHealthTracker()
+
+    async def dummy():
+        await asyncio.sleep(10)
+
+    task = asyncio.create_task(dummy())
+    tracker.register_consumer("sub-indep", task=task)
+
+    # 2 poll errors
+    tracker.record_poll_error("sub-indep")
+    tracker.record_poll_error("sub-indep")
+    assert tracker.get_stats("sub-indep").consecutive_poll_errors == 2
+
+    # Poll succeeds -> consecutive_poll_errors resets to 0
+    tracker.record_poll_success("sub-indep", count=1)
+    assert tracker.get_stats("sub-indep").consecutive_poll_errors == 0
+
+    # 2 processing errors
+    tracker.record_processing_error("sub-indep")
+    tracker.record_processing_error("sub-indep")
+    assert tracker.get_stats("sub-indep").consecutive_processing_errors == 2
+
+    # Verify consecutive_errors reflects max consecutive errors (2), aggregate_errors reflects sum (2)
+    stats = tracker.get_stats("sub-indep")
+    assert stats.consecutive_errors == 2
+    assert stats.aggregate_errors == 2
+
+    # Health status MUST remain healthy because neither counter exceeded threshold (> 3)
+    status = tracker.get_health_status(ams_enabled=True)
+    assert status["status"] == "healthy"
+
+    # Now add 2 more processing errors -> consecutive_processing_errors becomes 4 (> 3)
+    tracker.record_processing_error("sub-indep")
+    tracker.record_processing_error("sub-indep")
+    assert tracker.get_stats("sub-indep").consecutive_processing_errors == 4
+
+    status_degraded = tracker.get_health_status(ams_enabled=True)
+    assert status_degraded["status"] == "degraded"
+
+    task.cancel()
+    try:
+        await task
+    except asyncio.CancelledError:
+        pass
+
+
+@pytest.mark.asyncio
+async def test_ams_consume_loop_exceeds_max_delivery_attempts_and_dlqs(mocker):
+    from app.services.ams.client import ams_consume_loop, retry_tracker
+    from app.settings import settings
+
+    retry_tracker.clear()
+    encoded_data = base64.b64encode(b'{"key": "corrupt"}').decode("utf-8")
+    mock_messages = [
+        {
+            "ackId": "ack-poison-1",
+            "message": {"messageId": "msg-poison-1", "data": encoded_data},
+        }
+    ]
+
+    mocker.patch.object(settings, "AMS_MAX_DELIVERY_ATTEMPTS", 3)
+    mocker.patch.object(settings, "AMS_DLQ_TOPIC", "transformer-dlq")
+
+    mock_publish_dlq = mocker.patch(
+        "app.services.ams.client.publish_to_dlq", return_value=True
+    )
+    mock_ack = mocker.patch("app.services.ams.client.ack_messages", return_value=True)
+    mocker.patch("app.services.ams.client.process_message", return_value=False)
+
+    # Attempt 1: fails, not ACKed
+    mocker.patch(
+        "app.services.ams.client.pull_messages",
+        side_effect=[mock_messages, asyncio.CancelledError()],
+    )
+    with pytest.raises(asyncio.CancelledError):
+        await ams_consume_loop("sub-test")
+
+    assert retry_tracker.get_attempts("msg-poison-1") == 1
+    mock_ack.assert_not_called()
+    mock_publish_dlq.assert_not_called()
+
+    # Attempt 2: fails, not ACKed
+    mocker.patch(
+        "app.services.ams.client.pull_messages",
+        side_effect=[mock_messages, asyncio.CancelledError()],
+    )
+    with pytest.raises(asyncio.CancelledError):
+        await ams_consume_loop("sub-test")
+
+    assert retry_tracker.get_attempts("msg-poison-1") == 2
+    mock_ack.assert_not_called()
+    mock_publish_dlq.assert_not_called()
+
+    # Attempt 3 (reaches max_attempts=3): routes to DLQ and ACKs!
+    mocker.patch(
+        "app.services.ams.client.pull_messages",
+        side_effect=[mock_messages, asyncio.CancelledError()],
+    )
+    with pytest.raises(asyncio.CancelledError):
+        await ams_consume_loop("sub-test")
+
+    mock_publish_dlq.assert_called_once()
+    mock_ack.assert_called_once_with("sub-test", ["ack-poison-1"])
+    # After DLQ routing and ACK, tracker entry is reset
+    assert retry_tracker.get_attempts("msg-poison-1") == 0
+
+
+@pytest.mark.asyncio
+async def test_run_consumer_task_retries_on_ensure_subscription_failure(mocker):
+    from app.services.ams.startup import run_consumer_task
+
+    call_count = 0
+
+    async def mock_ensure_sub(topic, sub):
+        nonlocal call_count
+        call_count += 1
+        if call_count < 3:
+            raise ConnectionError("AMS connection refused")
+        return
+
+    mocker.patch(
+        "app.services.ams.startup.ensure_subscription", side_effect=mock_ensure_sub
+    )
+    mock_consume = mocker.patch(
+        "app.services.ams.startup.ams_consume_loop",
+        side_effect=asyncio.CancelledError(),
+    )
+
+    with pytest.raises(asyncio.CancelledError):
+        await run_consumer_task(
+            topic="adapter-update",
+            subscription_name="transformer-adapter-update",
+            initial_backoff=0.01,
+            max_backoff=0.05,
+            backoff_factor=1.5,
+        )
+
+    # ensure_subscription was attempted multiple times and recovered
+    assert call_count >= 3
+    mock_consume.assert_called_once_with("transformer-adapter-update")
