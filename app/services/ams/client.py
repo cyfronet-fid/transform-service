@@ -65,7 +65,7 @@ async def ensure_subscription(topic: str, subscription: str):
 
     payload = {
         "topic": f"projects/{settings.AMS_PROJECT_NAME}/topics/{topic}",
-        "ackDeadlineSeconds": 10,
+        "ackDeadlineSeconds": 60,
     }
 
     logger.info(f"[AMS] Ensuring pull subscription exists: {subscription}")
