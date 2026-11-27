@@ -1,13 +1,21 @@
+import argparse
 import json
-import logging
-import shutil
+import logging.config
 import subprocess
+import sys
 from pathlib import Path
 
-from ecudo import settings
-from sender import send_to_solr
+from app.logger import LOGGING_CONFIG
+from eosc_pl.ecudo import settings
+from eosc_pl.transform.utils.print_data_sources import print_data_sources_summary
 
-from schemas.output import EcudoRecord
+from .sender import send_to_solr
+
+logging.config.dictConfig(LOGGING_CONFIG)
+
+from .schemas.output import EcudoRecord
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
 logger = logging.getLogger(__name__)
 DUMP_FILE = settings.OUTPUT_DIR / "ecudo_dump.json"
@@ -16,7 +24,10 @@ DUMP_FILE = settings.OUTPUT_DIR / "ecudo_dump.json"
 def run_create_dump():
     logger.info("Running create_dump to fetch fresh metadata...")
     result = subprocess.run(
-        ["python", "create_dump.py"], capture_output=True, text=True
+        [sys.executable, "-m", "eosc_pl.ecudo.create_dump"],
+        capture_output=True,
+        text=True,
+        cwd=PROJECT_ROOT,
     )
     if result.returncode != 0:
         logger.error("create_dump failed:\n%s", result.stderr)
@@ -86,24 +97,98 @@ def transform_and_validate(records: list) -> list[dict]:
     return transformed
 
 
-def run_pipeline(load_from: Path = None):
+def run_pipeline(
+    load_from: Path | str | None = None,
+    dry_run: bool = False,
+    output_path: Path | str | None = None,
+    limit: int | None = None,
+):
     # Load and transform
-    records = load_dump(load_from)
+    logger.info("Running ECUDO pipeline...")
+    records = load_dump(Path(load_from) if load_from else None)
+    if limit is not None and limit > 0:
+        records = records[:limit]
+    logger.info("Found %d records to process", len(records))
+
     transformed_records = transform_and_validate(records)
+    logger.info("Transformed %d records", len(transformed_records))
 
-    # Send to Solr
-    logger.info("Sending %d records to Solr...", len(transformed_records))
-    send_to_solr(transformed_records)
+    # Data sources summary
+    publishers = sorted(
+        list({r.get("publisher") for r in transformed_records if r.get("publisher")})
+    )
 
-    # Delete raw dump folder
-    output_dir = DUMP_FILE.parent
-    if output_dir.exists():
-        try:
-            shutil.rmtree(output_dir)
-            logger.info("Deleted output directory: %s", output_dir)
-        except Exception as e:
-            logger.error("Failed to delete output directory %s: %s", output_dir, e)
+    print_data_sources_summary(
+        repository_name="ECUDO",
+        datasets=transformed_records,
+        primary_datasource_pids=["eosc.gdansk_tech.ecudo"],
+        publishers=publishers,
+    )
+
+    # Save to file
+    out_file = (
+        Path(output_path)
+        if output_path
+        else PROJECT_ROOT / "eosc_pl" / "output" / "ecudo.json"
+    )
+    out_file.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_file, "w", encoding="utf-8") as f:
+        json.dump(transformed_records, f, indent=2, ensure_ascii=False)
+    logger.info(
+        "Saved %d transformed records to %s", len(transformed_records), out_file
+    )
+
+    # Send to Solr / dry-run
+    if dry_run:
+        logger.info("Dry-run active: skipped sending to Solr.")
+    else:
+        logger.info("Sending %d records to Solr...", len(transformed_records))
+        send_to_solr(transformed_records)
+
+    logger.info("ECUDO pipeline finished successfully.")
+
+
+def main():
+    parser = argparse.ArgumentParser(description="ECUDO Solr pipeline")
+    parser.add_argument(
+        "--dry-run",
+        "--skip-solr",
+        action="store_true",
+        help="Skip sending transformed records to Solr and save output to JSON file",
+    )
+    parser.add_argument(
+        "--from-file",
+        type=str,
+        default=None,
+        help="Path to an existing ECUDO dump JSON file",
+    )
+    parser.add_argument(
+        "--limit",
+        "-n",
+        type=int,
+        default=None,
+        help="Maximum number of records to process",
+    )
+    parser.add_argument(
+        "--output",
+        "-o",
+        type=str,
+        default=None,
+        help="Path to save the output JSON file (defaults to eosc_pl/output/ecudo.json)",
+    )
+    args = parser.parse_args()
+
+    if args.limit is not None and args.limit <= 0:
+        logger.error("Invalid number of records: %s", args.limit)
+        return
+
+    run_pipeline(
+        load_from=args.from_file,
+        dry_run=args.dry_run,
+        output_path=args.output,
+        limit=args.limit,
+    )
 
 
 if __name__ == "__main__":
-    run_pipeline()
+    main()

@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Any, Optional, Union
 
 from pydantic import BaseModel
 
@@ -12,7 +12,7 @@ class PlDataset(BaseModel):
     citation_html: Optional[list[str]] = None
     country: list[str] = ["PL"]
     created_at: Optional[str] = None
-    datasource_pids: list[str] = None
+    datasource_pids: Optional[list[str]] = None
     doi: Optional[list[str]] = None
     dataverse_id: Optional[str] = None
     dataverse_name: Optional[str] = None
@@ -21,9 +21,10 @@ class PlDataset(BaseModel):
     url: Optional[list[str]] = None
     title: Optional[list[str]] = None
     type: str = "dataset"
+    node: Optional[str] = "EOSC PL"
 
     affiliation: Optional[list[str]] = None
-    contacts: Optional[list[str]] = None
+    contacts: Optional[list[Union[dict, str]]] = None
     description: Optional[list[str]] = None
     document_type: Optional[list[str]] = None
     file_count: Optional[int] = None
@@ -36,7 +37,7 @@ class PlDataset(BaseModel):
     major_version: Optional[int] = None
     producers: Optional[list[str]] = None
     publicationStatuses: Optional[list[str]] = None
-    publications: Optional[list[str]] = None
+    publications: Optional[list[Union[dict, str]]] = None
     publisher: Optional[list[str]] = None
     scientific_domains: Optional[list[str]] = None
     storage_id: Optional[str] = None

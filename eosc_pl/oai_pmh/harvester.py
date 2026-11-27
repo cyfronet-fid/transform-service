@@ -17,8 +17,9 @@ import urllib.parse
 from collections import defaultdict
 
 from lxml import etree
-from oai_pmh.onedata.transform import transform_metadata_dc
 from sickle import Sickle
+
+from eosc_pl.oai_pmh.onedata.transform import transform_metadata_dc
 
 # Use a safe XML parser configuration
 XML_PARSER = etree.XMLParser(resolve_entities=False, no_network=True, recover=True)

@@ -22,3 +22,4 @@ class EcudoRecord(BaseModel):
         default_factory=lambda: ["eosc.gdansk_tech.ecudo"]
     )
     best_access_right: str = "Open access"
+    node: str = "EOSC PL"

@@ -12,7 +12,9 @@ OUTPUT_DIR = Path(os.getenv("OAI_OUTPUT_DIR", BASE_DIR / "output"))
 
 # Solr configuration
 SOLR_URL = os.getenv("SOLR_URL", "http://localhost:8983")
-SOLR_COLLECTIONS = os.getenv("SOLR_EOSCPL_DATASET_COLS_NAME", "")
+SOLR_COLLECTIONS = os.getenv(
+    "SOLR_EOSCPL_DATASET_COLS_NAME", "pl_all_collection pl_dataset"
+)
 BATCH_SIZE = int(os.getenv("BATCH_SIZE", 100))
 
 if not SOLR_URL or not SOLR_COLLECTIONS:

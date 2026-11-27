@@ -1,4 +1,4 @@
-from oai_pmh.harvester import harvest_to_ndjson
+from eosc_pl.oai_pmh.harvester import harvest_to_ndjson
 
 OAI_BASE_URL = "https://data.eosc.pl/oai_pmh"
 METADATA_PREFIX = "oai_dc"
