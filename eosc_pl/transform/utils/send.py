@@ -2,6 +2,7 @@
 """Send data"""
 
 from logging import getLogger
+from typing import Any
 
 import requests
 from requests.exceptions import RequestException
@@ -12,13 +13,13 @@ logger = getLogger(__name__)
 def send_json_string_to_solr(
     data: str,
     conf: any,
-) -> bool:
+) -> list[Any] | None:
     """Send data as a json string to solr. Returns True if all collections succeeded."""
     if getattr(conf, "DRY_RUN", False):
         logger.info("DRY_RUN mode active: Skipping sending data to Solr.")
-        return True
+        return []
 
-    success = True
+    errors = []
     col_names = conf.SOLR_EOSCPL_DATASET_COLS_NAME.strip().split()
     for col_name in col_names:
         url = f"{conf.SOLR_URL}solr/{col_name}/update?commitWithin=100"
@@ -37,14 +38,14 @@ def send_json_string_to_solr(
                     f"Solr update was successful. Collection name={col_name}, status={req.status_code}"
                 )
             else:
-                success = False
-                logger.error(
-                    f"Solr update has failed. Collection name={col_name}, status={req.status_code}, body={req.text[:200]}"
-                )
-        except RequestException as e:
-            success = False
-            logger.error(
-                f"Solr connection failed for collection {col_name} (VPN may be required/disconnected): {e}"
-            )
+                error = f"Collection {col_name}: HTTP {req.status_code}, response={req.text[:200]}"
+                errors.append(error)
+                logger.error(error)
 
-    return success
+        except RequestException as e:
+            error = f"Collection {col_name}: Solr connection failed: {e}"
+            errors.append(error)
+            logger.error(error)
+
+        return errors
+    return None

@@ -5,6 +5,8 @@ import logging
 from pathlib import Path
 from typing import Optional
 
+from eosc_pl.transform.utils.print_data_sources import print_data_sources_summary
+
 try:
     import logging.config
 
@@ -26,36 +28,6 @@ from eosc_pl.transform.utils.loader import (
 from eosc_pl.transform.utils.send import send_json_string_to_solr
 
 logger = logging.getLogger(__name__)
-
-
-def print_data_sources_summary(repository_name: str, datasets):
-    """Print detected data sources and dataverses for processed datasets."""
-    datasource_pids = set()
-    if "datasource_pids" in datasets.columns:
-        for val in datasets["datasource_pids"].dropna():
-            if isinstance(val, list):
-                datasource_pids.update(val)
-            elif val:
-                datasource_pids.add(str(val))
-
-    dataverse_names = set()
-    for col in ("dataverse_name", "name_of_dataverse"):
-        if col in datasets.columns:
-            for val in datasets[col].dropna():
-                if val:
-                    dataverse_names.add(str(val))
-
-    print("\n" + "=" * 50)
-    print(f"=== DATA SOURCES SUMMARY ({repository_name.upper()}) ===")
-    print(f"Total datasets processed: {len(datasets)}")
-    print(f"Primary DataSource PID(s): {sorted(list(datasource_pids))}")
-    if dataverse_names:
-        print(f"Detected {len(dataverse_names)} distinct Dataverse data source(s):")
-        for name in sorted(dataverse_names)[:10]:
-            print(f"  - {name}")
-        if len(dataverse_names) > 10:
-            print(f"  ... and {len(dataverse_names) - 10} more.")
-    print("=" * 50 + "\n")
 
 
 def process(
@@ -96,7 +68,10 @@ def process(
     logger.info("Transformed %d datasets successfully", len(datasets))
 
     # 3. Print Data Sources summary in console
-    print_data_sources_summary(repository.value, datasets)
+    print_data_sources_summary(
+        repository_name="Dataverse",
+        datasets=datasets,
+    )
 
     # 4. Save locally if requested
     out_dir = Path(output_dir) if output_dir else conf.OUTPUT_DIR
@@ -115,7 +90,10 @@ def process(
         )
     else:
         logger.info("Sending %d records to Solr...", len(datasets))
-        send_json_string_to_solr(datasets_json, conf)
+        errors = send_json_string_to_solr(datasets_json, conf)
+
+        if errors:
+            raise RuntimeError("Failed to send data to Solr:\n" + "\n".join(errors))
 
 
 def main():
@@ -159,6 +137,10 @@ def main():
     )
 
     args = parser.parse_args()
+
+    if args.limit is not None and args.limit <= 0:
+        logger.error("Invalid number of records: %s", args.limit)
+        return
 
     repo_names = args.repositories
     if not repo_names:

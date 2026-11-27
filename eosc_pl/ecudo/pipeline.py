@@ -7,6 +7,7 @@ from pathlib import Path
 
 from app.logger import LOGGING_CONFIG
 from eosc_pl.ecudo import settings
+from eosc_pl.transform.utils.print_data_sources import print_data_sources_summary
 
 from .sender import send_to_solr
 
@@ -116,13 +117,13 @@ def run_pipeline(
     publishers = sorted(
         list({r.get("publisher") for r in transformed_records if r.get("publisher")})
     )
-    print("\n" + "=" * 50)
-    print("=== DATA SOURCES SUMMARY (ECUDO) ===")
-    print("Primary DataSource PID: ['eosc.gdansk_tech.ecudo']")
-    print(f"Detected {len(publishers)} distinct publisher/organization data source(s):")
-    for pub in publishers:
-        print(f"  - {pub}")
-    print("=" * 50 + "\n")
+
+    print_data_sources_summary(
+        repository_name="ECUDO",
+        datasets=transformed_records,
+        primary_datasource_pids=["eosc.gdansk_tech.ecudo"],
+        publishers=publishers,
+    )
 
     # Save to file
     out_file = (
@@ -177,11 +178,15 @@ def main():
     )
     args = parser.parse_args()
 
+    if args.limit is not None and args.limit <= 0:
+        logger.error("Invalid number of records: %s", args.limit)
+        return
+
     run_pipeline(
         load_from=args.from_file,
         dry_run=args.dry_run,
         output_path=args.output,
-        limit=1000000,
+        limit=args.limit,
     )
 
 

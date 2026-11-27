@@ -3,13 +3,13 @@ import argparse
 import json
 import logging
 import shutil
-import sys
 from pathlib import Path
 
 from eosc_pl.oai_pmh import settings
 from eosc_pl.oai_pmh.common.logging_conf import setup_logging
 from eosc_pl.oai_pmh.harvester import harvest_to_ndjson
 from eosc_pl.oai_pmh.sender import send_to_solr_collections
+from eosc_pl.transform.utils.print_data_sources import print_data_sources_summary
 
 setup_logging()
 logger = logging.getLogger("pipeline")
@@ -48,12 +48,12 @@ def run_pipeline(
                 if line:
                     records.append(json.loads(line))
 
-        # Data sources summary
-        print("\n" + "=" * 50)
-        print("=== DATA SOURCES SUMMARY (OneData OAI-PMH) ===")
-        print("Primary DataSource PID: ['eosc.cyfronet.onedata']")
-        print(f"Total datasets harvested: {len(records)}")
-        print("=" * 50 + "\n")
+        # # Data sources summary
+        print_data_sources_summary(
+            repository_name="OneData OAI-PMH",
+            datasets=records,
+            primary_datasource_pids=["eosc.cyfronet.onedata"],
+        )
 
         # Save to output file
         out_file = (
@@ -120,6 +120,10 @@ def main():
         help="Path to save the output JSON file (defaults to eosc_pl/output/onedata.json)",
     )
     args = parser.parse_args()
+
+    if args.max_records is not None and args.max_records <= 0:
+        logger.error("Invalid number of records: %s", args.max_records)
+        return
 
     run_pipeline(
         repository=args.repository,

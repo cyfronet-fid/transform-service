@@ -9,6 +9,7 @@ from eosc_pl.ecudo.sender import send_to_solr
 from eosc_pl.ega.mappings.best_access_right import access_map
 from eosc_pl.ega.schemas.output import EgaOutput
 from eosc_pl.ega.settings import URL
+from eosc_pl.transform.utils.print_data_sources import print_data_sources_summary
 
 BASE_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = BASE_DIR.parent.parent
@@ -70,11 +71,11 @@ def run_pipeline(
             logger.error("Failed for %s: %s", dataset_id, e)
 
     # Data sources summary
-    print("\n" + "=" * 50)
-    print("=== DATA SOURCES SUMMARY (EGA) ===")
-    print("Primary DataSource PID: ['eosc.ega.ega']")
-    print(f"Total datasets processed: {len(outputs)}")
-    print("=" * 50 + "\n")
+    print_data_sources_summary(
+        repository_name="EGA",
+        datasets=outputs,
+        primary_datasource_pids=["eosc.ega.ega"],
+    )
 
     # Save to file
     out_file = (
@@ -126,6 +127,10 @@ def main():
         help="Optional dataset accession IDs (defaults to datasets.json)",
     )
     args = parser.parse_args()
+
+    if args.limit is not None and args.limit <= 0:
+        logger.error("Invalid number of records: %s", args.limit)
+        return
 
     run_pipeline(
         dataset_ids=args.dataset_ids or None,

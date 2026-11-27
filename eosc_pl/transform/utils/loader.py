@@ -102,7 +102,7 @@ def pd_load_datasets_with_pagination(
         except Exception as e:
             logger.error("An unexpected error occurred: %s", e)
             break
-        start += per_page
+        start += count_in_response
     return pd.concat(dfs, ignore_index=True) if dfs else None
 
 
