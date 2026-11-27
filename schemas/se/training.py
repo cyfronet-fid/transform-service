@@ -23,8 +23,6 @@ class TrainingSESchema(BaseModel):
             List of catalogues the training belongs to.
         content_type (Optional[List[str]]):
             List of content types associated with the training. Used for tagging.
-        creators (Optional[str]):
-            Serialized creator metadata preserving PIDs and affiliations per creator.
         description (Optional[str]):
             Training description indexed for full-text search.
         duration (Optional[int]):
@@ -73,28 +71,28 @@ class TrainingSESchema(BaseModel):
             URL pointing to the training resource.
     """
 
-    author_names: Optional[List[str]]
-    author_names_tg: Optional[List[str]]
+    author_names: Optional[List[str]] = None
+    author_names_tg: Optional[List[str]] = None
     best_access_right: str
-    catalogue: Optional[str]  # TODO delete
-    catalogues: Optional[List[Optional[str]]]
-    content_type: Optional[List[str]]
+    catalogue: Optional[str] = None  # TODO delete
+    catalogues: Optional[List[Optional[str]]] = None
+    content_type: Optional[List[str]] = None
     creators: Optional[str] = None
-    description: Optional[str]
-    duration: Optional[int]
+    description: Optional[str] = None
+    duration: Optional[int] = None
     id: str
-    keywords: Optional[List[str]]
-    keywords_tg: Optional[List[str]]
+    keywords: Optional[List[str]] = None
+    keywords_tg: Optional[List[str]] = None
     language: List[str]
     level_of_expertise: str
     learning_outcomes: List[str]
-    license: Optional[str]
-    node: Optional[str]
+    license: Optional[str] = None
+    node: Optional[str] = None
     open_access: bool
     publicContacts: Optional[List[str]] = None
     publication_date: date
-    qualification: Optional[List[str]]
-    related_services: Optional[List[str]]
+    qualification: Optional[List[str]] = None
+    related_services: Optional[List[str]] = None
     resource_organisation: Optional[str] = None
     resource_owner: Optional[str] = None
     resource_type: List[str]
@@ -103,4 +101,4 @@ class TrainingSESchema(BaseModel):
     title: str
     type: str
     unified_categories: List[str]
-    url: Optional[str]
+    url: Optional[str] = None

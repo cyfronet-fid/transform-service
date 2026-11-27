@@ -151,7 +151,7 @@ class TrainingInputSchema(BaseModel):
     contentResourceTypes: Optional[List[str]] = None
     creators: Optional[List[Creator]] = None
     description: str
-    duration: Optional[str]
+    duration: Optional[str] = None
     eoscRelatedServices: Optional[List[str]] = None
     expertiseLevel: str
     id: str
@@ -161,7 +161,7 @@ class TrainingInputSchema(BaseModel):
     learningResourceTypes: Optional[List[str]] = None
     license: Optional[License] = None
     name: str
-    node: Optional[str]
+    node: Optional[str] = None
     publicContacts: Optional[List[str]] = None
     publishingDate: str
     qualifications: Optional[List[str]] = None

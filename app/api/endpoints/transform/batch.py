@@ -1,5 +1,4 @@
-"""Transform single or many records of a single type of data"""
-
+import logging
 from typing import Literal
 
 from fastapi import APIRouter
@@ -11,6 +10,7 @@ from app.transform.live_update.data_type_handlers import (
     update_service,
 )
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
@@ -35,10 +35,23 @@ async def batch_update(
     data: dict | list[dict],
 ) -> dict[str, str | None]:
     """Perform a batch update of a single data collection. Used for live update"""
+    record_count = len(data) if isinstance(data, list) else 1
+    logger.info(
+        "[BatchUpdate] Received /batch request: data_type=%s, action=%s, items_count=%s",
+        data_type,
+        action,
+        record_count,
+    )
+
     tasks_ids = {}
     if action == "delete":
         task = delete_data_by_id.delay(data_type, data, delete=True)
         tasks_ids["delete"] = task.id
+        logger.info(
+            "[BatchUpdate] Dispatched delete_data_by_id task for data_type=%s, task_id=%s",
+            data_type,
+            task.id,
+        )
     else:
         if data_type == "service":
             task_ids = update_service(data)
@@ -49,5 +62,10 @@ async def batch_update(
             task_ids = {"update": task.id}
 
         tasks_ids.update(task_ids)
+        logger.info(
+            "[BatchUpdate] Dispatched update tasks for data_type=%s: %s",
+            data_type,
+            task_ids,
+        )
 
     return tasks_ids

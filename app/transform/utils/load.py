@@ -41,9 +41,13 @@ def load_request_data(
                 collection=type_,
                 source="input",
             )
-    except AssertionError:
+    except AssertionError as ae:
+        logger.warning(f"Schema validation assertion failed for type='{type_}': {ae}")
+    except Exception as e:
         logger.warning(
-            f"Schema validation of raw input data for type={type_} has failed. Input schema is different than excepted"
+            f"Unexpected error during schema validation for type='{type_}': {e}",
+            exc_info=True,
         )
+
     df = spark.read.json(spark.sparkContext.parallelize([json.dumps(data)]))
     return df
