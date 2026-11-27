@@ -1,4 +1,4 @@
-"""Parse Spark configuration"""
+"""Parse Spark configuration """
 
 import configparser
 
